@@ -1,0 +1,17 @@
+2026-01-19 15:02:26.888 | INFO     | __main__:main:148 - 开始测试模式: cfoct, 名称: 260117_1
+2026-01-19 15:02:30.707 | INFO     | __main__:main:273 - Sample: 068_01_vs_068_02 | SR_ME: 1.0 | MeanErr: 3.40
+2026-01-19 15:02:30.910 | INFO     | __main__:main:273 - Sample: 048_01_vs_048_02 | SR_ME: 0.0 | MeanErr: 6.09
+2026-01-19 15:02:31.110 | INFO     | __main__:main:273 - Sample: 086_01_vs_086_02 | SR_ME: 0.0 | MeanErr: 6.68
+2026-01-19 15:02:31.318 | INFO     | __main__:main:273 - Sample: 100_01_vs_100_02 | SR_ME: 0.0 | MeanErr: 14.07
+2026-01-19 15:02:31.544 | INFO     | __main__:main:273 - Sample: 037_01_vs_037_02 | SR_ME: 0.0 | MeanErr: 5.61
+2026-01-19 15:02:31.777 | INFO     | __main__:main:273 - Sample: 034_01_vs_034_02 | SR_ME: 0.0 | MeanErr: 214.97
+2026-01-19 15:02:31.987 | INFO     | __main__:main:273 - Sample: 082_01_vs_082_02 | SR_ME: 0.0 | MeanErr: 33.28
+2026-01-19 15:02:32.019 | INFO     | __main__:main:278 - ==============================
+2026-01-19 15:02:32.019 | INFO     | __main__:main:279 - 测试整体总结:
+2026-01-19 15:02:32.020 | INFO     | __main__:main:281 -   Overall SR_ME: 0.1429
+2026-01-19 15:02:32.020 | INFO     | __main__:main:281 -   Overall SR_MAE: 0.1429
+2026-01-19 15:02:32.020 | INFO     | __main__:main:281 -   Overall Rep: 0.2775
+2026-01-19 15:02:32.020 | INFO     | __main__:main:281 -   Overall MIR: 0.2451
+2026-01-19 15:02:32.021 | INFO     | __main__:main:281 -   Overall mean_error: 40.5849
+2026-01-19 15:02:32.021 | INFO     | __main__:main:281 -   Overall max_error: 56.9405
+2026-01-19 15:02:32.021 | INFO     | __main__:main:282 - ==============================

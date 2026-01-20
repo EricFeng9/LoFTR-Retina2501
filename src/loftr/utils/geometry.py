@@ -52,3 +52,18 @@ def warp_kpts(kpts0, depth0, depth1, T_0to1, K0, K1):
     valid_mask = nonzero_mask * covisible_mask * consistent_mask
 
     return valid_mask, w_kpts0
+
+
+@torch.no_grad()
+def warp_kpts_homo(kpts0, H_0to1):
+    """ Warp kpts0 from I0 to I1 with homography H_0to1
+    Args:
+        kpts0 (torch.Tensor): [N, L, 2] - <x, y>
+        H_0to1 (torch.Tensor): [N, 3, 3]
+    Returns:
+        warped_keypoints0 (torch.Tensor): [N, L, 2] <x0_hat, y1_hat>
+    """
+    kpts0_h = torch.cat([kpts0, torch.ones_like(kpts0[:, :, [0]])], dim=-1)  # (N, L, 3)
+    w_kpts0_h = (H_0to1 @ kpts0_h.transpose(2, 1)).transpose(2, 1)  # (N, L, 3)
+    w_kpts0 = w_kpts0_h[:, :, :2] / (w_kpts0_h[:, :, [2]] + 1e-7)
+    return w_kpts0

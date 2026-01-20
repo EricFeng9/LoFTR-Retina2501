@@ -26,6 +26,7 @@ from src.utils import comm
 from src.datasets.megadepth import MegaDepthDataset
 from src.datasets.scannet import ScanNetDataset
 from src.datasets.sampler import RandomConcatSampler
+from data.CF_260116_expand.cf_260116_expand import MultiModalDataset
 
 
 class MultiSceneDataModule(pl.LightningDataModule):
@@ -70,6 +71,9 @@ class MultiSceneDataModule(pl.LightningDataModule):
         self.mgdpt_depth_pad = config.DATASET.MGDPT_DEPTH_PAD   # True
         self.mgdpt_df = config.DATASET.MGDPT_DF  # 8
         self.coarse_scale = 1 / config.LOFTR.RESOLUTION[0]  # 0.125. for training loftr.
+
+        # MultiModal options
+        self.multimodal_mode = getattr(config.DATASET, 'MULTIMODAL_MODE', 'cffa')
 
         # 3.loader parameters
         self.train_loader_params = {
@@ -230,6 +234,14 @@ class MultiSceneDataModule(pl.LightningDataModule):
                                      depth_padding=self.mgdpt_depth_pad,
                                      augment_fn=augment_fn,
                                      coarse_scale=self.coarse_scale))
+            elif data_source == 'MultiModal':
+                # 多模态眼底图像数据集
+                # root_dir 使用 data_root，mode 由 self.multimodal_mode 传入（cffa, cfoct, etc.）
+                datasets.append(
+                    MultiModalDataset(data_root,
+                                     mode=self.multimodal_mode,
+                                     split=mode,
+                                     img_size=self.mgdpt_img_resize))
             else:
                 raise NotImplementedError()
         return ConcatDataset(datasets)

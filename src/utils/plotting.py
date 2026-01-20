@@ -10,6 +10,8 @@ def _compute_conf_thresh(data):
         thr = 5e-4
     elif dataset_name == 'megadepth':
         thr = 1e-4
+    elif dataset_name == 'multimodal':
+        thr = 5.0 # 像素重投影误差阈值
     else:
         raise ValueError(f'Unknown dataset: {dataset_name}')
     return thr
@@ -74,20 +76,21 @@ def _make_evaluation_figure(data, b_id, alpha='dynamic'):
     kpts0 = data['mkpts0_f'][b_mask].cpu().numpy()
     kpts1 = data['mkpts1_f'][b_mask].cpu().numpy()
     
-    # for megadepth, we visualize matches on the resized image
-    if 'scale0' in data:
-        kpts0 = kpts0 / data['scale0'][b_id].cpu().numpy()[[1, 0]]
-        kpts1 = kpts1 / data['scale1'][b_id].cpu().numpy()[[1, 0]]
-
-    epi_errs = data['epi_errs'][b_mask].cpu().numpy()
+    # 获取对极误差 (如果存在)
+    if 'epi_errs' in data:
+        epi_errs = data['epi_errs'][b_mask].cpu().numpy()
+    else:
+        epi_errs = np.zeros(len(kpts0))
+        
+    conf_thr = _compute_conf_thresh(data)
     correct_mask = epi_errs < conf_thr
     precision = np.mean(correct_mask) if len(correct_mask) > 0 else 0
     n_correct = np.sum(correct_mask)
-    n_gt_matches = int(data['conf_matrix_gt'][b_id].sum().cpu())
+    
+    # RoMa 不使用 conf_matrix_gt，这里设为 0 或跳过
+    n_gt_matches = int(data['conf_matrix_gt'][b_id].sum().cpu()) if 'conf_matrix_gt' in data else 0
     recall = 0 if n_gt_matches == 0 else n_correct / (n_gt_matches)
-    # recall might be larger than 1, since the calculation of conf_matrix_gt
-    # uses groundtruth depths and camera poses, but epipolar distance is used here.
-
+    
     # matching info
     if alpha == 'dynamic':
         alpha = dynamic_alpha(len(correct_mask))
@@ -96,8 +99,9 @@ def _make_evaluation_figure(data, b_id, alpha='dynamic'):
     text = [
         f'#Matches {len(kpts0)}',
         f'Precision({conf_thr:.2e}) ({100 * precision:.1f}%): {n_correct}/{len(kpts0)}',
-        f'Recall({conf_thr:.2e}) ({100 * recall:.1f}%): {n_correct}/{n_gt_matches}'
     ]
+    if n_gt_matches > 0:
+        text.append(f'Recall({conf_thr:.2e}) ({100 * recall:.1f}%): {n_correct}/{n_gt_matches}')
     
     # make the figure
     figure = make_matching_figure(img0, img1, kpts0, kpts1,

@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from einops.einops import rearrange
 
-INF = 1e9
+INF = 1e4
 
 def mask_border(m, b: int, v):
     """ Mask borders with value
@@ -66,6 +66,9 @@ class CoarseMatching(nn.Module):
         # -- # for trainig fine-level LoFTR
         self.train_coarse_percent = config['train_coarse_percent']
         self.train_pad_num_gt_min = config['train_pad_num_gt_min']
+        # vessel-aware matching 配置
+        self.use_vessel_soft = config.get('use_vessel_soft', True)
+        self.vessel_soft_lambda = config.get('vessel_soft_lambda', 1.0)
 
         # we provide 2 options for differentiable matching
         self.match_type = config['match_type']
@@ -109,6 +112,11 @@ class CoarseMatching(nn.Module):
         feat_c0, feat_c1 = map(lambda feat: feat / feat.shape[-1]**.5,
                                [feat_c0, feat_c1])
 
+        # 读取 coarse 级别的血管软权重（若存在）
+        v_w0 = data.get('vessel_weight0_c_flat', None)
+        v_w1 = data.get('vessel_weight1_c_flat', None)
+        use_vessel = self.use_vessel_soft and (v_w0 is not None) and (v_w1 is not None)
+
         if self.match_type == 'dual_softmax':
             sim_matrix = torch.einsum("nlc,nsc->nls", feat_c0,
                                       feat_c1) / self.temperature
@@ -116,6 +124,13 @@ class CoarseMatching(nn.Module):
                 sim_matrix.masked_fill_(
                     ~(mask_c0[..., None] * mask_c1[:, None]).bool(),
                     -INF)
+            # 使用高斯软掩码对相似度进行重加权（血管及其邻域优先）
+            if use_vessel:
+                # v_w0: [N, L], v_w1: [N, S]
+                W_pair = v_w0[..., None] * v_w1[:, None, :]
+                # 【方案 B 改进】将乘法掩码改为加性偏置 (Additive Bias)
+                # 这样可以防止 Softmax 后的概率分布极度崩塌，并保留非血管区域的微弱响应
+                sim_matrix = sim_matrix + self.vessel_soft_lambda * W_pair
             conf_matrix = F.softmax(sim_matrix, 1) * F.softmax(sim_matrix, 2)
 
         elif self.match_type == 'sinkhorn':
@@ -125,6 +140,11 @@ class CoarseMatching(nn.Module):
                 sim_matrix[:, :L, :S].masked_fill_(
                     ~(mask_c0[..., None] * mask_c1[:, None]).bool(),
                     -INF)
+
+            if use_vessel:
+                W_pair = v_w0[..., None] * v_w1[:, None, :]
+                # 【方案 B 改进】加性偏置
+                sim_matrix[:, :L, :S] = sim_matrix[:, :L, :S] + self.vessel_soft_lambda * W_pair
 
             # build uniform prior & use sinkhorn
             log_assign_matrix = self.log_optimal_transport(

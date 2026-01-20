@@ -18,18 +18,21 @@ class LoFTRLoss(nn.Module):
         self.c_neg_w = self.loss_config['neg_weight']
         # fine-level
         self.fine_type = self.loss_config['fine_type']
+        
+        # 【方案 B 改进】梯度保底权重 (默认 0.1)
+        self.background_weight = 0.1
 
     def compute_coarse_loss(self, conf, conf_gt, weight=None):
-        """ Point-wise CE / Focal Loss with 0 / 1 confidence as gt.
+        """ 粗级匹配损失 (对应 plan.md 中的 Lc)
         Args:
-            conf (torch.Tensor): (N, HW0, HW1) / (N, HW0+1, HW1+1)
-            conf_gt (torch.Tensor): (N, HW0, HW1)
-            weight (torch.Tensor): (N, HW0, HW1)
+            conf (torch.Tensor): (N, HW0, HW1) / (N, HW0+1, HW1+1) 预测的置信度矩阵
+            conf_gt (torch.Tensor): (N, HW0, HW1) 真值匹配矩阵 (0 或 1)
+            weight (torch.Tensor): (N, HW0, HW1) 样本权重（用于处理 padding）
         """
         pos_mask, neg_mask = conf_gt == 1, conf_gt == 0
         c_pos_w, c_neg_w = self.c_pos_w, self.c_neg_w
-        # corner case: no gt coarse-level match at all
-        if not pos_mask.any():  # assign a wrong gt
+        # 处理没有正样本的边缘情况
+        if not pos_mask.any():
             pos_mask[0, 0, 0] = True
             if weight is not None:
                 weight[0, 0, 0] = 0.
@@ -41,8 +44,9 @@ class LoFTRLoss(nn.Module):
             c_neg_w = 0.
 
         if self.loss_config['coarse_type'] == 'cross_entropy':
-            assert not self.sparse_spvs, 'Sparse Supervision for cross-entropy not implemented!'
+            assert not self.sparse_spvs, 'Cross-entropy 不支持稀疏监督'
             conf = torch.clamp(conf, 1e-6, 1-1e-6)
+            # 计算负对数似然损失
             loss_pos = - torch.log(conf[pos_mask])
             loss_neg = - torch.log(1 - conf[neg_mask])
             if weight is not None:
@@ -121,29 +125,30 @@ class LoFTRLoss(nn.Module):
 
     def _compute_fine_loss_l2_std(self, expec_f, expec_f_gt):
         """
+        精级细化损失 (对应 plan.md 中的 Lf)
+        使用方差的倒数作为权重，方差越大（不确定性越高）的点权重越低。
         Args:
             expec_f (torch.Tensor): [M, 3] <x, y, std>
             expec_f_gt (torch.Tensor): [M, 2] <x, y>
         """
-        # correct_mask tells you which pair to compute fine-loss
+        # correct_mask 标识哪些点需要计算精级损失
         correct_mask = torch.linalg.norm(expec_f_gt, ord=float('inf'), dim=1) < self.correct_thr
 
-        # use std as weight that measures uncertainty
+        # 使用方差的倒数作为权重 (plan.md: 1/sigma^2)
         std = expec_f[:, 2]
-        inverse_std = 1. / torch.clamp(std, min=1e-10)
-        weight = (inverse_std / torch.mean(inverse_std)).detach()  # avoid minizing loss through increase std
+        inverse_var = 1. / torch.clamp(std**2, min=1e-10) # sigma^2
+        weight = (inverse_var / torch.mean(inverse_var)).detach()  # 归一化权重以防止通过增大方差来减小损失
 
-        # corner case: no correct coarse match found
+        # 处理没有正确匹配的情况
         if not correct_mask.any():
-            if self.training:  # this seldomly happen during training, since we pad prediction with gt
-                               # sometimes there is not coarse-level gt at all.
-                logger.warning("assign a false supervision to avoid ddp deadlock")
+            if self.training:
+                logger.warning("没有发现正确的 coarse 匹配，分配一个伪监督以避免 DDP 死锁")
                 correct_mask[0] = True
                 weight[0] = 0.
             else:
                 return None
 
-        # l2 loss with std
+        # 计算加权 L2 损失
         offset_l2 = ((expec_f_gt[correct_mask] - expec_f[correct_mask, :2]) ** 2).sum(-1)
         loss = (offset_l2 * weight[correct_mask]).mean()
 
@@ -152,8 +157,26 @@ class LoFTRLoss(nn.Module):
     @torch.no_grad()
     def compute_c_weight(self, data):
         """ compute element-wise weights for computing coarse-level loss. """
-        if 'mask0' in data:
-            c_weight = (data['mask0'].flatten(-2)[..., None] * data['mask1'].flatten(-2)[:, None]).float()
+        # 优先使用 coarse 级别的血管高斯软掩码作为 Loss 权重，其次退回到二值掩码
+        weight0_c = data.get('vessel_weight0_c', None)
+        weight1_c = data.get('vessel_weight1_c', None)
+
+        if weight0_c is not None and weight1_c is not None:
+            w0 = weight0_c.flatten(-2)
+            w1 = weight1_c.flatten(-2)
+            c_weight = (w0[..., None] * w1[:, None, :]).float()
+            # 【方案 B 改进】梯度保底 (Gradient Guard)
+            # 不要给非血管区域 0 权重，要给它们一个“低保”权重 (Curriculum Learning 动态调整)
+            # 这样即使点对落在背景上，也会产生微弱梯度推动模型学习大尺度的几何变换
+            c_weight = torch.clamp(c_weight, min=self.background_weight)
+            return c_weight
+
+        # 回退：使用二值血管掩码或有效区域掩码
+        mask0 = data.get('vessel_mask0', data.get('mask0'))
+        mask1 = data.get('vessel_mask1', data.get('mask1'))
+        
+        if mask0 is not None:
+            c_weight = (mask0.flatten(-2)[..., None] * mask1.flatten(-2)[:, None]).float()
         else:
             c_weight = None
         return c_weight

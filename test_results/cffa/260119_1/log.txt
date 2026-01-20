@@ -1,0 +1,177 @@
+2026-01-19 14:25:35.520 | INFO     | __main__:main:109 - 开始测试模式: cffa, 名称: 260117_2
+2026-01-19 14:27:14.003 | INFO     | __main__:main:136 - 开始测试模式: cffa, 名称: 260117_2
+2026-01-19 14:27:16.944 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:16.947 | INFO     | __main__:main:253 - Sample: 049_01_vs_049_02 | SR_ME: 0.0 | MeanErr: 69.81
+2026-01-19 14:27:16.953 | WARNING  | __main__:main:265 - 无法保存匹配图 049_01_vs_049_02: 'conf_matrix_gt'
+2026-01-19 14:27:16.955 | INFO     | __main__:main:268 - Sample: 049_01_vs_049_02 | SR_ME: 0.0 | MeanErr: 69.81
+2026-01-19 14:27:17.094 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:17.094 | INFO     | __main__:main:253 - Sample: 024_01_vs_024_02 | SR_ME: 1.0 | MeanErr: 4.04
+2026-01-19 14:27:17.097 | WARNING  | __main__:main:265 - 无法保存匹配图 024_01_vs_024_02: 'conf_matrix_gt'
+2026-01-19 14:27:17.097 | INFO     | __main__:main:268 - Sample: 024_01_vs_024_02 | SR_ME: 1.0 | MeanErr: 4.04
+2026-01-19 14:27:17.233 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:17.233 | INFO     | __main__:main:253 - Sample: 023_01_vs_023_02 | SR_ME: 1.0 | MeanErr: 2.43
+2026-01-19 14:27:17.236 | WARNING  | __main__:main:265 - 无法保存匹配图 023_01_vs_023_02: 'conf_matrix_gt'
+2026-01-19 14:27:17.236 | INFO     | __main__:main:268 - Sample: 023_01_vs_023_02 | SR_ME: 1.0 | MeanErr: 2.43
+2026-01-19 14:27:17.506 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:17.508 | INFO     | __main__:main:253 - Sample: 063_01_vs_063_02 | SR_ME: 0.0 | MeanErr: 287.87
+2026-01-19 14:27:17.533 | WARNING  | __main__:main:265 - 无法保存匹配图 063_01_vs_063_02: 'conf_matrix_gt'
+2026-01-19 14:27:17.535 | INFO     | __main__:main:268 - Sample: 063_01_vs_063_02 | SR_ME: 0.0 | MeanErr: 287.87
+2026-01-19 14:27:17.731 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:17.731 | INFO     | __main__:main:253 - Sample: 067_01_vs_067_02 | SR_ME: 0.0 | MeanErr: 279.99
+2026-01-19 14:27:17.733 | WARNING  | __main__:main:265 - 无法保存匹配图 067_01_vs_067_02: 'conf_matrix_gt'
+2026-01-19 14:27:17.733 | INFO     | __main__:main:268 - Sample: 067_01_vs_067_02 | SR_ME: 0.0 | MeanErr: 279.99
+2026-01-19 14:27:17.912 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:17.912 | INFO     | __main__:main:253 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 6.04
+2026-01-19 14:27:17.917 | WARNING  | __main__:main:265 - 无法保存匹配图 003_01_vs_003_02: 'conf_matrix_gt'
+2026-01-19 14:27:17.917 | INFO     | __main__:main:268 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 6.04
+2026-01-19 14:27:18.156 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:18.157 | INFO     | __main__:main:253 - Sample: 041_01_vs_041_02 | SR_ME: 0.0 | MeanErr: 224.69
+2026-01-19 14:27:18.161 | WARNING  | __main__:main:265 - 无法保存匹配图 041_01_vs_041_02: 'conf_matrix_gt'
+2026-01-19 14:27:18.162 | INFO     | __main__:main:268 - Sample: 041_01_vs_041_02 | SR_ME: 0.0 | MeanErr: 224.69
+2026-01-19 14:27:18.393 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:18.394 | INFO     | __main__:main:253 - Sample: 054_01_vs_054_02 | SR_ME: 0.0 | MeanErr: 170.65
+2026-01-19 14:27:18.399 | WARNING  | __main__:main:265 - 无法保存匹配图 054_01_vs_054_02: 'conf_matrix_gt'
+2026-01-19 14:27:18.400 | INFO     | __main__:main:268 - Sample: 054_01_vs_054_02 | SR_ME: 0.0 | MeanErr: 170.65
+2026-01-19 14:27:18.602 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:18.603 | INFO     | __main__:main:253 - Sample: 008_01_vs_008_02 | SR_ME: 0.0 | MeanErr: 5.13
+2026-01-19 14:27:18.606 | WARNING  | __main__:main:265 - 无法保存匹配图 008_01_vs_008_02: 'conf_matrix_gt'
+2026-01-19 14:27:18.606 | INFO     | __main__:main:268 - Sample: 008_01_vs_008_02 | SR_ME: 0.0 | MeanErr: 5.13
+2026-01-19 14:27:18.788 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:18.788 | INFO     | __main__:main:253 - Sample: 051_01_vs_051_02 | SR_ME: 0.0 | MeanErr: 8.60
+2026-01-19 14:27:18.791 | WARNING  | __main__:main:265 - 无法保存匹配图 051_01_vs_051_02: 'conf_matrix_gt'
+2026-01-19 14:27:18.792 | INFO     | __main__:main:268 - Sample: 051_01_vs_051_02 | SR_ME: 0.0 | MeanErr: 8.60
+2026-01-19 14:27:18.932 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:18.932 | INFO     | __main__:main:253 - Sample: 062_01_vs_062_02 | SR_ME: 1.0 | MeanErr: 3.90
+2026-01-19 14:27:18.936 | WARNING  | __main__:main:265 - 无法保存匹配图 062_01_vs_062_02: 'conf_matrix_gt'
+2026-01-19 14:27:18.936 | INFO     | __main__:main:268 - Sample: 062_01_vs_062_02 | SR_ME: 1.0 | MeanErr: 3.90
+2026-01-19 14:27:19.127 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:19.128 | INFO     | __main__:main:253 - Sample: 010_01_vs_010_02 | SR_ME: 0.0 | MeanErr: 7.19
+2026-01-19 14:27:19.131 | WARNING  | __main__:main:265 - 无法保存匹配图 010_01_vs_010_02: 'conf_matrix_gt'
+2026-01-19 14:27:19.131 | INFO     | __main__:main:268 - Sample: 010_01_vs_010_02 | SR_ME: 0.0 | MeanErr: 7.19
+2026-01-19 14:27:19.381 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:19.381 | INFO     | __main__:main:253 - Sample: 018_01_vs_018_02 | SR_ME: 0.0 | MeanErr: 93.38
+2026-01-19 14:27:19.384 | WARNING  | __main__:main:265 - 无法保存匹配图 018_01_vs_018_02: 'conf_matrix_gt'
+2026-01-19 14:27:19.384 | INFO     | __main__:main:268 - Sample: 018_01_vs_018_02 | SR_ME: 0.0 | MeanErr: 93.38
+2026-01-19 14:27:19.646 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:19.647 | INFO     | __main__:main:253 - Sample: 024_01_vs_024_02 | SR_ME: 0.0 | MeanErr: 15.06
+2026-01-19 14:27:19.654 | WARNING  | __main__:main:265 - 无法保存匹配图 024_01_vs_024_02: 'conf_matrix_gt'
+2026-01-19 14:27:19.654 | INFO     | __main__:main:268 - Sample: 024_01_vs_024_02 | SR_ME: 0.0 | MeanErr: 15.06
+2026-01-19 14:27:20.091 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:20.092 | INFO     | __main__:main:253 - Sample: 025_01_vs_025_02 | SR_ME: 0.0 | MeanErr: 221.52
+2026-01-19 14:27:20.094 | WARNING  | __main__:main:265 - 无法保存匹配图 025_01_vs_025_02: 'conf_matrix_gt'
+2026-01-19 14:27:20.095 | INFO     | __main__:main:268 - Sample: 025_01_vs_025_02 | SR_ME: 0.0 | MeanErr: 221.52
+2026-01-19 14:27:20.490 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:20.491 | INFO     | __main__:main:253 - Sample: 026_01_vs_026_02 | SR_ME: 0.0 | MeanErr: 187.95
+2026-01-19 14:27:20.494 | WARNING  | __main__:main:265 - 无法保存匹配图 026_01_vs_026_02: 'conf_matrix_gt'
+2026-01-19 14:27:20.494 | INFO     | __main__:main:268 - Sample: 026_01_vs_026_02 | SR_ME: 0.0 | MeanErr: 187.95
+2026-01-19 14:27:20.868 | WARNING  | __main__:main:251 - 无法保存匹配图: 'conf_matrix_gt'
+2026-01-19 14:27:20.885 | INFO     | __main__:main:253 - Sample: 065_01_vs_065_02 | SR_ME: 1.0 | MeanErr: 4.92
+2026-01-19 14:27:20.888 | WARNING  | __main__:main:265 - 无法保存匹配图 065_01_vs_065_02: 'conf_matrix_gt'
+2026-01-19 14:27:20.888 | INFO     | __main__:main:268 - Sample: 065_01_vs_065_02 | SR_ME: 1.0 | MeanErr: 4.92
+2026-01-19 14:29:43.671 | INFO     | __main__:main:136 - 开始测试模式: cffa, 名称: 260117_2
+2026-01-19 14:29:46.418 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:46.419 | INFO     | __main__:main:254 - Sample: 049_01_vs_049_02 | SR_ME: 0.0 | MeanErr: 69.81
+2026-01-19 14:29:46.425 | WARNING  | __main__:main:266 - 无法保存匹配图 049_01_vs_049_02: 'conf_matrix_gt'
+2026-01-19 14:29:46.426 | INFO     | __main__:main:269 - Sample: 049_01_vs_049_02 | SR_ME: 0.0 | MeanErr: 69.81
+2026-01-19 14:29:46.565 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:46.565 | INFO     | __main__:main:254 - Sample: 024_01_vs_024_02 | SR_ME: 1.0 | MeanErr: 4.04
+2026-01-19 14:29:46.570 | WARNING  | __main__:main:266 - 无法保存匹配图 024_01_vs_024_02: 'conf_matrix_gt'
+2026-01-19 14:29:46.570 | INFO     | __main__:main:269 - Sample: 024_01_vs_024_02 | SR_ME: 1.0 | MeanErr: 4.04
+2026-01-19 14:29:46.705 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:46.706 | INFO     | __main__:main:254 - Sample: 023_01_vs_023_02 | SR_ME: 1.0 | MeanErr: 2.43
+2026-01-19 14:29:46.710 | WARNING  | __main__:main:266 - 无法保存匹配图 023_01_vs_023_02: 'conf_matrix_gt'
+2026-01-19 14:29:46.710 | INFO     | __main__:main:269 - Sample: 023_01_vs_023_02 | SR_ME: 1.0 | MeanErr: 2.43
+2026-01-19 14:29:46.891 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:46.891 | INFO     | __main__:main:254 - Sample: 063_01_vs_063_02 | SR_ME: 0.0 | MeanErr: 287.87
+2026-01-19 14:29:46.896 | WARNING  | __main__:main:266 - 无法保存匹配图 063_01_vs_063_02: 'conf_matrix_gt'
+2026-01-19 14:29:46.896 | INFO     | __main__:main:269 - Sample: 063_01_vs_063_02 | SR_ME: 0.0 | MeanErr: 287.87
+2026-01-19 14:29:47.070 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:47.070 | INFO     | __main__:main:254 - Sample: 067_01_vs_067_02 | SR_ME: 0.0 | MeanErr: 279.99
+2026-01-19 14:29:47.075 | WARNING  | __main__:main:266 - 无法保存匹配图 067_01_vs_067_02: 'conf_matrix_gt'
+2026-01-19 14:29:47.076 | INFO     | __main__:main:269 - Sample: 067_01_vs_067_02 | SR_ME: 0.0 | MeanErr: 279.99
+2026-01-19 14:29:47.302 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:47.302 | INFO     | __main__:main:254 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 6.04
+2026-01-19 14:29:47.306 | WARNING  | __main__:main:266 - 无法保存匹配图 003_01_vs_003_02: 'conf_matrix_gt'
+2026-01-19 14:29:47.306 | INFO     | __main__:main:269 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 6.04
+2026-01-19 14:29:47.486 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:47.486 | INFO     | __main__:main:254 - Sample: 041_01_vs_041_02 | SR_ME: 0.0 | MeanErr: 224.69
+2026-01-19 14:29:47.489 | WARNING  | __main__:main:266 - 无法保存匹配图 041_01_vs_041_02: 'conf_matrix_gt'
+2026-01-19 14:29:47.490 | INFO     | __main__:main:269 - Sample: 041_01_vs_041_02 | SR_ME: 0.0 | MeanErr: 224.69
+2026-01-19 14:29:47.663 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:47.663 | INFO     | __main__:main:254 - Sample: 054_01_vs_054_02 | SR_ME: 0.0 | MeanErr: 170.65
+2026-01-19 14:29:47.666 | WARNING  | __main__:main:266 - 无法保存匹配图 054_01_vs_054_02: 'conf_matrix_gt'
+2026-01-19 14:29:47.666 | INFO     | __main__:main:269 - Sample: 054_01_vs_054_02 | SR_ME: 0.0 | MeanErr: 170.65
+2026-01-19 14:29:47.835 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:47.835 | INFO     | __main__:main:254 - Sample: 008_01_vs_008_02 | SR_ME: 0.0 | MeanErr: 5.13
+2026-01-19 14:29:47.842 | WARNING  | __main__:main:266 - 无法保存匹配图 008_01_vs_008_02: 'conf_matrix_gt'
+2026-01-19 14:29:47.842 | INFO     | __main__:main:269 - Sample: 008_01_vs_008_02 | SR_ME: 0.0 | MeanErr: 5.13
+2026-01-19 14:29:47.964 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:47.965 | INFO     | __main__:main:254 - Sample: 051_01_vs_051_02 | SR_ME: 0.0 | MeanErr: 8.60
+2026-01-19 14:29:47.970 | WARNING  | __main__:main:266 - 无法保存匹配图 051_01_vs_051_02: 'conf_matrix_gt'
+2026-01-19 14:29:47.971 | INFO     | __main__:main:269 - Sample: 051_01_vs_051_02 | SR_ME: 0.0 | MeanErr: 8.60
+2026-01-19 14:29:48.082 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:48.082 | INFO     | __main__:main:254 - Sample: 062_01_vs_062_02 | SR_ME: 1.0 | MeanErr: 3.90
+2026-01-19 14:29:48.085 | WARNING  | __main__:main:266 - 无法保存匹配图 062_01_vs_062_02: 'conf_matrix_gt'
+2026-01-19 14:29:48.085 | INFO     | __main__:main:269 - Sample: 062_01_vs_062_02 | SR_ME: 1.0 | MeanErr: 3.90
+2026-01-19 14:29:48.225 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:48.225 | INFO     | __main__:main:254 - Sample: 010_01_vs_010_02 | SR_ME: 0.0 | MeanErr: 7.19
+2026-01-19 14:29:48.228 | WARNING  | __main__:main:266 - 无法保存匹配图 010_01_vs_010_02: 'conf_matrix_gt'
+2026-01-19 14:29:48.228 | INFO     | __main__:main:269 - Sample: 010_01_vs_010_02 | SR_ME: 0.0 | MeanErr: 7.19
+2026-01-19 14:29:48.520 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:48.521 | INFO     | __main__:main:254 - Sample: 018_01_vs_018_02 | SR_ME: 0.0 | MeanErr: 93.38
+2026-01-19 14:29:48.525 | WARNING  | __main__:main:266 - 无法保存匹配图 018_01_vs_018_02: 'conf_matrix_gt'
+2026-01-19 14:29:48.525 | INFO     | __main__:main:269 - Sample: 018_01_vs_018_02 | SR_ME: 0.0 | MeanErr: 93.38
+2026-01-19 14:29:48.898 | WARNING  | __main__:main:252 - 无法保存匹配图: 
+2026-01-19 14:29:48.899 | INFO     | __main__:main:254 - Sample: 024_01_vs_024_02 | SR_ME: 0.0 | MeanErr: 15.06
+2026-01-19 14:29:48.902 | WARNING  | __main__:main:266 - 无法保存匹配图 024_01_vs_024_02: 'conf_matrix_gt'
+2026-01-19 14:29:48.902 | INFO     | __main__:main:269 - Sample: 024_01_vs_024_02 | SR_ME: 0.0 | MeanErr: 15.06
+2026-01-19 14:33:22.927 | INFO     | __main__:main:162 - 开始测试模式: cffa, 名称: 260117_2
+2026-01-19 14:33:25.996 | INFO     | __main__:main:282 - Sample: 049_01_vs_049_02 | SR_ME: 0.0 | MeanErr: 69.81
+2026-01-19 14:33:26.402 | INFO     | __main__:main:297 - Sample: 049_01_vs_049_02 | SR_ME: 0.0 | MeanErr: 69.81
+2026-01-19 14:33:26.603 | INFO     | __main__:main:282 - Sample: 024_01_vs_024_02 | SR_ME: 1.0 | MeanErr: 4.04
+2026-01-19 14:33:27.271 | INFO     | __main__:main:297 - Sample: 024_01_vs_024_02 | SR_ME: 1.0 | MeanErr: 4.04
+2026-01-19 14:33:27.455 | INFO     | __main__:main:282 - Sample: 023_01_vs_023_02 | SR_ME: 1.0 | MeanErr: 2.43
+2026-01-19 14:33:27.926 | INFO     | __main__:main:297 - Sample: 023_01_vs_023_02 | SR_ME: 1.0 | MeanErr: 2.43
+2026-01-19 14:33:28.175 | INFO     | __main__:main:282 - Sample: 063_01_vs_063_02 | SR_ME: 0.0 | MeanErr: 287.87
+2026-01-19 14:33:28.522 | INFO     | __main__:main:297 - Sample: 063_01_vs_063_02 | SR_ME: 0.0 | MeanErr: 287.87
+2026-01-19 14:33:28.732 | INFO     | __main__:main:282 - Sample: 067_01_vs_067_02 | SR_ME: 0.0 | MeanErr: 279.99
+2026-01-19 14:33:29.062 | INFO     | __main__:main:297 - Sample: 067_01_vs_067_02 | SR_ME: 0.0 | MeanErr: 279.99
+2026-01-19 14:33:29.271 | INFO     | __main__:main:282 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 6.04
+2026-01-19 14:33:29.606 | INFO     | __main__:main:297 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 6.04
+2026-01-19 14:33:29.815 | INFO     | __main__:main:282 - Sample: 041_01_vs_041_02 | SR_ME: 0.0 | MeanErr: 224.69
+2026-01-19 14:33:30.171 | INFO     | __main__:main:297 - Sample: 041_01_vs_041_02 | SR_ME: 0.0 | MeanErr: 224.69
+2026-01-19 14:33:30.398 | INFO     | __main__:main:282 - Sample: 054_01_vs_054_02 | SR_ME: 0.0 | MeanErr: 170.65
+2026-01-19 14:33:30.684 | INFO     | __main__:main:297 - Sample: 054_01_vs_054_02 | SR_ME: 0.0 | MeanErr: 170.65
+2026-01-19 14:33:30.863 | INFO     | __main__:main:282 - Sample: 008_01_vs_008_02 | SR_ME: 0.0 | MeanErr: 5.13
+2026-01-19 14:33:31.288 | INFO     | __main__:main:297 - Sample: 008_01_vs_008_02 | SR_ME: 0.0 | MeanErr: 5.13
+2026-01-19 14:33:31.481 | INFO     | __main__:main:282 - Sample: 051_01_vs_051_02 | SR_ME: 0.0 | MeanErr: 8.60
+2026-01-19 14:33:31.908 | INFO     | __main__:main:297 - Sample: 051_01_vs_051_02 | SR_ME: 0.0 | MeanErr: 8.60
+2026-01-19 14:33:32.063 | INFO     | __main__:main:282 - Sample: 062_01_vs_062_02 | SR_ME: 1.0 | MeanErr: 3.90
+2026-01-19 14:33:32.645 | INFO     | __main__:main:297 - Sample: 062_01_vs_062_02 | SR_ME: 1.0 | MeanErr: 3.90
+2026-01-19 14:33:32.885 | INFO     | __main__:main:282 - Sample: 010_01_vs_010_02 | SR_ME: 0.0 | MeanErr: 7.19
+2026-01-19 14:33:33.283 | INFO     | __main__:main:297 - Sample: 010_01_vs_010_02 | SR_ME: 0.0 | MeanErr: 7.19
+2026-01-19 14:33:33.533 | INFO     | __main__:main:282 - Sample: 018_01_vs_018_02 | SR_ME: 0.0 | MeanErr: 93.38
+2026-01-19 14:33:33.907 | INFO     | __main__:main:297 - Sample: 018_01_vs_018_02 | SR_ME: 0.0 | MeanErr: 93.38
+2026-01-19 14:33:34.372 | INFO     | __main__:main:282 - Sample: 024_01_vs_024_02 | SR_ME: 0.0 | MeanErr: 15.06
+2026-01-19 14:33:34.944 | INFO     | __main__:main:297 - Sample: 024_01_vs_024_02 | SR_ME: 0.0 | MeanErr: 15.06
+2026-01-19 14:33:35.448 | INFO     | __main__:main:282 - Sample: 025_01_vs_025_02 | SR_ME: 0.0 | MeanErr: 221.52
+2026-01-19 14:33:35.817 | INFO     | __main__:main:297 - Sample: 025_01_vs_025_02 | SR_ME: 0.0 | MeanErr: 221.52
+2026-01-19 14:33:36.407 | INFO     | __main__:main:282 - Sample: 026_01_vs_026_02 | SR_ME: 0.0 | MeanErr: 187.95
+2026-01-19 14:33:36.968 | INFO     | __main__:main:297 - Sample: 026_01_vs_026_02 | SR_ME: 0.0 | MeanErr: 187.95
+2026-01-19 14:33:37.163 | INFO     | __main__:main:282 - Sample: 065_01_vs_065_02 | SR_ME: 1.0 | MeanErr: 4.92
+2026-01-19 14:33:37.621 | INFO     | __main__:main:297 - Sample: 065_01_vs_065_02 | SR_ME: 1.0 | MeanErr: 4.92
+2026-01-19 14:33:37.850 | INFO     | __main__:main:282 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 449.38
+2026-01-19 14:33:38.149 | INFO     | __main__:main:297 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 449.38
+2026-01-19 14:33:38.358 | INFO     | __main__:main:282 - Sample: 012_01_vs_012_02 | SR_ME: 0.0 | MeanErr: 8.95
+2026-01-19 14:33:38.711 | INFO     | __main__:main:297 - Sample: 012_01_vs_012_02 | SR_ME: 0.0 | MeanErr: 8.95
+2026-01-19 14:33:38.988 | INFO     | __main__:main:282 - Sample: 058_01_vs_058_02 | SR_ME: 0.0 | MeanErr: 86.51
+2026-01-19 14:33:39.405 | INFO     | __main__:main:297 - Sample: 058_01_vs_058_02 | SR_ME: 0.0 | MeanErr: 86.51
+2026-01-19 14:33:39.453 | INFO     | __main__:main:302 - ==============================
+2026-01-19 14:33:39.453 | INFO     | __main__:main:303 - 测试整体总结:
+2026-01-19 14:33:39.453 | INFO     | __main__:main:305 -   Overall SR_ME: 0.2000
+2026-01-19 14:33:39.454 | INFO     | __main__:main:305 -   Overall SR_MAE: 0.2000
+2026-01-19 14:33:39.454 | INFO     | __main__:main:305 -   Overall Rep: 0.2038
+2026-01-19 14:33:39.454 | INFO     | __main__:main:305 -   Overall MIR: 0.2074
+2026-01-19 14:33:39.454 | INFO     | __main__:main:305 -   Overall mean_error: 106.9010
+2026-01-19 14:33:39.455 | INFO     | __main__:main:305 -   Overall max_error: 297.7109
+2026-01-19 14:33:39.455 | INFO     | __main__:main:306 - ==============================

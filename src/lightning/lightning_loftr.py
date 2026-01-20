@@ -107,28 +107,68 @@ class PL_LoFTR(pl.LightningModule):
                 't_errs': batch['t_errs'],
                 'inliers': batch['inliers']}
             ret_dict = {'metrics': metrics}
+            # 将 H_est 传递出去供 validation callback 使用
+            if 'H_est' in batch:
+                ret_dict['H_est'] = batch['H_est']
         return ret_dict, rel_pair_names
     
+    def on_train_epoch_start(self):
+        """
+        【方案 B 改进】解剖课程学习 (Curriculum Learning)
+        根据当前训练进度调整血管掩码权重和背景梯度保底。
+        """
+        total_epochs = self.trainer.max_epochs
+        cur_epoch = self.current_epoch
+        
+        # 阶段 1: 前 20% Epochs - 全图感知期
+        if cur_epoch < 0.2 * total_epochs:
+            vessel_soft_lambda = 0.0 # 不使用血管掩码偏置
+            background_weight = 1.0 # 背景权重全开
+            stage = "Phase 1: Global Perception"
+        # 阶段 2: 中间 50% Epochs - 软掩码引导期
+        elif cur_epoch < 0.7 * total_epochs:
+            vessel_soft_lambda = self.loftr_cfg['match_coarse'].get('vessel_soft_lambda', 1.0)
+            background_weight = 0.2
+            stage = "Phase 2: Soft Mask Biasing"
+        # 阶段 3: 最后 30% Epochs - 精度冲刺期
+        else:
+            vessel_soft_lambda = self.loftr_cfg['match_coarse'].get('vessel_soft_lambda', 1.0) * 1.5
+            background_weight = 0.05
+            stage = "Phase 3: Precision Sprint"
+            
+        # 更新模型和损失函数的超参数
+        if hasattr(self.matcher.coarse_matching, 'vessel_soft_lambda'):
+            self.matcher.coarse_matching.vessel_soft_lambda = vessel_soft_lambda
+            
+        # 更新损失函数的背景权重
+        self.loss.background_weight = background_weight
+        
+        if self.trainer.global_rank == 0:
+            logger.info(f"Curriculum Learning | Epoch {cur_epoch} | {stage} | lambda: {vessel_soft_lambda:.2f} | bg_weight: {background_weight:.2f}")
+
     def training_step(self, batch, batch_idx):
         self._trainval_inference(batch)
         
         # logging
-        if self.trainer.global_rank == 0 and self.global_step % self.trainer.log_every_n_steps == 0:
+        if self.trainer.global_rank == 0:
             # scalars
             for k, v in batch['loss_scalars'].items():
-                self.logger.experiment.add_scalar(f'train/{k}', v, self.global_step)
+                self.log(f'train/{k}', v, on_step=True, on_epoch=True, prog_bar=False, logger=True)
+            
+            self.log('train/loss', batch['loss'], on_step=True, on_epoch=True, prog_bar=False, logger=True)
 
-            # net-params
-            if self.config.LOFTR.MATCH_COARSE.MATCH_TYPE == 'sinkhorn':
-                self.logger.experiment.add_scalar(
-                    f'skh_bin_score', self.matcher.coarse_matching.bin_score.clone().detach().cpu().data, self.global_step)
+            if self.global_step % self.trainer.log_every_n_steps == 0:
+                # net-params
+                if self.config.LOFTR.MATCH_COARSE.MATCH_TYPE == 'sinkhorn':
+                    self.logger.experiment.add_scalar(
+                        f'skh_bin_score', self.matcher.coarse_matching.bin_score.clone().detach().cpu().data, self.global_step)
 
-            # figures
-            if self.config.TRAINER.ENABLE_PLOTTING:
-                compute_symmetrical_epipolar_errors(batch)  # compute epi_errs for each match
-                figures = make_matching_figures(batch, self.config, self.config.TRAINER.PLOT_MODE)
-                for k, v in figures.items():
-                    self.logger.experiment.add_figure(f'train_match/{k}', v, self.global_step)
+                # figures
+                if self.config.TRAINER.ENABLE_PLOTTING:
+                    compute_symmetrical_epipolar_errors(batch)  # compute epi_errs for each match
+                    figures = make_matching_figures(batch, self.config, self.config.TRAINER.PLOT_MODE)
+                    for k, v in figures.items():
+                        self.logger.experiment.add_figure(f'train_match/{k}', v, self.global_step)
 
         return {'loss': batch['loss']}
 
@@ -186,9 +226,11 @@ class PL_LoFTR(pl.LightningModule):
             if self.trainer.global_rank == 0:
                 for k, v in loss_scalars.items():
                     mean_v = torch.stack(v).mean()
+                    self.log(f'val/avg_{k}', mean_v, on_epoch=True, logger=True)
                     self.logger.experiment.add_scalar(f'val_{valset_idx}/avg_{k}', mean_v, global_step=cur_epoch)
 
                 for k, v in val_metrics_4tb.items():
+                    self.log(f'metrics/{k}', v, on_epoch=True, logger=True)
                     self.logger.experiment.add_scalar(f"metrics_{valset_idx}/{k}", v, global_step=cur_epoch)
                 
                 for k, v in figures.items():

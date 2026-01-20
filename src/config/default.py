@@ -34,6 +34,8 @@ _CN.LOFTR.MATCH_COARSE.SKH_PREFILTER = False
 _CN.LOFTR.MATCH_COARSE.TRAIN_COARSE_PERCENT = 0.2  # training tricks: save GPU memory
 _CN.LOFTR.MATCH_COARSE.TRAIN_PAD_NUM_GT_MIN = 200  # training tricks: avoid DDP deadlock
 _CN.LOFTR.MATCH_COARSE.SPARSE_SPVS = True
+_CN.LOFTR.MATCH_COARSE.USE_VESSEL_SOFT = True       # 是否在 coarse 匹配阶段使用血管高斯软掩码
+_CN.LOFTR.MATCH_COARSE.VESSEL_SOFT_LAMBDA = 1.0     # 血管软掩码的幂次（λ），控制权重强度
 
 # 4. LoFTR-fine module config
 _CN.LOFTR.FINE = CN()
@@ -98,6 +100,9 @@ _CN.DATASET.MGDPT_IMG_PAD = True  # pad img to square with size = MGDPT_IMG_RESI
 _CN.DATASET.MGDPT_DEPTH_PAD = True  # pad depthmap to square with size = 2000
 _CN.DATASET.MGDPT_DF = 8
 
+# MultiModal options
+_CN.DATASET.MULTIMODAL_MODE = 'cffa'  # options: ['cffa', 'cfoct', 'octfa', 'cfocta']
+
 ##############  Trainer  ##############
 _CN.TRAINER = CN()
 _CN.TRAINER.WORLD_SIZE = 1
@@ -135,7 +140,8 @@ _CN.TRAINER.PLOT_MATCHES_ALPHA = 'dynamic'
 _CN.TRAINER.EPI_ERR_THR = 5e-4  # recommendation: 5e-4 for ScanNet, 1e-4 for MegaDepth (from SuperGlue)
 _CN.TRAINER.POSE_GEO_MODEL = 'E'  # ['E', 'F', 'H']
 _CN.TRAINER.POSE_ESTIMATION_METHOD = 'RANSAC'  # [RANSAC, DEGENSAC, MAGSAC]
-_CN.TRAINER.RANSAC_PIXEL_THR = 0.5
+# _CN.TRAINER.RANSAC_PIXEL_THR = 0.5 改成2，增大一点
+_CN.TRAINER.RANSAC_PIXEL_THR = 2
 _CN.TRAINER.RANSAC_CONF = 0.99999
 _CN.TRAINER.RANSAC_MAX_ITERS = 10000
 _CN.TRAINER.USE_MAGSACPP = False

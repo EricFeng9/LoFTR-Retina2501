@@ -5,9 +5,77 @@ import torch
 from einops import repeat
 from kornia.utils import create_meshgrid
 
-from .geometry import warp_kpts
+from .geometry import warp_kpts, warp_kpts_homo
+
 
 ##############  ↓  Coarse-Level supervision  ↓  ##############
+
+
+@torch.no_grad()
+def spvs_coarse_homo(data, config):
+    """
+    针对单应矩阵/仿射变换数据集的粗级监督（如多模态眼底图像）
+    """
+    device = data['image0'].device
+    N, _, H0, W0 = data['image0'].shape
+    _, _, H1, W1 = data['image1'].shape
+    scale = config['LOFTR']['RESOLUTION'][0]
+    h0, w0, h1, w1 = map(lambda x: x // scale, [H0, W0, H1, W1])
+
+    # 1. 生成粗级网格点并转换到原始图像分辨率
+    grid_pt0_c = create_meshgrid(h0, w0, False, device).reshape(1, h0*w0, 2).repeat(N, 1, 1)    # [N, hw, 2]
+    grid_pt0_i = scale * grid_pt0_c
+    grid_pt1_c = create_meshgrid(h1, w1, False, device).reshape(1, h1*w1, 2).repeat(N, 1, 1)
+    grid_pt1_i = scale * grid_pt1_c
+
+    # 使用变换矩阵 T 投影点位 (对应 plan.md 中的 j_gt = T * [x, y, 1]^T)
+    w_pt0_i = warp_kpts_homo(grid_pt0_i, data['T_0to1'])
+    w_pt1_i = warp_kpts_homo(grid_pt1_i, data['T_0to1'].inverse())
+    
+    w_pt0_c = w_pt0_i / scale
+    w_pt1_c = w_pt1_i / scale
+
+    # 2. 检查互近邻 (Mutual Nearest Neighbor)
+    w_pt0_c_round = w_pt0_c.round().long()
+    nearest_index1 = w_pt0_c_round[..., 0] + w_pt0_c_round[..., 1] * w1
+    w_pt1_c_round = w_pt1_c.round().long()
+    nearest_index0 = w_pt1_c_round[..., 0] + w_pt1_c_round[..., 1] * w0
+
+    # 处理越界情况
+    def out_bound_mask(pt, w, h):
+        return (pt[..., 0] < 0) | (pt[..., 0] >= w) | (pt[..., 1] < 0) | (pt[..., 1] >= h)
+    
+    mask_out1 = out_bound_mask(w_pt0_c_round, w1, h1)
+    mask_out0 = out_bound_mask(w_pt1_c_round, w0, h0)
+    nearest_index1[mask_out1] = 0
+    nearest_index0[mask_out0] = 0
+
+    # 计算重投影后的循环匹配
+    loop_back = torch.stack([nearest_index0[_b][nearest_index1[_b]] for _b in range(N)], dim=0)
+    correct_0to1 = (loop_back == torch.arange(h0*w0, device=device)[None].repeat(N, 1)) & (~mask_out1)
+
+    # 3. 构建真值置信度矩阵 (plan.md 中的 M_c_gt)
+    conf_matrix_gt = torch.zeros(N, h0*w0, h1*w1, device=device)
+    b_ids, i_ids = torch.where(correct_0to1)
+    j_ids = nearest_index1[b_ids, i_ids]
+
+    conf_matrix_gt[b_ids, i_ids, j_ids] = 1
+    data.update({'conf_matrix_gt': conf_matrix_gt})
+
+    # 4. 保存粗级匹配索引用于精级网络训练
+    if len(b_ids) == 0:
+        logger.warning(f"没有找到有效的粗级匹配真值: {data.get('pair_names', 'unknown')}")
+        b_ids = torch.tensor([0], device=device)
+        i_ids = torch.tensor([0], device=device)
+        j_ids = torch.tensor([0], device=device)
+
+    data.update({
+        'spv_b_ids': b_ids,
+        'spv_i_ids': i_ids,
+        'spv_j_ids': j_ids,
+        'spv_w_pt0_i': w_pt0_i,
+        'spv_pt1_i': grid_pt1_i
+    })
 
 
 @torch.no_grad()
@@ -110,12 +178,14 @@ def spvs_coarse(data, config):
 
 
 def compute_supervision_coarse(data, config):
-    assert len(set(data['dataset_name'])) == 1, "Do not support mixed datasets training!"
+    assert len(set(data['dataset_name'])) == 1, "不支持混合数据集训练!"
     data_source = data['dataset_name'][0]
     if data_source.lower() in ['scannet', 'megadepth']:
         spvs_coarse(data, config)
+    elif data_source.lower() == 'multimodal':
+        spvs_coarse_homo(data, config)
     else:
-        raise ValueError(f'Unknown data source: {data_source}')
+        raise ValueError(f'未知数据源: {data_source}')
 
 
 ##############  ↓  Fine-Level supervision  ↓  ##############
@@ -123,29 +193,29 @@ def compute_supervision_coarse(data, config):
 @torch.no_grad()
 def spvs_fine(data, config):
     """
+    精级监督：计算 coarse 预测点周围的亚像素偏移量 (对应 plan.md 中的 j_gt')
     Update:
         data (dict):{
             "expec_f_gt": [M, 2]}
     """
-    # 1. misc
-    # w_pt0_i, pt1_i = data.pop('spv_w_pt0_i'), data.pop('spv_pt1_i')
+    # 1. 获取投影后的点位和格点中心
     w_pt0_i, pt1_i = data['spv_w_pt0_i'], data['spv_pt1_i']
     scale = config['LOFTR']['RESOLUTION'][1]
     radius = config['LOFTR']['FINE_WINDOW_SIZE'] // 2
 
-    # 2. get coarse prediction
+    # 2. 获取 coarse 预测出的匹配索引
     b_ids, i_ids, j_ids = data['b_ids'], data['i_ids'], data['j_ids']
 
-    # 3. compute gt
-    scale = scale * data['scale1'][b_ids] if 'scale0' in data else scale
-    # `expec_f_gt` might exceed the window, i.e. abs(*) > 1, which would be filtered later
+    # 3. 计算精级真值 (归一化到 [-1, 1])
+    # 公式: (重投影点 - 格点中心) / (精级缩放 * 窗口半径)
+    scale = scale * data['scale1'][b_ids] if 'scale1' in data else scale
     expec_f_gt = (w_pt0_i[b_ids, i_ids] - pt1_i[b_ids, j_ids]) / scale / radius  # [M, 2]
     data.update({"expec_f_gt": expec_f_gt})
 
 
 def compute_supervision_fine(data, config):
     data_source = data['dataset_name'][0]
-    if data_source.lower() in ['scannet', 'megadepth']:
+    if data_source.lower() in ['scannet', 'megadepth', 'multimodal']:
         spvs_fine(data, config)
     else:
         raise NotImplementedError

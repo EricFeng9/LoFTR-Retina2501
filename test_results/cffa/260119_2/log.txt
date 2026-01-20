@@ -1,0 +1,30 @@
+2026-01-19 14:40:09.486 | INFO     | __main__:main:162 - 开始测试模式: cffa, 名称: 260117_2
+2026-01-19 14:40:13.450 | INFO     | __main__:main:290 - Sample: 049_01_vs_049_02 | SR_ME: 0.0 | MeanErr: 69.81
+2026-01-19 14:40:13.672 | INFO     | __main__:main:290 - Sample: 024_01_vs_024_02 | SR_ME: 1.0 | MeanErr: 4.04
+2026-01-19 14:40:13.910 | INFO     | __main__:main:290 - Sample: 023_01_vs_023_02 | SR_ME: 1.0 | MeanErr: 2.43
+2026-01-19 14:40:14.272 | INFO     | __main__:main:290 - Sample: 063_01_vs_063_02 | SR_ME: 0.0 | MeanErr: 287.87
+2026-01-19 14:40:14.598 | INFO     | __main__:main:290 - Sample: 067_01_vs_067_02 | SR_ME: 0.0 | MeanErr: 279.99
+2026-01-19 14:40:14.937 | INFO     | __main__:main:290 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 6.04
+2026-01-19 14:40:15.289 | INFO     | __main__:main:290 - Sample: 041_01_vs_041_02 | SR_ME: 0.0 | MeanErr: 224.69
+2026-01-19 14:40:15.587 | INFO     | __main__:main:290 - Sample: 054_01_vs_054_02 | SR_ME: 0.0 | MeanErr: 170.65
+2026-01-19 14:40:15.865 | INFO     | __main__:main:290 - Sample: 008_01_vs_008_02 | SR_ME: 0.0 | MeanErr: 5.13
+2026-01-19 14:40:16.148 | INFO     | __main__:main:290 - Sample: 051_01_vs_051_02 | SR_ME: 0.0 | MeanErr: 8.60
+2026-01-19 14:40:16.396 | INFO     | __main__:main:290 - Sample: 062_01_vs_062_02 | SR_ME: 1.0 | MeanErr: 3.90
+2026-01-19 14:40:16.691 | INFO     | __main__:main:290 - Sample: 010_01_vs_010_02 | SR_ME: 0.0 | MeanErr: 7.19
+2026-01-19 14:40:17.026 | INFO     | __main__:main:290 - Sample: 018_01_vs_018_02 | SR_ME: 0.0 | MeanErr: 93.38
+2026-01-19 14:40:17.390 | INFO     | __main__:main:290 - Sample: 024_01_vs_024_02 | SR_ME: 0.0 | MeanErr: 15.06
+2026-01-19 14:40:17.731 | INFO     | __main__:main:290 - Sample: 025_01_vs_025_02 | SR_ME: 0.0 | MeanErr: 221.52
+2026-01-19 14:40:18.052 | INFO     | __main__:main:290 - Sample: 026_01_vs_026_02 | SR_ME: 0.0 | MeanErr: 187.95
+2026-01-19 14:40:18.284 | INFO     | __main__:main:290 - Sample: 065_01_vs_065_02 | SR_ME: 1.0 | MeanErr: 4.92
+2026-01-19 14:40:18.569 | INFO     | __main__:main:290 - Sample: 003_01_vs_003_02 | SR_ME: 0.0 | MeanErr: 449.38
+2026-01-19 14:40:18.837 | INFO     | __main__:main:290 - Sample: 012_01_vs_012_02 | SR_ME: 0.0 | MeanErr: 8.95
+2026-01-19 14:40:19.182 | INFO     | __main__:main:290 - Sample: 058_01_vs_058_02 | SR_ME: 0.0 | MeanErr: 86.51
+2026-01-19 14:40:19.237 | INFO     | __main__:main:295 - ==============================
+2026-01-19 14:40:19.238 | INFO     | __main__:main:296 - 测试整体总结:
+2026-01-19 14:40:19.238 | INFO     | __main__:main:298 -   Overall SR_ME: 0.2000
+2026-01-19 14:40:19.238 | INFO     | __main__:main:298 -   Overall SR_MAE: 0.2000
+2026-01-19 14:40:19.238 | INFO     | __main__:main:298 -   Overall Rep: 0.2038
+2026-01-19 14:40:19.239 | INFO     | __main__:main:298 -   Overall MIR: 0.2074
+2026-01-19 14:40:19.239 | INFO     | __main__:main:298 -   Overall mean_error: 106.9010
+2026-01-19 14:40:19.239 | INFO     | __main__:main:298 -   Overall max_error: 297.7109
+2026-01-19 14:40:19.239 | INFO     | __main__:main:299 - ==============================

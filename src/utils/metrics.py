@@ -52,6 +52,9 @@ def compute_symmetrical_epipolar_errors(data):
     Update:
         data (dict):{"epi_errs": [M]}
     """
+    if data['dataset_name'][0].lower() == 'multimodal':
+        return compute_homography_reprojection_errors(data)
+    
     Tx = numeric.cross_product_matrix(data['T_0to1'][:, :3, 3])
     E_mat = Tx @ data['T_0to1'][:, :3, :3]
 
@@ -67,6 +70,39 @@ def compute_symmetrical_epipolar_errors(data):
     epi_errs = torch.cat(epi_errs, dim=0)
 
     data.update({'epi_errs': epi_errs})
+
+
+def compute_homography_reprojection_errors(data):
+    """
+    计算基于单应矩阵的重投影误差 (针对 MultiModal 数据集)
+    Update:
+        data (dict):{"epi_errs": [M]}
+    """
+    m_bids = data['m_bids']
+    pts0 = data['mkpts0_f']
+    pts1 = data['mkpts1_f']
+    H_0to1 = data['T_0to1'] # [N, 3, 3]
+
+    epi_errs = []
+    for bs in range(H_0to1.size(0)):
+        mask = m_bids == bs
+        if mask.sum() == 0:
+            continue
+        
+        # 将 pts0 投影到 image1
+        p0 = pts0[mask]
+        p0_h = torch.cat([p0, torch.ones_like(p0[:, :1])], dim=-1)
+        p0_warped_h = (H_0to1[bs] @ p0_h.t()).t()
+        p0_warped = p0_warped_h[:, :2] / (p0_warped_h[:, 2:] + 1e-7)
+        
+        # 计算 L2 距离作为误差
+        err = torch.norm(p0_warped - pts1[mask], dim=-1)
+        epi_errs.append(err)
+        
+    if len(epi_errs) == 0:
+        data.update({'epi_errs': torch.tensor([], device=pts0.device)})
+    else:
+        data.update({'epi_errs': torch.cat(epi_errs, dim=0)})
 
 
 def estimate_pose(kpts0, kpts1, K0, K1, thresh, conf=0.99999):
@@ -107,6 +143,9 @@ def compute_pose_errors(data, config):
             "inliers" List[np.ndarray]: [N]
         }
     """
+    if data['dataset_name'][0].lower() == 'multimodal':
+        return compute_homography_errors(data, config)
+    
     pixel_thr = config.TRAINER.RANSAC_PIXEL_THR  # 0.5
     conf = config.TRAINER.RANSAC_CONF  # 0.99999
     data.update({'R_errs': [], 't_errs': [], 'inliers': []})
@@ -125,13 +164,140 @@ def compute_pose_errors(data, config):
         if ret is None:
             data['R_errs'].append(np.inf)
             data['t_errs'].append(np.inf)
-            data['inliers'].append(np.array([]).astype(np.bool))
+            data['inliers'].append(np.array([]).astype(bool))
         else:
             R, t, inliers = ret
             t_err, R_err = relative_pose_error(T_0to1[bs], R, t, ignore_gt_t_thr=0.0)
             data['R_errs'].append(R_err)
             data['t_errs'].append(t_err)
             data['inliers'].append(inliers)
+
+
+def spatial_binning(pts0, pts1, img_size, grid_size=4, top_n=20, conf=None):
+    """
+    【方案 B 改进】空间均匀化 (Spatial Binning)
+    将图像划分为 grid_size x grid_size 的网格，每个网格内最多保留 Top-N 个匹配点。
+    """
+    h, w = img_size
+    cell_h = h / grid_size
+    cell_w = w / grid_size
+    
+    selected_indices = []
+    
+    # 模拟网格
+    grid = [[] for _ in range(grid_size * grid_size)]
+    
+    for i, pt in enumerate(pts0):
+        gx = min(int(pt[0] / cell_w), grid_size - 1)
+        gy = min(int(pt[1] / cell_h), grid_size - 1)
+        grid[gy * grid_size + gx].append(i)
+        
+    for cell_indices in grid:
+        if len(cell_indices) == 0:
+            continue
+        
+        if conf is not None:
+            # 按置信度排序
+            cell_indices = sorted(cell_indices, key=lambda idx: conf[idx], reverse=True)
+            
+        selected_indices.extend(cell_indices[:top_n])
+        
+    return np.array(selected_indices)
+
+
+def compute_homography_errors(data, config):
+    """
+    计算单应矩阵估计误差 (针对 MultiModal 数据集)
+    """
+    data.update({'R_errs': [], 't_errs': [], 'inliers': [], 'H_est': []})
+    
+    m_bids = data['m_bids'].cpu().numpy()
+    pts0 = data['mkpts0_f'].cpu().numpy()
+    pts1 = data['mkpts1_f'].cpu().numpy()
+    H_gt = data['T_0to1'].cpu().numpy()
+    mconf = data.get('mconf')
+    if mconf is not None:
+        mconf = mconf.cpu().numpy()
+    
+    for bs in range(H_gt.shape[0]):
+        mask = m_bids == bs
+        num_matches = np.sum(mask)
+        
+        if num_matches < 4:
+            from loguru import logger
+            logger.warning(f"⚠️ Batch {bs}: 匹配点数不足 ({num_matches} < 4)")
+            data['R_errs'].append(np.inf)
+            data['t_errs'].append(np.inf)
+            data['inliers'].append(np.array([]).astype(bool))
+            data['H_est'].append(np.eye(3))
+            continue
+            
+        # 估计单应矩阵 (对应 plan.md 第四阶段: 几何估计)
+        # 【方案 B 改进】进行空间均匀化 (Spatial Binning)
+        img_size = data['image0'].shape[2:]
+        pts0_batch = pts0[mask]
+        pts1_batch = pts1[mask]
+        mconf_batch = mconf[mask] if mconf is not None else None
+        
+        bin_indices = spatial_binning(pts0_batch, pts1_batch, img_size, grid_size=4, top_n=20, conf=mconf_batch)
+        
+        from loguru import logger
+        logger.info(f"🔍 Batch {bs}: 总匹配点={num_matches}, Spatial Binning后={len(bin_indices)}")
+        
+        if len(bin_indices) >= 4:
+            pts0_ransac = pts0_batch[bin_indices]
+            pts1_ransac = pts1_batch[bin_indices]
+            H_est, inliers = cv2.findHomography(pts0_ransac, pts1_ransac, cv2.RANSAC, config.TRAINER.RANSAC_PIXEL_THR)
+        else:
+            H_est, inliers = cv2.findHomography(pts0_batch, pts1_batch, cv2.RANSAC, config.TRAINER.RANSAC_PIXEL_THR)
+        
+        if H_est is None:
+            # 【调试】RANSAC 失败，记录原因
+            from loguru import logger
+            logger.warning(f"⚠️ Batch {bs}: RANSAC 返回 None (匹配点数: {len(bin_indices) if len(bin_indices) >= 4 else num_matches})")
+            data['R_errs'].append(np.inf)
+            data['t_errs'].append(np.inf)
+            data['inliers'].append(np.array([]).astype(bool))
+            data['H_est'].append(np.eye(3))
+        else:
+            # 【调试】检查 inliers 数量和矩阵状态
+            from loguru import logger
+            num_inliers = np.sum(inliers.ravel() > 0) if inliers is not None else 0
+            is_identity = np.allclose(H_est, np.eye(3), atol=1e-3)
+            
+            logger.info(f"✅ Batch {bs}: RANSAC 成功, inliers={num_inliers}/{len(bin_indices) if len(bin_indices) >= 4 else num_matches}, H_est是否单位矩阵={is_identity}")
+            
+            if is_identity:
+                logger.warning(f"⚠️ Batch {bs}: H_est 接近单位矩阵! 这不正常!")
+                logger.warning(f"   pts0 范围: [{pts0_batch[:, 0].min():.1f}, {pts0_batch[:, 0].max():.1f}] x [{pts0_batch[:, 1].min():.1f}, {pts0_batch[:, 1].max():.1f}]")
+                logger.warning(f"   pts1 范围: [{pts1_batch[:, 0].min():.1f}, {pts1_batch[:, 0].max():.1f}] x [{pts1_batch[:, 1].min():.1f}, {pts1_batch[:, 1].max():.1f}]")
+            elif num_inliers < 30:
+                logger.warning(f"⚠️ Batch {bs}: Inliers 数量较少 ({num_inliers}), 可能导致配准质量差")
+            
+            # 对于眼底图像配准，我们将 R_errs 设为 0
+            # 将 t_errs 设为 Corner Error，用于 AUC 计算 (对应 MegaDepth/LoFTR 的标准评测方式)
+            data['R_errs'].append(0.0)
+            
+            # 重要修复：计算 Corner Error (估计 H 与 真值 H 之间的偏差)
+            # 而不是计算 H_est 在其自身内点上的残差
+            h, w = data['image0'].shape[2:]
+            corners = np.array([[0, 0], [w-1, 0], [w-1, h-1], [0, h-1]], dtype=np.float32)
+            corners_h = np.concatenate([corners, np.ones((4, 1))], axis=-1)
+            
+            # 使用真值 H 投影得到 GT 坐标
+            corners_gt_h = (H_gt[bs] @ corners_h.T).T
+            corners_gt = corners_gt_h[:, :2] / (corners_gt_h[:, 2:] + 1e-7)
+            
+            # 使用估计 H 投影得到预测坐标
+            corners_est_h = (H_est @ corners_h.T).T
+            corners_est = corners_est_h[:, :2] / (corners_est_h[:, 2:] + 1e-7)
+            
+            # 计算平均角点误差
+            err = np.mean(np.linalg.norm(corners_est - corners_gt, axis=-1))
+            
+            data['t_errs'].append(err)
+            data['inliers'].append(inliers.ravel() > 0)
+            data['H_est'].append(H_est)
 
 
 # --- METRIC AGGREGATION ---

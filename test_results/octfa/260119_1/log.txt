@@ -1,0 +1,21 @@
+2026-01-19 15:18:44.948 | INFO     | __main__:main:148 - 开始测试模式: octfa, 名称: 260117_1
+2026-01-19 15:18:49.950 | INFO     | __main__:main:273 - Sample: 070_01_vs_070_02 | SR_ME: 0.0 | MeanErr: 5.78
+2026-01-19 15:18:50.201 | INFO     | __main__:main:273 - Sample: 085_01_vs_085_02 | SR_ME: 0.0 | MeanErr: 6.31
+2026-01-19 15:18:50.492 | INFO     | __main__:main:273 - Sample: 047_01_vs_047_02 | SR_ME: 0.0 | MeanErr: 43.59
+2026-01-19 15:18:50.739 | INFO     | __main__:main:273 - Sample: 075_01_vs_075_02 | SR_ME: 0.0 | MeanErr: 6.13
+2026-01-19 15:18:51.106 | INFO     | __main__:main:273 - Sample: 095_01_vs_095_02 | SR_ME: 0.0 | MeanErr: 7.54
+2026-01-19 15:18:51.349 | INFO     | __main__:main:273 - Sample: 095_01_vs_095_02 | SR_ME: 0.0 | MeanErr: 5.96
+2026-01-19 15:18:51.921 | INFO     | __main__:main:273 - Sample: 099_01_vs_099_02 | SR_ME: 0.0 | MeanErr: 86.29
+2026-01-19 15:18:52.527 | INFO     | __main__:main:273 - Sample: 094_01_vs_094_02 | SR_ME: 0.0 | MeanErr: 100.66
+2026-01-19 15:18:53.204 | INFO     | __main__:main:273 - Sample: 004_01_vs_004_02 | SR_ME: 0.0 | MeanErr: 240.45
+2026-01-19 15:18:53.485 | INFO     | __main__:main:273 - Sample: 048_01_vs_048_02 | SR_ME: 0.0 | MeanErr: 69.32
+2026-01-19 15:18:53.763 | INFO     | __main__:main:273 - Sample: 082_01_vs_082_02 | SR_ME: 0.0 | MeanErr: 78.59
+2026-01-19 15:18:53.868 | INFO     | __main__:main:278 - ==============================
+2026-01-19 15:18:53.869 | INFO     | __main__:main:279 - 测试整体总结:
+2026-01-19 15:18:53.869 | INFO     | __main__:main:281 -   Overall SR_ME: 0.0000
+2026-01-19 15:18:53.869 | INFO     | __main__:main:281 -   Overall SR_MAE: 0.0909
+2026-01-19 15:18:53.869 | INFO     | __main__:main:281 -   Overall Rep: 0.1688
+2026-01-19 15:18:53.870 | INFO     | __main__:main:281 -   Overall MIR: 0.1648
+2026-01-19 15:18:53.870 | INFO     | __main__:main:281 -   Overall mean_error: 59.1476
+2026-01-19 15:18:53.870 | INFO     | __main__:main:281 -   Overall max_error: 85.7006
+2026-01-19 15:18:53.870 | INFO     | __main__:main:282 - ==============================
