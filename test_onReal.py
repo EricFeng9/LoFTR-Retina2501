@@ -20,6 +20,9 @@ from data.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import
 from data.operation_pre_filtered_cfoct.operation_pre_filtered_cfoct_dataset import CFOCTDataset
 from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset import OCTFADataset
 
+# 导入 EarlyStopping 用于定义 DelayedEarlyStopping
+from pytorch_lightning.callbacks import EarlyStopping
+
 # 数据集根目录 (保持与 train_multimodal_onReal.py 一致)
 DATA_ROOTS = {
     'cffa': "/data/student/Fengjunming/LoFTR/data/operation_pre_filtered_cffa",
@@ -27,6 +30,17 @@ DATA_ROOTS = {
     'octfa': "/data/student/Fengjunming/LoFTR/data/operation_pre_filtered_octfa",
     'cfocta': "/data/student/Fengjunming/LoFTR/data/CF_OCTA_v2_repaired"
 }
+
+class DelayedEarlyStopping(EarlyStopping):
+    """自定义早停回调，在指定 epoch 之后才开始计数"""
+    def __init__(self, start_epoch=50, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.start_epoch = start_epoch
+        
+    def on_validation_end(self, trainer, pl_module):
+        # 只有在达到 start_epoch 后才开始早停检查
+        if trainer.current_epoch >= self.start_epoch:
+            super().on_validation_end(trainer, pl_module)
 
 class LoFTRTestDatasetWrapper(data.Dataset):
     """
