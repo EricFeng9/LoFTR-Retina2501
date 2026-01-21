@@ -25,7 +25,7 @@ from data.FIVES_extract.FIVES_extract import MultiModalDataset
 from src.utils.plotting import make_matching_figures
 
 # 数据集根目录硬编码
-DATA_ROOT = "/data/student/Fengjunming/LoFTR/data/FIVES_extract"
+DATA_ROOT = "/data/student/Fengjunming/LoFTR/data/FIVES_extract_v2"
 
 # 配置日志格式
 loguru_logger = get_rank_zero_only_logger(logger)
@@ -74,7 +74,7 @@ def parse_args():
     parser = pl.Trainer.add_argparse_args(parser)
     
     # 设置 Lightning 参数的默认值
-    parser.set_defaults(max_epochs=100, gpus='1')
+    parser.set_defaults(max_epochs=500, gpus='1')
     
     return parser.parse_args()
 
@@ -402,6 +402,17 @@ class MultimodalValidationCallback(Callback):
                 
         return mses
 
+class DelayedEarlyStopping(EarlyStopping):
+    """自定义早停回调，在指定 epoch 之后才开始计数"""
+    def __init__(self, start_epoch=50, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.start_epoch = start_epoch
+        
+    def on_validation_end(self, trainer, pl_module):
+        # 只有在达到 start_epoch 后才开始早停检查
+        if trainer.current_epoch >= self.start_epoch:
+            super().on_validation_end(trainer, pl_module)
+
 def main():
     args = parse_args()
     rank_zero_only(pprint.pprint)(vars(args))
@@ -443,12 +454,13 @@ def main():
     val_callback = MultimodalValidationCallback(args)
     lr_monitor = LearningRateMonitor(logging_interval='step')
     
-    # 启用早停机制：20 epoch 后，如果连续 8 次验证 (即 40 epoch) loss 不下降则停止
-    # 注意：check_val_every_n_epoch=5，所以 patience=8 对应 8 次验证检查
-    early_stop_callback = EarlyStopping(
+    # 启用早停机制：epoch 50 后，如果连续 5 次验证 (即 25 epoch) loss 不下降则停止
+    # 注意：check_val_every_n_epoch=5，所以 patience=5 对应 5 次验证检查
+    # 使用自定义 EarlyStopping，在 epoch 50 之前不计数
+    early_stop_callback = DelayedEarlyStopping(
+        start_epoch=50,
         monitor='val_mse', 
-        #patience=8 改成10,
-        patience=10,
+        patience=5,
         verbose=True,
         mode='min',
         min_delta=0.0001
