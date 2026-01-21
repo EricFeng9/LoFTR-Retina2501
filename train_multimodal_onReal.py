@@ -451,6 +451,17 @@ class MultimodalValidationCallback(Callback):
                 
         return mses
 
+class DelayedEarlyStopping(EarlyStopping):
+    """自定义早停回调，在指定 epoch 之后才开始计数"""
+    def __init__(self, start_epoch=50, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.start_epoch = start_epoch
+        
+    def on_validation_end(self, trainer, pl_module):
+        # 只有在达到 start_epoch 后才开始早停检查
+        if trainer.current_epoch >= self.start_epoch:
+            super().on_validation_end(trainer, pl_module)
+
 def main():
     args = parse_args()
     rank_zero_only(pprint.pprint)(vars(args))
@@ -495,16 +506,6 @@ def main():
     # 启用早停机制：epoch 50 后，如果连续 5 次验证 (即 25 epoch) loss 不下降则停止
     # 注意：check_val_every_n_epoch=5，所以 patience=5 对应 5 次验证检查
     # 使用自定义 EarlyStopping，在 epoch 50 之前不计数
-    class DelayedEarlyStopping(EarlyStopping):
-        def __init__(self, start_epoch=50, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            self.start_epoch = start_epoch
-            
-        def on_validation_end(self, trainer, pl_module):
-            # 只有在达到 start_epoch 后才开始早停检查
-            if trainer.current_epoch >= self.start_epoch:
-                super().on_validation_end(trainer, pl_module)
-    
     early_stop_callback = DelayedEarlyStopping(
         start_epoch=50,
         monitor='val_mse', 
