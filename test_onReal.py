@@ -16,7 +16,7 @@ from measurement import calculate_metrics
 
 # 导入数据集类
 from data.CF_OCTA_v2_repaired.cf_octa_v2_repaired_dataset import CFOCTADataset
-from data.operation_pre_filtered_cffa.operation_pre_filtered_octfa_dataset import CFFADataset
+from data.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import CFFADataset
 from data.operation_pre_filtered_cfoct.operation_pre_filtered_cfoct_dataset import CFOCTDataset
 from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset import OCTFADataset
 
@@ -31,6 +31,7 @@ DATA_ROOTS = {
 class LoFTRTestDatasetWrapper(data.Dataset):
     """
     通过 Dataset 提供的 get_raw_sample 接口获取原始数据。
+    测试时直接使用未对齐的原始图像（fix 和 moving），不施加额外变换。
     """
     def __init__(self, dataset, img_size=512):
         self.dataset = dataset
@@ -41,12 +42,21 @@ class LoFTRTestDatasetWrapper(data.Dataset):
 
     def __getitem__(self, idx):
         # 调用统一接口获取原始图像和关键点
+        # img0_raw: fix 图（已归一化到 [0,1]）
+        # img1_raw: moving 图（未对齐，已归一化到 [0,1]）
+        # pts0, pts1: 人工标注的关键点对（用于计算 GT）
         img0_raw, img1_raw, pts0, pts1, path0, path1 = self.dataset.get_raw_sample(idx)
+        
+        # 如果图像是 uint8 格式，归一化到 [0, 1]
+        if img0_raw.dtype == np.uint8:
+            img0_raw = img0_raw.astype(np.float32) / 255.0
+        if img1_raw.dtype == np.uint8:
+            img1_raw = img1_raw.astype(np.float32) / 255.0
         
         h0, w0 = img0_raw.shape
         h1, w1 = img1_raw.shape
 
-        # Resize 图像到模型输入尺寸
+        # Resize 图像到模型输入尺寸（保持 [0, 1] 范围）
         img0 = cv2.resize(img0_raw, (self.img_size, self.img_size))
         img1 = cv2.resize(img1_raw, (self.img_size, self.img_size))
         
@@ -61,8 +71,8 @@ class LoFTRTestDatasetWrapper(data.Dataset):
             pts1_res[:, 1] *= (self.img_size / h1)
 
         return {
-            'image0': torch.from_numpy(img0).float()[None] / 255.0,
-            'image1': torch.from_numpy(img1).float()[None] / 255.0,
+            'image0': torch.from_numpy(img0).float()[None],  # [1, H, W], [0, 1]
+            'image1': torch.from_numpy(img1).float()[None],  # [1, H, W], [0, 1]
             'ctrl_pts0': pts0_res,
             'ctrl_pts1': pts1_res,
             'pair_names': (os.path.basename(path0), os.path.basename(path1)),

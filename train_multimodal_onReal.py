@@ -19,7 +19,7 @@ from src.config.default import get_cfg_defaults
 from src.utils.misc import get_rank_zero_only_logger, setup_gpus
 from src.lightning.lightning_loftr import PL_LoFTR
 from data.CF_OCTA_v2_repaired.cf_octa_v2_repaired_dataset import CFOCTADataset
-from data.operation_pre_filtered_cffa.operation_pre_filtered_octfa_dataset import CFFADataset
+from data.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import CFFADataset
 from data.operation_pre_filtered_cfoct.operation_pre_filtered_cfoct_dataset import CFOCTDataset
 from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset import OCTFADataset
 from src.utils.plotting import make_matching_figures
@@ -56,7 +56,15 @@ logging.getLogger("PIL").setLevel(logging.WARNING)
 logging.getLogger("fsspec").setLevel(logging.WARNING)
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="LoFTR 多模态眼底图像配准训练脚本 (V2)")
+    parser = argparse.ArgumentParser(description="""
+    LoFTR 多模态眼底图像配准训练脚本 (V2 - 真实数据集 + 端到端学习策略)
+    
+    依据 plan.md 实现：
+    - 输入：未对齐的真实 fix 和 moving 图像对
+    - 使用人工标注关键点对计算 GT 单应矩阵
+    - 训练时对 moving 图施加随机放射变换（±90°旋转，10%翻转概率）
+    - 测试时直接使用原始未对齐图像
+    """)
     parser.add_argument('--mode', type=str, default='cffa', choices=['cffa', 'cfoct', 'octfa', 'cfocta'], help='配准模式')
     parser.add_argument('--name', '-n', type=str, default='loftr_multimodal', help='本次训练的名称')
     parser.add_argument('--batch_size', type=int, default=4, help='每个 GPU 的 Batch Size')
@@ -82,50 +90,80 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
         return len(self.dataset)
 
     def _get_random_affine(self, rng=None):
+        """生成随机放射变换矩阵（扩大旋转范围到 ±90°，支持翻转）"""
         if rng is None:
             rng = np.random
-        angle = rng.uniform(15, 45)
-        if rng.rand() > 0.5:
-            angle = -angle
+        
+        # 扩大旋转角度到 [-90°, 90°]，覆盖大角度旋转
+        angle = rng.uniform(-90, 90)
         scale = rng.uniform(0.8, 1.2)
-        tx = rng.uniform(-0.1, 0.1) * self.img_size
-        ty = rng.uniform(-0.1, 0.1) * self.img_size
+        tx = rng.uniform(-0.2, 0.2) * self.img_size
+        ty = rng.uniform(-0.2, 0.2) * self.img_size
+        
+        # 生成基础旋转+缩放+平移矩阵
         center = (self.img_size // 2, self.img_size // 2)
         M = cv2.getRotationMatrix2D(center, angle, scale)
         M[0, 2] += tx
         M[1, 2] += ty
+        
+        # 随机翻转（小概率 10%）
+        flip_h = rng.rand() < 0.1
+        flip_v = rng.rand() < 0.1
+        
+        # 如果需要翻转，则需要组合变换矩阵
+        if flip_h or flip_v:
+            H = np.eye(3, dtype=np.float32)
+            H[:2, :] = M
+            
+            if flip_h:
+                H_flip_h = np.array([[-1, 0, self.img_size-1], [0, 1, 0], [0, 0, 1]], dtype=np.float32)
+                H = H_flip_h @ H
+            if flip_v:
+                H_flip_v = np.array([[1, 0, 0], [0, -1, self.img_size-1], [0, 0, 1]], dtype=np.float32)
+                H = H_flip_v @ H
+            
+            return H[:2, :]
+        
         return M.astype(np.float32)
 
     def __getitem__(self, idx):
-        # real dataset 返回: cond_tensor [0,1], tgt_tensor [-1,1], cp, tp
-        cond_tensor, tgt_tensor, cp, tp = self.dataset[idx]
+        # 调用真实数据集的 get_raw_sample 接口
+        # 返回：fix图(img0_raw), moving图(img1_raw), fix关键点(pts0), moving关键点(pts1), path0, path1
+        img0_raw, img1_raw, pts0, pts1, path0, path1 = self.dataset.get_raw_sample(idx)
         
-        # LoFTR 需要 [0, 1] 灰度图
-        # 如果 cond_tensor 是 3 通道的，转为单通道灰度
-        if cond_tensor.shape[0] == 3:
-            img0 = (0.299 * cond_tensor[0] + 0.587 * cond_tensor[1] + 0.114 * cond_tensor[2]).numpy()
-        else:
-            img0 = cond_tensor[0].numpy()
-            
-        # tgt_tensor 从 [-1, 1] 转为 [0, 1]
-        tgt_tensor_01 = (tgt_tensor + 1.0) / 2.0
-        if tgt_tensor_01.shape[0] == 3:
-            img1 = (0.299 * tgt_tensor_01[0] + 0.587 * tgt_tensor_01[1] + 0.114 * tgt_tensor_01[2]).numpy()
-        else:
-            img1 = tgt_tensor_01[0].numpy()
+        # 原始图已经是 [0, 1] 的 numpy array
+        img0 = img0_raw.astype(np.float32)
+        img1 = img1_raw.astype(np.float32)
         
+        # 保存原始 moving 图（用于计算 MSE）
         img1_origin = img1.copy()
         
+        # 训练和验证时：对 moving 图施加随机放射变换
         if self.split in ['train', 'val']:
+            # 验证集使用固定随机种子，确保可重复
             if self.split == 'val':
                 rng = np.random.RandomState(idx)
                 T = self._get_random_affine(rng)
             else:
                 T = self._get_random_affine()
-                
+            
+            # 对 moving 图施加变换
             img1_warped = cv2.warpAffine(img1, T, (self.img_size, self.img_size), flags=cv2.INTER_LINEAR)
+            
+            # 构造 3x3 单应矩阵（用于标注GT）
             H = np.eye(3, dtype=np.float32)
             H[:2, :] = T
+            
+            # 使用人工标注的关键点计算 GT 单应矩阵（从 img0 到变换后的 img1）
+            # 首先对 moving 的关键点也施加同样的变换
+            if len(pts1) >= 4:
+                pts1_warped = cv2.transform(pts1.reshape(-1, 1, 2), T).reshape(-1, 2)
+                
+                # 使用 RANSAC 计算从 img0 到 img1_warped 的单应矩阵作为 GT
+                if len(pts0) >= 4 and len(pts1_warped) >= 4:
+                    H_gt, _ = cv2.findHomography(pts0, pts1_warped, cv2.RANSAC, 5.0)
+                    if H_gt is not None:
+                        H = H_gt.astype(np.float32)
             
             data = {
                 'image0': torch.from_numpy(img0).float()[None],
@@ -134,16 +172,17 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
                 'T_0to1': torch.from_numpy(H),
             }
         else:
+            # 测试时：不施加变换，直接使用原始图
             data = {
                 'image0': torch.from_numpy(img0).float()[None],
                 'image1': torch.from_numpy(img1).float()[None],
                 'image1_origin': torch.from_numpy(img1_origin).float()[None],
             }
-            
+        
         data.update({
             'dataset_name': 'MultiModal',
             'pair_id': idx,
-            'pair_names': (os.path.basename(cp), os.path.basename(tp))
+            'pair_names': (os.path.basename(path0), os.path.basename(path1))
         })
         return data
 

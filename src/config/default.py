@@ -144,7 +144,6 @@ _CN.TRAINER.POSE_ESTIMATION_METHOD = 'RANSAC'  # [RANSAC, DEGENSAC, MAGSAC]
 _CN.TRAINER.RANSAC_PIXEL_THR = 2
 _CN.TRAINER.RANSAC_CONF = 0.99999
 _CN.TRAINER.RANSAC_MAX_ITERS = 10000
-_CN.TRAINER.USE_MAGSACPP = False
 
 # data sampler for train_dataloader
 _CN.TRAINER.DATA_SAMPLER = 'scene_balance'  # options: ['scene_balance', 'random', 'normal']
@@ -159,16 +158,6 @@ _CN.TRAINER.RDM_NUM_SAMPLES = None
 
 # gradient clipping
 _CN.TRAINER.GRADIENT_CLIPPING = 0.5
-
-# reproducibility
-# This seed affects the data sampling. With the same seed, the data sampling is promised
-# to be the same. When resume training from a checkpoint, it's better to use a different
-# seed, otherwise the sampled data will be exactly the same as before resuming, which will
-# cause less unique data items sampled during the entire training.
-# Use of different seed values might affect the final training result, since not all data items
-# are used during training on ScanNet. (60M pairs of images sampled during traing from 230M pairs in total.)
-_CN.TRAINER.SEED = 66
-
 
 def get_cfg_defaults():
     """Get a yacs CfgNode object with default values for my_project."""

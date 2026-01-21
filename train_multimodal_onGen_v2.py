@@ -53,13 +53,21 @@ logging.getLogger("PIL").setLevel(logging.ERROR)
 logging.getLogger("fsspec").setLevel(logging.ERROR)
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="LoFTR 多模态眼底图像配准训练脚本 (V2 - FIVES数据集 + 血管掩码)")
+    parser = argparse.ArgumentParser(description="""
+    LoFTR 多模态眼底图像配准训练脚本 (V2 - 生成数据集 + 端到端学习策略)
+    
+    依据 plan.md 实现：
+    - 完整图像输入（含背景），不做掩码过滤
+    - 血管掩码仅用于损失权重和注意力偏置（不拼接到 Backbone）
+    - 支持大角度旋转（±90°）和翻转（10%概率）
+    - 端到端学习：模型自动学习血管区域的重要性
+    """)
     parser.add_argument('--mode', type=str, default='cffa', choices=['cffa', 'cfoct', 'octfa', 'cfocta'], help='配准模式')
     parser.add_argument('--name', '-n', type=str, default='loftr_multimodal_fives', help='本次训练的名称')
     parser.add_argument('--batch_size', type=int, default=4, help='每个 GPU 的 Batch Size')
     parser.add_argument('--num_workers', type=int, default=8, help='数据加载线程数')
     parser.add_argument('--img_size', type=int, default=512, help='图像输入尺寸')
-    parser.add_argument('--vessel_sigma', type=float, default=6.0, help='血管高斯软掩码的 σ（像素单位），用于扩展血管有效区域')
+    parser.add_argument('--vessel_sigma', type=float, default=6.0, help='血管高斯软掩码的 σ（像素单位），用于损失加权')
     parser.add_argument('--main_cfg_path', type=str, default=None, help='主配置文件路径')
     
     # 自动添加 Lightning Trainer 参数 (如 --gpus, --max_epochs, --accelerator 等)

@@ -52,7 +52,8 @@ def compute_symmetrical_epipolar_errors(data):
     Update:
         data (dict):{"epi_errs": [M]}
     """
-    if data['dataset_name'][0].lower() == 'multimodal':
+    dataset_name = data['dataset_name'][0].lower()
+    if dataset_name == 'multimodal' or dataset_name == 'realdataset':
         return compute_homography_reprojection_errors(data)
     
     Tx = numeric.cross_product_matrix(data['T_0to1'][:, :3, 3])
@@ -143,7 +144,8 @@ def compute_pose_errors(data, config):
             "inliers" List[np.ndarray]: [N]
         }
     """
-    if data['dataset_name'][0].lower() == 'multimodal':
+    dataset_name = data['dataset_name'][0].lower()
+    if dataset_name == 'multimodal' or dataset_name == 'realdataset':
         return compute_homography_errors(data, config)
     
     pixel_thr = config.TRAINER.RANSAC_PIXEL_THR  # 0.5

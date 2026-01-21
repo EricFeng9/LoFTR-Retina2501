@@ -28,3 +28,4 @@ src/utils/client.py
 
 results/*
 data/*
+test_results/*

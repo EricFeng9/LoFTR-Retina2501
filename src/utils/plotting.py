@@ -10,7 +10,7 @@ def _compute_conf_thresh(data):
         thr = 5e-4
     elif dataset_name == 'megadepth':
         thr = 1e-4
-    elif dataset_name == 'multimodal':
+    elif dataset_name == 'multimodal' or dataset_name == 'realdataset':
         thr = 5.0 # 像素重投影误差阈值
     else:
         raise ValueError(f'Unknown dataset: {dataset_name}')
