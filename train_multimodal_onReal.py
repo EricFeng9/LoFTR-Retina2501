@@ -103,29 +103,24 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
         moving_original_tensor = (moving_original_tensor + 1) / 2.0
         
         # 提取单通道灰度图 (数据集返回RGB格式的tensor [C, H, W])
-        img0 = fix_tensor[0].numpy()  # 取第一个通道
-        img1 = moving_original_tensor[0].numpy()  # 取第一个通道
+        img0 = fix_tensor[0].numpy()  # fix - 未配准的原图
+        img1 = moving_original_tensor[0].numpy()  # moving - 未配准的原图（模型要学习配准它）
         
-        # T_0to1 是从 moving 到 fix 的变换矩阵（数据集通过 findHomography(moving_pts, fix_pts) 计算）
-        # LoFTR 期望的 T_0to1 是从 image0 到 image1 的变换
-        # 因此如果 image0=fix, image1=moving，我们需要求逆
-        T_moving_to_fix = T_0to1.numpy()
-        try:
-            T_fix_to_moving = np.linalg.inv(T_moving_to_fix)
-        except:
-            # 如果矩阵不可逆，使用单位矩阵
-            T_fix_to_moving = np.eye(3, dtype=np.float32)
-            loguru_logger.warning(f"样本 {idx} 的变换矩阵不可逆，使用单位矩阵")
-        
-        # 保存 moving_gt 用于计算 MSE（已配准到 fix 空间）
+        # 保存 moving_gt 用于计算 MSE（已配准到 fix 空间的ground truth）
         img1_gt = moving_gt_tensor[0].numpy()
         img1_gt = (img1_gt + 1) / 2.0  # 转回[0,1]
         
+        # T_0to1 是数据集计算的从 moving 到 fix 的变换矩阵
+        # 通过 findHomography(moving_pts, fix_pts) 或 register_image() 计算
+        # 这个变换可以将 moving 配准到 fix 空间
+        # LoFTR训练时的GT就是这个变换矩阵（让moving配准到fix）
+        T_0to1 = T_0to1.numpy()
+        
         data = {
-            'image0': torch.from_numpy(img0).float()[None],  # fix (未变换)
-            'image1': torch.from_numpy(img1).float()[None],  # moving (未变换)
+            'image0': torch.from_numpy(img0).float()[None],  # fix (未配准)
+            'image1': torch.from_numpy(img1).float()[None],  # moving (未配准) - 模型要学习配准它
             'image1_origin': torch.from_numpy(img1_gt).float()[None],  # moving配准后的GT (用于MSE计算)
-            'T_0to1': torch.from_numpy(T_fix_to_moving).float(),  # 从fix到moving的变换
+            'T_0to1': torch.from_numpy(T_0to1).float(),  # 从moving到fix的变换（GT）
         }
         
         data.update({
