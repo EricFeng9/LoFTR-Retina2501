@@ -284,11 +284,26 @@ def main():
 
     # 5. 汇总统计
     if all_metrics:
-        avg_metrics = {k: np.mean([m[k] for m in all_metrics if m[k] is not None]) for k in all_metrics[0].keys()}
+        total_samples = len(all_metrics)
+        # 成功的样本定义：mean_error 是有限数值（非 inf/nan）
+        success_metrics = [m for m in all_metrics if m.get('mean_error') is not None and np.isfinite(m['mean_error'])]
+        num_success = len(success_metrics)
+        num_failed = total_samples - num_success
+        failure_rate = (num_failed / total_samples) * 100
+
         logger.info("="*30)
-        logger.info("测试整体总结:")
-        for k, v in avg_metrics.items():
-            logger.info(f"  Overall {k}: {v:.4f}")
+        logger.info(f"测试整体总结 (总样本: {total_samples}, 成功: {num_success}, 失败: {num_failed}):")
+        
+        if num_success > 0:
+            # 只对成功的样本计算各指标的平均值
+            avg_metrics = {k: np.mean([m[k] for m in success_metrics if m.get(k) is not None and np.isfinite(m[k])]) 
+                          for k in all_metrics[0].keys()}
+            for k, v in avg_metrics.items():
+                logger.info(f"  Overall {k}: {v:.4f}")
+        else:
+            logger.warning("  没有成功的匹配样本，无法计算平均误差指标。")
+
+        logger.info(f"  Overall failure_rate: {failure_rate:.2f}%")
         logger.info("="*30)
 
 if __name__ == "__main__":

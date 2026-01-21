@@ -1,3 +1,29 @@
+"""
+1. SR_ME (Success Rate based on Mean Error) - 平均误差成功率
+   - 公式: SR_ME = 1 if (1/N * Σ ||T(p_i) - q_i||) <= ε_ME else 0
+   - 说明: 计算所有控制点经过预测变换后的平均重投影误差。如果平均误差小于阈值 ε_ME (5px)，则认为配准成功。
+   - 评价: 越大越好 (1.0 代表成功，0.0 代表失败)。
+
+2. SR_MAE (Success Rate based on Maximum Absolute Error) - 最大误差成功率
+   - 公式: SR_MAE = 1 if max(||T(p_i) - q_i||) <= ε_MAE else 0
+   - 说明: 计算所有控制点中最大的重投影误差。如果最大误差小于阈值 ε_MAE (10px)，则认为配准成功。
+   - 评价: 越大越好 (1.0 代表成功，0.0 代表失败)。
+
+3. Rep (Repeatability) - 特征点重复率
+   - 公式: Rep = |{p ∈ K0 | dist(H_gt * p, K1) <= ε_Rep}| / |K0|
+   - 说明: 衡量在源图中检测到的特征点，经过真值变换后，在目标图中 ε_Rep (5px) 距离范围内也能找到对应检测点的比例。
+   - 评价: 越大越好。
+
+4. MIR (Matching Inliers Ratio) - 匹配内点率
+   - 公式: MIR = N_inliers / N_matches
+   - 说明: 经过 RANSAC 算法剔除误匹配后的内点数量与初始匹配对总数的比值。衡量匹配算法的鲁棒性。
+   - 评价: 越大越好。
+
+5. Mean Error / Max Error - 误差数值
+   - 公式: 见 SR_ME 和 SR_MAE 的内部项
+   - 说明: 控制点的实际重投影误差像素值。
+   - 评价: 越小越好。
+"""
 import numpy as np
 import cv2
 from scipy.spatial import KDTree

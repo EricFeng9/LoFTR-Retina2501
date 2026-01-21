@@ -447,8 +447,8 @@ def main():
     # 注意：check_val_every_n_epoch=5，所以 patience=8 对应 8 次验证检查
     early_stop_callback = EarlyStopping(
         monitor='val_mse', 
-        #patience=8 改成20,
-        patience=20,
+        #patience=8 改成10,
+        patience=10,
         verbose=True,
         mode='min',
         min_delta=0.0001

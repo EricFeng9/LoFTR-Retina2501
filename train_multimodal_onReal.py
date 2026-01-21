@@ -131,11 +131,29 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
         # 返回：fix图(img0_raw), moving图(img1_raw), fix关键点(pts0), moving关键点(pts1), path0, path1
         img0_raw, img1_raw, pts0, pts1, path0, path1 = self.dataset.get_raw_sample(idx)
         
-        # 原始图已经是 [0, 1] 的 numpy array
-        img0 = img0_raw.astype(np.float32)
-        img1 = img1_raw.astype(np.float32)
+        # 归一化并 Resize 图像
+        if img0_raw.dtype == np.uint8:
+            img0_raw = img0_raw.astype(np.float32) / 255.0
+        if img1_raw.dtype == np.uint8:
+            img1_raw = img1_raw.astype(np.float32) / 255.0
+            
+        h0, w0 = img0_raw.shape
+        h1, w1 = img1_raw.shape
         
-        # 保存原始 moving 图（用于计算 MSE）
+        img0 = cv2.resize(img0_raw, (self.img_size, self.img_size))
+        img1 = cv2.resize(img1_raw, (self.img_size, self.img_size))
+        
+        # 同步缩放关键点坐标
+        pts0_res = pts0.copy()
+        pts1_res = pts1.copy()
+        if len(pts0_res) > 0:
+            pts0_res[:, 0] *= (self.img_size / w0)
+            pts0_res[:, 1] *= (self.img_size / h0)
+        if len(pts1_res) > 0:
+            pts1_res[:, 0] *= (self.img_size / w1)
+            pts1_res[:, 1] *= (self.img_size / h1)
+        
+        # 保存原始 moving 图（已 Resize，用于计算 MSE）
         img1_origin = img1.copy()
         
         # 训练和验证时：对 moving 图施加随机放射变换
@@ -156,12 +174,12 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
             
             # 使用人工标注的关键点计算 GT 单应矩阵（从 img0 到变换后的 img1）
             # 首先对 moving 的关键点也施加同样的变换
-            if len(pts1) >= 4:
-                pts1_warped = cv2.transform(pts1.reshape(-1, 1, 2), T).reshape(-1, 2)
+            if len(pts1_res) >= 4:
+                pts1_warped = cv2.transform(pts1_res.reshape(-1, 1, 2), T).reshape(-1, 2)
                 
                 # 使用 RANSAC 计算从 img0 到 img1_warped 的单应矩阵作为 GT
-                if len(pts0) >= 4 and len(pts1_warped) >= 4:
-                    H_gt, _ = cv2.findHomography(pts0, pts1_warped, cv2.RANSAC, 5.0)
+                if len(pts0_res) >= 4 and len(pts1_warped) >= 4:
+                    H_gt, _ = cv2.findHomography(pts0_res, pts1_warped, cv2.RANSAC, 5.0)
                     if H_gt is not None:
                         H = H_gt.astype(np.float32)
             
@@ -172,7 +190,7 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
                 'T_0to1': torch.from_numpy(H),
             }
         else:
-            # 测试时：不施加变换，直接使用原始图
+            # 测试时：不施加变换，直接使用 Resize 后的图
             data = {
                 'image0': torch.from_numpy(img0).float()[None],
                 'image1': torch.from_numpy(img1).float()[None],
@@ -544,7 +562,7 @@ def main():
     # 注意：check_val_every_n_epoch=5，所以 patience=8 对应 8 次验证检查
     early_stop_callback = EarlyStopping(
         monitor='val_mse', 
-        patience=8,
+        patience=10,
         verbose=True,
         mode='min',
         min_delta=0.0001
