@@ -1,5 +1,7 @@
 import sys
 import os
+import matplotlib
+matplotlib.use('Agg')  # 强制使用非交互式后端，防止多线程 Tkinter 报错
 import math
 import argparse
 import pprint
@@ -14,6 +16,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, Callback, EarlyStopping
 from pytorch_lightning.plugins import DDPPlugin
 import logging
+import warnings
 
 from src.config.default import get_cfg_defaults
 from src.utils.misc import get_rank_zero_only_logger, setup_gpus
@@ -54,6 +57,11 @@ logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
 logging.getLogger("matplotlib").setLevel(logging.WARNING)
 logging.getLogger("PIL").setLevel(logging.WARNING)
 logging.getLogger("fsspec").setLevel(logging.WARNING)
+
+# 屏蔽不重要的 Tkinter/Matplotlib 异常日志
+warnings.filterwarnings("ignore", category=UserWarning, module="matplotlib")
+warnings.filterwarnings("ignore", message=".*main thread is not in main loop.*")
+
 
 def parse_args():
     parser = argparse.ArgumentParser(description="""
