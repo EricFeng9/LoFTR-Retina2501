@@ -81,6 +81,10 @@ def parse_args():
     return parser.parse_args()
 
 class LoFTRDatasetWrapper(torch.utils.data.Dataset):
+    """
+    简化的数据集包装器：直接使用数据集提供的未对齐图像对和GT变换矩阵
+    不进行额外的随机变换，保持训练流程简单清晰
+    """
     def __init__(self, dataset, split='train', img_size=512):
         self.dataset = dataset
         self.split = split
@@ -89,118 +93,45 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.dataset)
 
-    def _get_random_affine(self, rng=None):
-        """生成随机放射变换矩阵（扩大旋转范围到 ±90°，支持翻转）"""
-        if rng is None:
-            rng = np.random
-        
-        # 扩大旋转角度到 [-90°, 90°]，覆盖大角度旋转
-        angle = rng.uniform(-90, 90)
-        scale = rng.uniform(0.8, 1.2)
-        tx = rng.uniform(-0.2, 0.2) * self.img_size
-        ty = rng.uniform(-0.2, 0.2) * self.img_size
-        
-        # 生成基础旋转+缩放+平移矩阵
-        center = (self.img_size // 2, self.img_size // 2)
-        M = cv2.getRotationMatrix2D(center, angle, scale)
-        M[0, 2] += tx
-        M[1, 2] += ty
-        
-        # 随机翻转（小概率 10%）
-        flip_h = rng.rand() < 0.1
-        flip_v = rng.rand() < 0.1
-        
-        # 如果需要翻转，则需要组合变换矩阵
-        if flip_h or flip_v:
-            H = np.eye(3, dtype=np.float32)
-            H[:2, :] = M
-            
-            if flip_h:
-                H_flip_h = np.array([[-1, 0, self.img_size-1], [0, 1, 0], [0, 0, 1]], dtype=np.float32)
-                H = H_flip_h @ H
-            if flip_v:
-                H_flip_v = np.array([[1, 0, 0], [0, -1, self.img_size-1], [0, 0, 1]], dtype=np.float32)
-                H = H_flip_v @ H
-            
-            return H[:2, :]
-        
-        return M.astype(np.float32)
-
     def __getitem__(self, idx):
-        # 调用真实数据集的 get_raw_sample 接口
-        # 返回：fix图(img0_raw), moving图(img1_raw), fix关键点(pts0), moving关键点(pts1), path0, path1
-        img0_raw, img1_raw, pts0, pts1, path0, path1 = self.dataset.get_raw_sample(idx)
+        # 调用数据集的 __getitem__ 方法
+        # 返回：fix_tensor, moving_original_tensor, moving_gt_tensor, fix_path, moving_path, T_0to1
+        fix_tensor, moving_original_tensor, moving_gt_tensor, fix_path, moving_path, T_0to1 = self.dataset[idx]
         
-        # 归一化并 Resize 图像
-        if img0_raw.dtype == np.uint8:
-            img0_raw = img0_raw.astype(np.float32) / 255.0
-        if img1_raw.dtype == np.uint8:
-            img1_raw = img1_raw.astype(np.float32) / 255.0
-            
-        h0, w0 = img0_raw.shape
-        h1, w1 = img1_raw.shape
+        # 数据集返回的tensor已经归一化到[0,1]，moving已归一化到[-1,1]
+        # 需要将moving_original_tensor转回[0,1]范围
+        moving_original_tensor = (moving_original_tensor + 1) / 2.0
         
-        img0 = cv2.resize(img0_raw, (self.img_size, self.img_size))
-        img1 = cv2.resize(img1_raw, (self.img_size, self.img_size))
+        # 提取单通道灰度图 (数据集返回RGB格式的tensor [C, H, W])
+        img0 = fix_tensor[0].numpy()  # 取第一个通道
+        img1 = moving_original_tensor[0].numpy()  # 取第一个通道
         
-        # 同步缩放关键点坐标
-        pts0_res = pts0.copy()
-        pts1_res = pts1.copy()
-        if len(pts0_res) > 0:
-            pts0_res[:, 0] *= (self.img_size / w0)
-            pts0_res[:, 1] *= (self.img_size / h0)
-        if len(pts1_res) > 0:
-            pts1_res[:, 0] *= (self.img_size / w1)
-            pts1_res[:, 1] *= (self.img_size / h1)
+        # T_0to1 是从 moving 到 fix 的变换矩阵（数据集通过 findHomography(moving_pts, fix_pts) 计算）
+        # LoFTR 期望的 T_0to1 是从 image0 到 image1 的变换
+        # 因此如果 image0=fix, image1=moving，我们需要求逆
+        T_moving_to_fix = T_0to1.numpy()
+        try:
+            T_fix_to_moving = np.linalg.inv(T_moving_to_fix)
+        except:
+            # 如果矩阵不可逆，使用单位矩阵
+            T_fix_to_moving = np.eye(3, dtype=np.float32)
+            loguru_logger.warning(f"样本 {idx} 的变换矩阵不可逆，使用单位矩阵")
         
-        # 保存原始 moving 图（已 Resize，用于计算 MSE）
-        img1_origin = img1.copy()
+        # 保存 moving_gt 用于计算 MSE（已配准到 fix 空间）
+        img1_gt = moving_gt_tensor[0].numpy()
+        img1_gt = (img1_gt + 1) / 2.0  # 转回[0,1]
         
-        # 训练和验证时：对 moving 图施加随机放射变换
-        if self.split in ['train', 'val']:
-            # 验证集使用固定随机种子，确保可重复
-            if self.split == 'val':
-                rng = np.random.RandomState(idx)
-                T = self._get_random_affine(rng)
-            else:
-                T = self._get_random_affine()
-            
-            # 对 moving 图施加变换
-            img1_warped = cv2.warpAffine(img1, T, (self.img_size, self.img_size), flags=cv2.INTER_LINEAR)
-            
-            # 构造 3x3 单应矩阵（用于标注GT）
-            H = np.eye(3, dtype=np.float32)
-            H[:2, :] = T
-            
-            # 使用人工标注的关键点计算 GT 单应矩阵（从 img0 到变换后的 img1）
-            # 首先对 moving 的关键点也施加同样的变换
-            if len(pts1_res) >= 4:
-                pts1_warped = cv2.transform(pts1_res.reshape(-1, 1, 2), T).reshape(-1, 2)
-                
-                # 使用 RANSAC 计算从 img0 到 img1_warped 的单应矩阵作为 GT
-                if len(pts0_res) >= 4 and len(pts1_warped) >= 4:
-                    H_gt, _ = cv2.findHomography(pts0_res, pts1_warped, cv2.RANSAC, 5.0)
-                    if H_gt is not None:
-                        H = H_gt.astype(np.float32)
-            
-            data = {
-                'image0': torch.from_numpy(img0).float()[None],
-                'image1': torch.from_numpy(img1_warped).float()[None],
-                'image1_origin': torch.from_numpy(img1_origin).float()[None],
-                'T_0to1': torch.from_numpy(H),
-            }
-        else:
-            # 测试时：不施加变换，直接使用 Resize 后的图
-            data = {
-                'image0': torch.from_numpy(img0).float()[None],
-                'image1': torch.from_numpy(img1).float()[None],
-                'image1_origin': torch.from_numpy(img1_origin).float()[None],
-            }
+        data = {
+            'image0': torch.from_numpy(img0).float()[None],  # fix (未变换)
+            'image1': torch.from_numpy(img1).float()[None],  # moving (未变换)
+            'image1_origin': torch.from_numpy(img1_gt).float()[None],  # moving配准后的GT (用于MSE计算)
+            'T_0to1': torch.from_numpy(T_fix_to_moving).float(),  # 从fix到moving的变换
+        }
         
         data.update({
             'dataset_name': 'MultiModal',
             'pair_id': idx,
-            'pair_names': (os.path.basename(path0), os.path.basename(path1))
+            'pair_names': (os.path.basename(str(fix_path)), os.path.basename(str(moving_path)))
         })
         return data
 
