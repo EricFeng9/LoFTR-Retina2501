@@ -59,6 +59,7 @@ def parse_args():
     依据 plan.md 实现：
     - 完整图像输入（含背景），不做掩码过滤
     - 血管掩码仅用于损失权重和注意力偏置（不拼接到 Backbone）
+    - 支持加载 MINIMA 预训练权重作为初始化
     - 支持大角度旋转（±90°）和翻转（10%概率）
     - 端到端学习：模型自动学习血管区域的重要性
     """)
@@ -68,6 +69,7 @@ def parse_args():
     parser.add_argument('--num_workers', type=int, default=8, help='数据加载线程数')
     parser.add_argument('--img_size', type=int, default=512, help='图像输入尺寸')
     parser.add_argument('--vessel_sigma', type=float, default=6.0, help='血管高斯软掩码的 σ（像素单位），用于损失加权')
+    parser.add_argument('--pretrained_ckpt', type=str, default=None, help='MINIMA 预训练权重路径')
     parser.add_argument('--main_cfg_path', type=str, default=None, help='主配置文件路径')
     
     # 自动添加 Lightning Trainer 参数 (如 --gpus, --max_epochs, --accelerator 等)
@@ -444,7 +446,7 @@ def main():
     config.TRAINER.TRUE_LR = config.TRAINER.CANONICAL_LR * _scaling
     
     # 3. 初始化模型与数据
-    model = PL_LoFTR(config)
+    model = PL_LoFTR(config, pretrained_ckpt=args.pretrained_ckpt)
     data_module = MultimodalDataModule(args, config)
 
     # 4. 初始化训练器
