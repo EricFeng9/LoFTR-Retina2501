@@ -17,8 +17,7 @@ class LoFTR(nn.Module):
         self.config = config
 
         # Modules
-        self.backbone0 = build_backbone(config)
-        self.backbone1 = build_backbone(config)
+        self.backbone = build_backbone(config)
         self.pos_encoding = PositionEncodingSine(
             config['coarse']['d_model'],
             temp_bug_fix=config['coarse']['temp_bug_fix'])
@@ -44,8 +43,8 @@ class LoFTR(nn.Module):
             'hw0_i': data['image0'].shape[2:], 'hw1_i': data['image1'].shape[2:]
         })
 
-        (feat_c0, feat_f0) = self.backbone0(data['image0'])
-        (feat_c1, feat_f1) = self.backbone1(data['image1'])
+        (feat_c0, feat_f0) = self.backbone(data['image0'])
+        (feat_c1, feat_f1) = self.backbone(data['image1'])
 
         data.update({
             'hw0_c': feat_c0.shape[2:], 'hw1_c': feat_c1.shape[2:],
@@ -118,16 +117,7 @@ class LoFTR(nn.Module):
         for k, v in state_dict.items():
             if k.startswith('matcher.'):
                 k = k.replace('matcher.', '', 1)
-            
-            # 处理单流 Backbone 到双流 Backbone 的权重复制
-            if k.startswith('backbone.'):
-                # 复制给 backbone0
-                new_state_dict[k.replace('backbone.', 'backbone0.', 1)] = v
-                # 复制给 backbone1
-                new_state_dict[k.replace('backbone.', 'backbone1.', 1)] = v
-            else:
-                new_state_dict[k] = v
-        
+            new_state_dict[k] = v
         return super().load_state_dict(new_state_dict, *args, **kwargs)
 
     def _process_mask(self, mask0, mask1, data):

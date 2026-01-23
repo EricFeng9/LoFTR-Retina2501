@@ -43,34 +43,11 @@ class PL_LoFTR(pl.LightningModule):
         self.loss = LoFTRLoss(_config)
 
         # Pretrained weights
+        # Pretrained weights
         if pretrained_ckpt:
             state_dict = torch.load(pretrained_ckpt, map_location='cpu')['state_dict']
             
-            # 智能处理双流 Backbone 权重：
-            # 如果预训练权重中只有 backbone (共享权重)，则复制给 backbone0 和 backbone1
-            # 如果预训练权重中已有 backbone0 和 backbone1，则直接加载
-            has_backbone0 = any(k.startswith('matcher.backbone0.') for k in state_dict.keys())
-            has_backbone1 = any(k.startswith('matcher.backbone1.') for k in state_dict.keys())
-            has_backbone = any(k.startswith('matcher.backbone.') for k in state_dict.keys())
-            
-            if has_backbone and not (has_backbone0 and has_backbone1):
-                # 预训练权重使用共享 backbone，需要复制到 backbone0 和 backbone1
-                logger.info("检测到共享 Backbone 权重，正在复制到双流 Backbone...")
-                new_state_dict = {}
-                for k, v in state_dict.items():
-                    if k.startswith('matcher.backbone.'):
-                        # 复制给 backbone0 和 backbone1
-                        new_key0 = k.replace('matcher.backbone.', 'matcher.backbone0.')
-                        new_key1 = k.replace('matcher.backbone.', 'matcher.backbone1.')
-                        new_state_dict[new_key0] = v.clone()
-                        new_state_dict[new_key1] = v.clone()
-                        logger.debug(f"复制权重: {k} -> {new_key0}, {new_key1}")
-                    else:
-                        new_state_dict[k] = v
-                state_dict = new_state_dict
-                logger.info("双流 Backbone 权重复制完成")
-            
-            # 加载权重（使用 strict=False 以兼容可能的结构差异）
+            # 直接加载权重 (Standard Loading)
             missing_keys, unexpected_keys = self.matcher.load_state_dict(state_dict, strict=False)
             
             # 详细日志

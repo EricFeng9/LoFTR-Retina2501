@@ -282,6 +282,20 @@ def main():
             ctrl_pts0=ctrl_pts0, ctrl_pts1=ctrl_pts1,
             H_gt=H_gt
         )
+        
+        # 【Plan v3 对齐】计算有效区域 MSE
+        try:
+            res_f, orig_f = filter_valid_area(img1_result, img0) # img1_result是配准后的moving，img0是fix
+            mask_val = (res_f > 0)
+            if np.any(mask_val):
+                mse_val = np.mean(((res_f[mask_val] / 255.0) - (orig_f[mask_val] / 255.0)) ** 2)
+            else:
+                mse_val = np.mean(((img1_result / 255.0) - (img0 / 255.0)) ** 2)
+        except Exception as e:
+            logger.warning(f"MSE calculation failed: {e}")
+            mse_val = float('inf')
+            
+        metrics['MSE'] = mse_val
         all_metrics.append(metrics)
 
         # 保存结果
@@ -309,7 +323,7 @@ def main():
         except Exception as e:
             logger.warning(f"无法保存匹配图: {e}")
 
-        logger.info(f"Sample: {pair_name} | SR_ME: {metrics['SR_ME']} | MeanErr: {metrics['mean_error']:.2f}")
+        logger.info(f"Sample: {pair_name} | SR_ME: {metrics['SR_ME']} | MeanErr: {metrics['mean_error']:.2f} | MSE: {metrics['MSE']:.6f}")
 
     # 5. 汇总统计
     if all_metrics:
