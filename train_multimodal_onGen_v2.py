@@ -69,7 +69,9 @@ def parse_args():
     parser.add_argument('--num_workers', type=int, default=8, help='数据加载线程数')
     parser.add_argument('--img_size', type=int, default=512, help='图像输入尺寸')
     parser.add_argument('--vessel_sigma', type=float, default=6.0, help='血管高斯软掩码的 σ（像素单位），用于损失加权')
-    parser.add_argument('--pretrained_ckpt', type=str, default=None, help='MINIMA 预训练权重路径')
+    parser.add_argument('--pretrained_ckpt', type=str, 
+                        default='/data/student/Fengjunming/LoFTR/third_party/MINIMA/weights/minima_loftr.ckpt', 
+                        help='MINIMA 预训练权重路径')
     parser.add_argument('--main_cfg_path', type=str, default=None, help='主配置文件路径')
     
     # 自动添加 Lightning Trainer 参数 (如 --gpus, --max_epochs, --accelerator 等)
@@ -446,7 +448,10 @@ def main():
     config.TRAINER.TRUE_LR = config.TRAINER.CANONICAL_LR * _scaling
     
     # 3. 初始化模型与数据
+    # 加载 MINIMA 预训练权重
+    loguru_logger.info(f"正在加载 MINIMA 预训练权重: {args.pretrained_ckpt}")
     model = PL_LoFTR(config, pretrained_ckpt=args.pretrained_ckpt)
+    loguru_logger.info("MINIMA 预训练权重加载完成，开始在此基础上训练")
     data_module = MultimodalDataModule(args, config)
 
     # 4. 初始化训练器
