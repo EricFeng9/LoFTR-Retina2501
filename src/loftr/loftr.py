@@ -114,10 +114,21 @@ class LoFTR(nn.Module):
         self.fine_matching(feat_f0_unfold, feat_f1_unfold, data)
 
     def load_state_dict(self, state_dict, *args, **kwargs):
-        for k in list(state_dict.keys()):
+        new_state_dict = {}
+        for k, v in state_dict.items():
             if k.startswith('matcher.'):
-                state_dict[k.replace('matcher.', '', 1)] = state_dict.pop(k)
-        return super().load_state_dict(state_dict, *args, **kwargs)
+                k = k.replace('matcher.', '', 1)
+            
+            # 处理单流 Backbone 到双流 Backbone 的权重复制
+            if k.startswith('backbone.'):
+                # 复制给 backbone0
+                new_state_dict[k.replace('backbone.', 'backbone0.', 1)] = v
+                # 复制给 backbone1
+                new_state_dict[k.replace('backbone.', 'backbone1.', 1)] = v
+            else:
+                new_state_dict[k] = v
+        
+        return super().load_state_dict(new_state_dict, *args, **kwargs)
 
     def _process_mask(self, mask0, mask1, data):
         """ 辅助函数：处理掩码的维度并进行下采样 """
