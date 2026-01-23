@@ -156,10 +156,16 @@ def main():
     parser.add_argument('--mode', type=str, required=True, choices=['cffa', 'cfoct', 'octfa', 'cfocta'])
     parser.add_argument('--name', type=str, required=True)
     parser.add_argument('--savedir', type=str, default='test_run')
+    parser.add_argument('--minima', action='store_true', help='使用 MINIMA 预训练权重进行测试')
     args = parser.parse_args()
 
     # 1. 路径准备
-    ckpt_path = Path(f"results/{args.mode}/{args.name}/best_checkpoint/model.ckpt")
+    if args.minima:
+        # MINIMA 权重路径 (硬编码，参考 train_multimodal_onGen_v2.py)
+        ckpt_path = Path("/data/student/Fengjunming/LoFTR/third_party/MINIMA/weights/minima_loftr.ckpt")
+    else:
+        ckpt_path = Path(f"results/{args.mode}/{args.name}/best_checkpoint/model.ckpt")
+    
     if not ckpt_path.exists():
         logger.error(f"未找到模型权重: {ckpt_path}")
         return
@@ -170,10 +176,19 @@ def main():
     log_file = save_root / "log.txt"
     logger.add(log_file, rotation="10 MB")
     logger.info(f"开始测试模式: {args.mode}, 名称: {args.name}")
+    if args.minima:
+        logger.info(f"使用 MINIMA 预训练权重: {ckpt_path}")
+    else:
+        logger.info(f"使用训练好的权重: {ckpt_path}")
 
     # 2. 加载模型
     config = get_cfg_defaults()
-    model = PL_LoFTR.load_from_checkpoint(str(ckpt_path), config=config)
+    if args.minima:
+        # 使用 pretrained_ckpt 初始化 (仅加载权重)
+        model = PL_LoFTR(config, pretrained_ckpt=str(ckpt_path))
+    else:
+        # 加载完整 Lightning Checkpoint
+        model = PL_LoFTR.load_from_checkpoint(str(ckpt_path), config=config)
     model.cuda().eval()
 
     # 3. 准备数据集
