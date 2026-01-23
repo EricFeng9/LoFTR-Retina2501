@@ -121,11 +121,17 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
         img1_gt = moving_gt_tensor[0].numpy()
         img1_gt = (img1_gt + 1) / 2.0  # 转回[0,1]
         
-        # T_0to1 是数据集计算的从 moving 到 fix 的变换矩阵
-        # 通过 findHomography(moving_pts, fix_pts) 或 register_image() 计算
-        # 这个变换可以将 moving 配准到 fix 空间
-        # LoFTR训练时的GT就是这个变换矩阵（让moving配准到fix）
-        T_0to1 = T_0to1.numpy()
+        # 【修正说明】
+        # 数据集返回的 T_0to1 实际上是 T_1to0 (Moving -> Fix)，即把 moving 图的点变换到 fix 图
+        # 但 LoFTR 的 supervision 模块 (warp_kpts_homo) 期望的是 T_0to1 (Fix -> Moving)
+        # 即: w_pt0 = T * pt0
+        # 因此，必须对矩阵求逆，否则模型训练时方向是反的，导致性能退化。
+        T_1to0 = T_0to1.numpy()
+        try:
+            T_0to1 = np.linalg.inv(T_1to0)
+        except np.linalg.LinAlgError:
+            print(f"Warning: Matrix inversion failed for pair {idx}")
+            T_0to1 = T_1to0
         
         data = {
             'image0': torch.from_numpy(img0).float()[None],  # fix (未配准)
