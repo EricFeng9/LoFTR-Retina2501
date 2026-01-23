@@ -121,18 +121,44 @@ class LoFTRDatasetWrapper(torch.utils.data.Dataset):
         img1_gt = moving_gt_tensor[0].numpy()
         img1_gt = (img1_gt + 1) / 2.0  # 转回[0,1]
         
-        # 【修正说明】
-        # 数据集返回的 T_0to1 实际上是 T_1to0 (Moving -> Fix)，即把 moving 图的点变换到 fix 图
-        # 但 LoFTR 的 supervision 模块 (warp_kpts_homo) 期望的是 T_0to1 (Fix -> Moving)
-        # 即: w_pt0 = T * pt0
-        # 因此，必须对矩阵求逆，否则模型训练时方向是反的，导致性能退化。
-        T_1to0 = T_0to1.numpy()
+        # 【修正说明 2.0】
+        # Bug 1: 矩阵方向反了 (已在步骤1修复)
+        # Bug 2: 坐标系缩放缺失 (本次修复)
+        # 数据集返回的 T_matrix 是: T_dataset = S_matrix @ T_orig
+        # 这只缩放了输出坐标 (Fix图)，但输入坐标 (Moving图) 也被 Resize缩放了。
+        # 正确的坐标变换 (两边都缩放) 应该是: T_correct = S_matrix @ T_orig @ inv(S_matrix)
+        # 因此我们需要右乘 inv(S_matrix) 来归一化输入坐标。
+        
+        # 1. 获取原图尺寸 (为了计算 S 矩阵)
+        # 注意：这里假设没有裁剪逻辑(参考temp代码)，直接是原图resize。如有裁剪需修改此处。
         try:
-            T_0to1 = np.linalg.inv(T_1to0)
+            # 尝试快速读取 header
+            import imagesize
+            w_orig, h_orig = imagesize.get(str(fix_path))
+        except ImportError:
+            # 回退到 cv2 读取 (稍慢)
+            h_orig, w_orig = cv2.imread(str(fix_path), cv2.IMREAD_GRAYSCALE).shape[:2]
+            
+        sx = self.img_size / w_orig
+        sy = self.img_size / h_orig
+        
+        S_inv = np.array([
+            [1/sx, 0, 0],
+            [0, 1/sy, 0],
+            [0, 0, 1]
+        ], dtype=np.float32)
+
+        # 2. 修正缩放: T_1to0 (Moving->Fix)
+        T_1to0_raw = T_0to1.numpy()
+        T_1to0_corrected = T_1to0_raw @ S_inv
+        
+        # 3. 修正方向: LoFTR 需要 Fix -> Moving
+        try:
+            T_0to1 = np.linalg.inv(T_1to0_corrected)
         except np.linalg.LinAlgError:
             print(f"Warning: Matrix inversion failed for pair {idx}")
-            T_0to1 = T_1to0
-        
+            T_0to1 = T_1to0_corrected # 降级
+
         data = {
             'image0': torch.from_numpy(img0).float()[None],  # fix (未配准)
             'image1': torch.from_numpy(img1).float()[None],  # moving (未配准) - 模型要学习配准它
