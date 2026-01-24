@@ -124,14 +124,14 @@ logging.getLogger("fsspec").setLevel(logging.ERROR)
 
 def parse_args():
     parser = argparse.ArgumentParser(description="""
-    LoFTR 多模态眼底图像配准训练脚本 (V2 - 生成数据集 + 端到端学习策略)
+    LoFTR 多模态眼底图像配准训练脚本 (V2.1 - 生成数据集 + 完全自主学习)
     
-    依据 plan.md 实现：
+    依据 plan_v2_1.md 实现：
     - 完整图像输入（含背景），不做掩码过滤
-    - 血管掩码仅用于损失权重和注意力偏置（不拼接到 Backbone）
+    - **完全弃用血管掩码**：vessel_soft_lambda = 0, loss_weight = 1.0
+    - 模型必须完全自主学习跨模态特征
     - 支持加载 MINIMA 预训练权重作为初始化
     - 支持大角度旋转（±90°）和翻转（10%概率）
-    - 端到端学习：模型自动学习血管区域的重要性
     """)
     parser.add_argument('--mode', type=str, default='cffa', choices=['cffa', 'cfoct', 'octfa', 'cfocta'], help='配准模式')
     parser.add_argument('--name', '-n', type=str, default='loftr_multimodal_fives', help='本次训练的名称')
@@ -339,12 +339,25 @@ class PL_LoFTR_WithDomainRand(PL_LoFTR):
                 self.saved_batches += 1
                 loguru_logger.info(f"已保存第 {self.saved_batches}/2 个batch的域随机化可视化（训练模式，Epoch {epoch_label}, Batch {batch_idx}）")
         
+        # 强制移除所有血管掩码相关键，确保模型不接收任何掩码信息 (V2.1 No Mask Strategy)
+        # 使用 pop 而不是设为 None，以避免 LoFTR.py 中 "if 'mask0' in data" 的逻辑报错
+        keys_to_remove = ['mask0', 'mask1', 'vessel_mask0', 'vessel_mask1', 'vessel_weight0', 'vessel_weight1']
+        for k in keys_to_remove:
+            if k in batch:
+                batch.pop(k)
+        
         # 调用原始的 training_step
         return super().training_step(batch, batch_idx)
     
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         """重写 validation_step 以支持多数据集验证（接受 dataloader_idx 参数）
         注意：验证时不应用域随机化，直接使用原始图像"""
+        # 验证时同样移除掩码，确保计算的 Loss 是无加权的
+        keys_to_remove = ['mask0', 'mask1', 'vessel_mask0', 'vessel_mask1', 'vessel_weight0', 'vessel_weight1']
+        for k in keys_to_remove:
+            if k in batch:
+                batch.pop(k)
+
         # 验证时不应用域随机化，直接调用基类方法
         return super().validation_step(batch, batch_idx)
 

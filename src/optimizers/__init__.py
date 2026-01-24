@@ -3,6 +3,12 @@ from torch.optim.lr_scheduler import MultiStepLR, CosineAnnealingLR, Exponential
 
 
 def build_optimizer(model, config):
+    """
+    构建优化器。
+    
+    【最简方案】统一学习率，所有参数使用相同的学习率。
+    让 Transformer 自己学习跨模态匹配，不做特殊处理。
+    """
     name = config.TRAINER.OPTIMIZER
     lr = config.TRAINER.TRUE_LR
 

@@ -42,21 +42,7 @@ class PL_LoFTR(pl.LightningModule):
         self.matcher = LoFTR(config=_config['loftr'])
         self.loss = LoFTRLoss(_config)
 
-        # Pretrained weights
-        # Pretrained weights
-        if pretrained_ckpt:
-            state_dict = torch.load(pretrained_ckpt, map_location='cpu')['state_dict']
-            
-            # 直接加载权重 (Standard Loading)
-            missing_keys, unexpected_keys = self.matcher.load_state_dict(state_dict, strict=False)
-            
-            # 详细日志
-            if missing_keys:
-                logger.warning(f"预训练权重中缺失的键 ({len(missing_keys)}): {missing_keys[:5]}...")
-            if unexpected_keys:
-                logger.warning(f"预训练权重中多余的键 ({len(unexpected_keys)}): {unexpected_keys[:5]}...")
-            
-            logger.info(f"成功加载预训练权重: '{pretrained_ckpt}'")
+        # Pretrained weights\r\n        if pretrained_ckpt:\r\n            state_dict = torch.load(pretrained_ckpt, map_location='cpu')['state_dict']\r\n            \r\n            # 【最简方案】完整加载预训练权重\r\n            missing_keys, unexpected_keys = self.matcher.load_state_dict(state_dict, strict=False)\r\n            \r\n            logger.info(f\"成功加载预训练权重: '{pretrained_ckpt}'\")\r\n            if missing_keys:\r\n                logger.warning(f\"缺失的键: {missing_keys[:3]}...\")\r\n            if unexpected_keys:\r\n                logger.warning(f\"多余的键: {unexpected_keys[:3]}...\")
         
         # Testing
         self.dump_dir = dump_dir
@@ -124,37 +110,19 @@ class PL_LoFTR(pl.LightningModule):
     
     def on_train_epoch_start(self):
         """
-        【方案 B 改进】解剖课程学习 (Curriculum Learning)
-        根据当前训练进度调整血管掩码权重和背景梯度保底。
+        【最简方案】不使用血管掩码引导
+        让 Transformer 自己从数据中学习哪些区域重要。
         """
-        total_epochs = self.trainer.max_epochs
-        cur_epoch = self.current_epoch
-        
-        # 阶段 1: 前 20% Epochs - 全图感知期
-        if cur_epoch < 0.2 * total_epochs:
-            vessel_soft_lambda = 0.0 # 不使用血管掩码偏置
-            background_weight = 1.0 # 背景权重全开
-            stage = "Phase 1: Global Perception"
-        # 阶段 2: 中间 50% Epochs - 软掩码引导期
-        elif cur_epoch < 0.7 * total_epochs:
-            vessel_soft_lambda = self.loftr_cfg['match_coarse'].get('vessel_soft_lambda', 1.0)
-            background_weight = 0.2
-            stage = "Phase 2: Soft Mask Biasing"
-        # 阶段 3: 最后 30% Epochs - 精度冲刺期
-        else:
-            vessel_soft_lambda = self.loftr_cfg['match_coarse'].get('vessel_soft_lambda', 1.0) * 1.5
-            background_weight = 0.05
-            stage = "Phase 3: Precision Sprint"
-            
-        # 更新模型和损失函数的超参数
+        # 完全关闭血管掩码偏置
         if hasattr(self.matcher.coarse_matching, 'vessel_soft_lambda'):
-            self.matcher.coarse_matching.vessel_soft_lambda = vessel_soft_lambda
-            
-        # 更新损失函数的背景权重
-        self.loss.background_weight = background_weight
+            self.matcher.coarse_matching.vessel_soft_lambda = 0.0
+        
+        # 损失函数不使用背景权重调整，所有区域平等对待
+        if hasattr(self.loss, 'background_weight'):
+            self.loss.background_weight = 1.0
         
         if self.trainer.global_rank == 0:
-            logger.info(f"Curriculum Learning | Epoch {cur_epoch} | {stage} | lambda: {vessel_soft_lambda:.2f} | bg_weight: {background_weight:.2f}")
+            logger.info(f"Minimal Training (V2.1) | Epoch {self.current_epoch} | No vessel guidance (λ=0, loss_w=1.0)")
 
     def training_step(self, batch, batch_idx):
         self._trainval_inference(batch)

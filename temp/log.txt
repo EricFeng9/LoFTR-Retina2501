@@ -1,728 +1,251 @@
-2026-01-24 16:42:19.095 | INFO     | __main__:main:623 - 日志将同时保存到: results/cffa/260124_2/log.txt
-2026-01-24 16:42:19.097 | INFO     | __main__:main:641 - 正在加载预训练权重: weights/outdoor_ds.ckpt
-2026-01-24 16:42:19.334 | INFO     | src.lightning.lightning_loftr:__init__:59 - 成功加载预训练权重: 'weights/outdoor_ds.ckpt'
-2026-01-24 16:42:19.335 | INFO     | __main__:main:653 - 域随机化增强已启用，将在训练时应用（包括sanity check阶段）
-2026-01-24 16:42:19.336 | INFO     | __main__:main:654 - 将在训练开始时保存前2个batch的域随机化可视化
-2026-01-24 16:42:19.450 | INFO     | __main__:main:691 - 开始训练: 260124_2 (模式: cffa)
-2026-01-24 16:42:21.846 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=227, Spatial Binning后=185
-2026-01-24 16:42:21.850 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=104/185, H_est是否单位矩阵=False
-2026-01-24 16:42:21.851 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=126, Spatial Binning后=126
-2026-01-24 16:42:21.854 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=58/126, H_est是否单位矩阵=False
-2026-01-24 16:42:21.855 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=106, Spatial Binning后=102
-2026-01-24 16:42:21.857 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=60/102, H_est是否单位矩阵=False
-2026-01-24 16:42:21.859 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=232, Spatial Binning后=212
-2026-01-24 16:42:21.861 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=123/212, H_est是否单位矩阵=False
-2026-01-24 16:42:23.692 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=105, Spatial Binning后=99
-2026-01-24 16:42:23.694 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=56/99, H_est是否单位矩阵=False
-2026-01-24 16:42:23.695 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=136, Spatial Binning后=134
-2026-01-24 16:42:23.698 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=55/134, H_est是否单位矩阵=False
-2026-01-24 16:42:23.699 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=79, Spatial Binning后=72
-2026-01-24 16:42:23.701 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=41/72, H_est是否单位矩阵=False
-2026-01-24 16:42:23.702 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=170, Spatial Binning后=164
-2026-01-24 16:42:23.704 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=82/164, H_est是否单位矩阵=False
-2026-01-24 16:42:25.144 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=140, Spatial Binning后=137
-2026-01-24 16:42:25.148 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=69/137, H_est是否单位矩阵=False
-2026-01-24 16:42:25.149 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=78, Spatial Binning后=78
-2026-01-24 16:42:25.151 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=39/78, H_est是否单位矩阵=False
-2026-01-24 16:42:25.152 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=46, Spatial Binning后=46
-2026-01-24 16:42:25.158 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=21/46, H_est是否单位矩阵=False
-2026-01-24 16:42:25.158 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (21), 可能导致配准质量差
-2026-01-24 16:42:25.159 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=98, Spatial Binning后=96
-2026-01-24 16:42:25.161 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=50/96, H_est是否单位矩阵=False
-2026-01-24 16:42:27.345 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=223, Spatial Binning后=206
-2026-01-24 16:42:27.347 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=117/206, H_est是否单位矩阵=False
-2026-01-24 16:42:27.349 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=291, Spatial Binning后=238
-2026-01-24 16:42:27.351 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=124/238, H_est是否单位矩阵=False
-2026-01-24 16:42:27.353 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=294, Spatial Binning后=244
-2026-01-24 16:42:27.354 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=164/244, H_est是否单位矩阵=False
-2026-01-24 16:42:27.355 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=244, Spatial Binning后=199
-2026-01-24 16:42:27.356 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=137/199, H_est是否单位矩阵=False
-2026-01-24 16:42:29.313 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=227, Spatial Binning后=194
-2026-01-24 16:42:29.315 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=95/194, H_est是否单位矩阵=False
-2026-01-24 16:42:29.316 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=97, Spatial Binning后=97
-2026-01-24 16:42:29.320 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=37/97, H_est是否单位矩阵=False
-2026-01-24 16:42:29.321 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=98, Spatial Binning后=98
-2026-01-24 16:42:29.323 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=48/98, H_est是否单位矩阵=False
-2026-01-24 16:42:29.325 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=183, Spatial Binning后=173
-2026-01-24 16:42:29.327 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=83/173, H_est是否单位矩阵=False
-2026-01-24 16:42:30.766 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=110, Spatial Binning后=110
-2026-01-24 16:42:30.769 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=48/110, H_est是否单位矩阵=False
-2026-01-24 16:42:30.771 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=276, Spatial Binning后=209
-2026-01-24 16:42:30.772 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=148/209, H_est是否单位矩阵=False
-2026-01-24 16:42:30.774 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=398, Spatial Binning后=286
-2026-01-24 16:42:30.776 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=152/286, H_est是否单位矩阵=False
-2026-01-24 16:42:30.777 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=191, Spatial Binning后=167
-2026-01-24 16:42:30.778 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=116/167, H_est是否单位矩阵=False
-2026-01-24 16:42:32.288 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 16:42:34.657 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 16:42:37.225 | INFO     | __main__:on_validation_epoch_end:426 - Sanity check 完成，跳过模型保存和最优更新
-2026-01-24 16:42:37.248 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 0 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:42:38.495 | INFO     | __main__:training_step:340 - 已保存第 1/2 个batch的域随机化可视化（训练模式，Epoch 1, Batch 0）
-2026-01-24 16:42:41.348 | INFO     | __main__:training_step:340 - 已保存第 2/2 个batch的域随机化可视化（训练模式，Epoch 1, Batch 1）
-2026-01-24 16:43:50.210 | INFO     | __main__:on_train_epoch_end:418 - Epoch 1 训练总结 >> loss_c: 3.4027 | loss_f: 0.5948
-2026-01-24 16:43:50.228 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 1 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:45:02.787 | INFO     | __main__:on_train_epoch_end:418 - Epoch 2 训练总结 >> loss_c: 3.2708 | loss_f: 0.5500
-2026-01-24 16:45:02.804 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 2 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:46:15.930 | INFO     | __main__:on_train_epoch_end:418 - Epoch 3 训练总结 >> loss_c: 3.0282 | loss_f: 0.5198
-2026-01-24 16:46:15.947 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 3 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:47:29.049 | INFO     | __main__:on_train_epoch_end:418 - Epoch 4 训练总结 >> loss_c: 2.8024 | loss_f: 0.4999
-2026-01-24 16:47:29.068 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 4 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:48:41.609 | INFO     | __main__:on_train_epoch_end:418 - Epoch 5 训练总结 >> loss_c: 2.7136 | loss_f: 0.4924
-2026-01-24 16:48:42.519 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=81, Spatial Binning后=71
-2026-01-24 16:48:42.535 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=21/71, H_est是否单位矩阵=False
-2026-01-24 16:48:42.536 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (21), 可能导致配准质量差
-2026-01-24 16:48:42.538 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=7, Spatial Binning后=7
-2026-01-24 16:48:42.541 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=4/7, H_est是否单位矩阵=False
-2026-01-24 16:48:42.542 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:42.544 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=93, Spatial Binning后=91
-2026-01-24 16:48:42.554 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=32/91, H_est是否单位矩阵=False
-2026-01-24 16:48:42.556 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=246, Spatial Binning后=140
-2026-01-24 16:48:42.562 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=53/140, H_est是否单位矩阵=False
-2026-01-24 16:48:44.408 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=4, Spatial Binning后=4
-2026-01-24 16:48:44.409 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=4/4, H_est是否单位矩阵=False
-2026-01-24 16:48:44.409 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:44.410 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=26, Spatial Binning后=26
-2026-01-24 16:48:44.414 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=10/26, H_est是否单位矩阵=False
-2026-01-24 16:48:44.415 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 16:48:44.415 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=11, Spatial Binning后=11
-2026-01-24 16:48:44.421 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=4/11, H_est是否单位矩阵=False
-2026-01-24 16:48:44.421 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:44.421 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=5, Spatial Binning后=5
-2026-01-24 16:48:44.422 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=4/5, H_est是否单位矩阵=False
-2026-01-24 16:48:44.423 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:45.651 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=8, Spatial Binning后=8
-2026-01-24 16:48:45.654 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=4/8, H_est是否单位矩阵=False
-2026-01-24 16:48:45.655 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:45.655 | WARNING  | src.utils.metrics:compute_homography_errors:230 - ⚠️ Batch 1: 匹配点数不足 (0 < 4)
-2026-01-24 16:48:45.656 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=15, Spatial Binning后=15
-2026-01-24 16:48:45.658 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=7/15, H_est是否单位矩阵=False
-2026-01-24 16:48:45.658 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 16:48:45.659 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=10, Spatial Binning后=10
-2026-01-24 16:48:45.661 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=6/10, H_est是否单位矩阵=False
-2026-01-24 16:48:45.661 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (6), 可能导致配准质量差
-2026-01-24 16:48:45.954 | WARNING  | __main__:_save_batch_results:487 - ⚠️ Batch 中有 1/4 个样本的 H_est 是单位矩阵
-2026-01-24 16:48:46.134 | WARNING  | __main__:_save_batch_results:526 - 样本 561_N_cf_512_vs_561_N_fa_gen: H_est 是单位矩阵
-2026-01-24 16:48:47.859 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=25, Spatial Binning后=25
-2026-01-24 16:48:47.868 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=8/25, H_est是否单位矩阵=False
-2026-01-24 16:48:47.868 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 16:48:47.869 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=166, Spatial Binning后=147
-2026-01-24 16:48:47.871 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=89/147, H_est是否单位矩阵=False
-2026-01-24 16:48:47.872 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=65, Spatial Binning后=65
-2026-01-24 16:48:47.874 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=31/65, H_est是否单位矩阵=False
-2026-01-24 16:48:47.874 | WARNING  | src.utils.metrics:compute_homography_errors:230 - ⚠️ Batch 3: 匹配点数不足 (2 < 4)
-2026-01-24 16:48:48.338 | WARNING  | __main__:_save_batch_results:487 - ⚠️ Batch 中有 1/4 个样本的 H_est 是单位矩阵
-2026-01-24 16:48:49.022 | WARNING  | __main__:_save_batch_results:526 - 样本 063_01_vs_063_02: H_est 是单位矩阵
-2026-01-24 16:48:49.363 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=7, Spatial Binning后=7
-2026-01-24 16:48:49.365 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=4/7, H_est是否单位矩阵=False
-2026-01-24 16:48:49.366 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:49.367 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=10, Spatial Binning后=10
-2026-01-24 16:48:49.369 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=5/10, H_est是否单位矩阵=False
-2026-01-24 16:48:49.369 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 16:48:49.369 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=11, Spatial Binning后=11
-2026-01-24 16:48:49.372 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=5/11, H_est是否单位矩阵=False
-2026-01-24 16:48:49.372 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 16:48:49.373 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=6, Spatial Binning后=6
-2026-01-24 16:48:49.374 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=4/6, H_est是否单位矩阵=False
-2026-01-24 16:48:49.374 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:50.863 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=15, Spatial Binning后=15
-2026-01-24 16:48:50.870 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=5/15, H_est是否单位矩阵=False
-2026-01-24 16:48:50.871 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 16:48:50.873 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=371, Spatial Binning后=166
-2026-01-24 16:48:50.875 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=96/166, H_est是否单位矩阵=False
-2026-01-24 16:48:50.876 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=120, Spatial Binning后=98
-2026-01-24 16:48:50.878 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=55/98, H_est是否单位矩阵=False
-2026-01-24 16:48:50.879 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=70, Spatial Binning后=51
-2026-01-24 16:48:50.880 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=39/51, H_est是否单位矩阵=False
-2026-01-24 16:48:52.414 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=121, Spatial Binning后=100
-2026-01-24 16:48:52.424 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=32/100, H_est是否单位矩阵=False
-2026-01-24 16:48:52.425 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=6, Spatial Binning后=6
-2026-01-24 16:48:52.426 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=4/6, H_est是否单位矩阵=False
-2026-01-24 16:48:52.427 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:48:52.427 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=28, Spatial Binning后=28
-2026-01-24 16:48:52.429 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=16/28, H_est是否单位矩阵=False
-2026-01-24 16:48:52.429 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (16), 可能导致配准质量差
-2026-01-24 16:48:52.430 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=29, Spatial Binning后=29
-2026-01-24 16:48:52.434 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=11/29, H_est是否单位矩阵=False
-2026-01-24 16:48:52.434 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (11), 可能导致配准质量差
-2026-01-24 16:48:53.681 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=38, Spatial Binning后=38
-2026-01-24 16:48:53.684 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=17/38, H_est是否单位矩阵=False
-2026-01-24 16:48:53.684 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (17), 可能导致配准质量差
-2026-01-24 16:48:53.684 | WARNING  | src.utils.metrics:compute_homography_errors:230 - ⚠️ Batch 1: 匹配点数不足 (2 < 4)
-2026-01-24 16:48:53.685 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=52, Spatial Binning后=52
-2026-01-24 16:48:53.686 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=31/52, H_est是否单位矩阵=False
-2026-01-24 16:48:53.687 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=8, Spatial Binning后=8
-2026-01-24 16:48:53.688 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=5/8, H_est是否单位矩阵=False
-2026-01-24 16:48:53.688 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 16:48:54.015 | WARNING  | __main__:_save_batch_results:487 - ⚠️ Batch 中有 1/4 个样本的 H_est 是单位矩阵
-2026-01-24 16:48:54.205 | WARNING  | __main__:_save_batch_results:526 - 样本 003_01_vs_003_02: H_est 是单位矩阵
-2026-01-24 16:48:54.832 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 16:48:56.796 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
-2026-01-24 16:49:00.297 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 5 验证总结（真实数据） >> mse_real: 0.0225 | auc@5: 0.0000 | auc@10: 0.0277 | auc@20: 0.0746 | loss_c: 3.4338 | loss_f: 1.0000 | loss: 3.4338
-2026-01-24 16:49:00.960 | INFO     | __main__:on_validation_epoch_end:470 - 发现新的最优模型! Epoch 5, MSE: 0.022531
-2026-01-24 16:49:01.291 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 5 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:50:15.182 | INFO     | __main__:on_train_epoch_end:418 - Epoch 6 训练总结 >> loss_c: 2.6100 | loss_f: 0.4811
-2026-01-24 16:50:15.200 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 6 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:51:27.957 | INFO     | __main__:on_train_epoch_end:418 - Epoch 7 训练总结 >> loss_c: 2.5294 | loss_f: 0.4786
-2026-01-24 16:51:27.977 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 7 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:52:42.928 | INFO     | __main__:on_train_epoch_end:418 - Epoch 8 训练总结 >> loss_c: 2.4304 | loss_f: 0.4605
-2026-01-24 16:52:42.946 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 8 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:53:56.412 | INFO     | __main__:on_train_epoch_end:418 - Epoch 9 训练总结 >> loss_c: 2.4090 | loss_f: 0.4577
-2026-01-24 16:53:56.430 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 9 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:55:08.984 | INFO     | __main__:on_train_epoch_end:418 - Epoch 10 训练总结 >> loss_c: 2.3094 | loss_f: 0.4443
-2026-01-24 16:55:10.073 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=536, Spatial Binning后=257
-2026-01-24 16:55:10.081 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=88/257, H_est是否单位矩阵=False
-2026-01-24 16:55:10.082 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=87, Spatial Binning后=87
-2026-01-24 16:55:10.114 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=10/87, H_est是否单位矩阵=False
-2026-01-24 16:55:10.114 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 16:55:10.117 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=488, Spatial Binning后=253
-2026-01-24 16:55:10.119 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=119/253, H_est是否单位矩阵=False
-2026-01-24 16:55:10.123 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=833, Spatial Binning后=250
-2026-01-24 16:55:10.125 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=116/250, H_est是否单位矩阵=False
-2026-01-24 16:55:12.411 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=7, Spatial Binning后=7
-2026-01-24 16:55:12.413 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=4/7, H_est是否单位矩阵=False
-2026-01-24 16:55:12.413 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 16:55:12.415 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=283, Spatial Binning后=150
-2026-01-24 16:55:12.431 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=41/150, H_est是否单位矩阵=False
-2026-01-24 16:55:12.432 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=269, Spatial Binning后=170
-2026-01-24 16:55:12.437 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=63/170, H_est是否单位矩阵=False
-2026-01-24 16:55:12.438 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=130, Spatial Binning后=114
-2026-01-24 16:55:12.457 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=29/114, H_est是否单位矩阵=False
-2026-01-24 16:55:12.458 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (29), 可能导致配准质量差
-2026-01-24 16:55:14.268 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=49, Spatial Binning后=49
-2026-01-24 16:55:14.298 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=8/49, H_est是否单位矩阵=False
-2026-01-24 16:55:14.299 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 16:55:14.300 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=97, Spatial Binning后=78
-2026-01-24 16:55:14.304 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=33/78, H_est是否单位矩阵=False
-2026-01-24 16:55:14.305 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=171, Spatial Binning后=146
-2026-01-24 16:55:14.311 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=52/146, H_est是否单位矩阵=False
-2026-01-24 16:55:14.313 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=240, Spatial Binning后=188
-2026-01-24 16:55:14.316 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=80/188, H_est是否单位矩阵=False
-2026-01-24 16:55:16.653 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=67, Spatial Binning后=67
-2026-01-24 16:55:16.683 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=15/67, H_est是否单位矩阵=False
-2026-01-24 16:55:16.684 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (15), 可能导致配准质量差
-2026-01-24 16:55:16.685 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=114, Spatial Binning后=93
-2026-01-24 16:55:16.687 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=47/93, H_est是否单位矩阵=False
-2026-01-24 16:55:16.688 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=42, Spatial Binning后=42
-2026-01-24 16:55:16.693 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=15/42, H_est是否单位矩阵=False
-2026-01-24 16:55:16.694 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (15), 可能导致配准质量差
-2026-01-24 16:55:16.694 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=15, Spatial Binning后=15
-2026-01-24 16:55:16.701 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=7/15, H_est是否单位矩阵=False
-2026-01-24 16:55:16.701 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 16:55:18.199 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=28, Spatial Binning后=28
-2026-01-24 16:55:18.202 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=12/28, H_est是否单位矩阵=False
-2026-01-24 16:55:18.202 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 16:55:18.203 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=52, Spatial Binning后=52
-2026-01-24 16:55:18.223 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=13/52, H_est是否单位矩阵=False
-2026-01-24 16:55:18.224 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (13), 可能导致配准质量差
-2026-01-24 16:55:18.225 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=48, Spatial Binning后=48
-2026-01-24 16:55:18.255 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=11/48, H_est是否单位矩阵=False
-2026-01-24 16:55:18.255 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (11), 可能导致配准质量差
-2026-01-24 16:55:18.256 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=26, Spatial Binning后=26
-2026-01-24 16:55:18.271 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=7/26, H_est是否单位矩阵=False
-2026-01-24 16:55:18.271 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 16:55:19.557 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=127, Spatial Binning后=122
-2026-01-24 16:55:19.590 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=16/122, H_est是否单位矩阵=False
-2026-01-24 16:55:19.591 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (16), 可能导致配准质量差
-2026-01-24 16:55:19.595 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=647, Spatial Binning后=256
-2026-01-24 16:55:19.597 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=127/256, H_est是否单位矩阵=False
-2026-01-24 16:55:19.598 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=165, Spatial Binning后=113
-2026-01-24 16:55:19.602 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=47/113, H_est是否单位矩阵=False
-2026-01-24 16:55:19.604 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=299, Spatial Binning后=150
-2026-01-24 16:55:19.605 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=88/150, H_est是否单位矩阵=False
-2026-01-24 16:55:21.515 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=316, Spatial Binning后=205
-2026-01-24 16:55:21.526 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=61/205, H_est是否单位矩阵=False
-2026-01-24 16:55:21.527 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=89, Spatial Binning后=89
-2026-01-24 16:55:21.558 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=10/89, H_est是否单位矩阵=False
-2026-01-24 16:55:21.558 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 16:55:21.559 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=135, Spatial Binning后=123
-2026-01-24 16:55:21.591 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=21/123, H_est是否单位矩阵=False
-2026-01-24 16:55:21.591 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (21), 可能导致配准质量差
-2026-01-24 16:55:21.593 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=335, Spatial Binning后=199
-2026-01-24 16:55:21.626 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=35/199, H_est是否单位矩阵=False
-2026-01-24 16:55:23.123 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=131, Spatial Binning后=121
-2026-01-24 16:55:23.128 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=47/121, H_est是否单位矩阵=False
-2026-01-24 16:55:23.129 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=32, Spatial Binning后=32
-2026-01-24 16:55:23.130 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=16/32, H_est是否单位矩阵=False
-2026-01-24 16:55:23.131 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (16), 可能导致配准质量差
-2026-01-24 16:55:23.133 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=413, Spatial Binning后=252
-2026-01-24 16:55:23.136 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=106/252, H_est是否单位矩阵=False
-2026-01-24 16:55:23.137 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=23, Spatial Binning后=23
-2026-01-24 16:55:23.143 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=8/23, H_est是否单位矩阵=False
-2026-01-24 16:55:23.143 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 16:55:24.493 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 16:55:27.273 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
-2026-01-24 16:55:31.471 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 10 验证总结（真实数据） >> mse_real: 0.0206 | auc@5: 0.0727 | auc@10: 0.1349 | auc@20: 0.2353 | loss_c: 3.4381 | loss_f: 1.0000 | loss: 3.4381
-2026-01-24 16:55:33.001 | INFO     | __main__:on_validation_epoch_end:470 - 发现新的最优模型! Epoch 10, MSE: 0.020613
-2026-01-24 16:55:33.405 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 10 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:56:47.138 | INFO     | __main__:on_train_epoch_end:418 - Epoch 11 训练总结 >> loss_c: 2.3198 | loss_f: 0.4484
-2026-01-24 16:56:47.157 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 11 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:58:00.678 | INFO     | __main__:on_train_epoch_end:418 - Epoch 12 训练总结 >> loss_c: 2.1586 | loss_f: 0.4306
-2026-01-24 16:58:00.697 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 12 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 16:59:15.167 | INFO     | __main__:on_train_epoch_end:418 - Epoch 13 训练总结 >> loss_c: 2.1020 | loss_f: 0.4263
-2026-01-24 16:59:15.184 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 13 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:00:28.566 | INFO     | __main__:on_train_epoch_end:418 - Epoch 14 训练总结 >> loss_c: 2.1100 | loss_f: 0.4274
-2026-01-24 17:00:28.584 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 14 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:01:41.767 | INFO     | __main__:on_train_epoch_end:418 - Epoch 15 训练总结 >> loss_c: 2.0584 | loss_f: 0.4092
-2026-01-24 17:01:42.868 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=921, Spatial Binning后=295
-2026-01-24 17:01:42.876 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=100/295, H_est是否单位矩阵=False
-2026-01-24 17:01:42.877 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=86, Spatial Binning后=86
-2026-01-24 17:01:42.907 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=12/86, H_est是否单位矩阵=False
-2026-01-24 17:01:42.908 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 17:01:42.912 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=811, Spatial Binning后=288
-2026-01-24 17:01:42.913 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=169/288, H_est是否单位矩阵=False
-2026-01-24 17:01:42.918 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=1044, Spatial Binning后=289
-2026-01-24 17:01:42.920 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=142/289, H_est是否单位矩阵=False
-2026-01-24 17:01:45.667 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=135, Spatial Binning后=93
-2026-01-24 17:01:45.669 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=43/93, H_est是否单位矩阵=False
-2026-01-24 17:01:45.671 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=159, Spatial Binning后=134
-2026-01-24 17:01:45.701 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=27/134, H_est是否单位矩阵=False
-2026-01-24 17:01:45.701 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (27), 可能导致配准质量差
-2026-01-24 17:01:45.704 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=611, Spatial Binning后=215
-2026-01-24 17:01:45.706 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=111/215, H_est是否单位矩阵=False
-2026-01-24 17:01:45.707 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=100, Spatial Binning后=99
-2026-01-24 17:01:45.717 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=30/99, H_est是否单位矩阵=False
-2026-01-24 17:01:47.495 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=36, Spatial Binning后=36
-2026-01-24 17:01:47.525 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=7/36, H_est是否单位矩阵=False
-2026-01-24 17:01:47.525 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:01:47.526 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=38, Spatial Binning后=38
-2026-01-24 17:01:47.557 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=7/38, H_est是否单位矩阵=False
-2026-01-24 17:01:47.557 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:01:47.559 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=264, Spatial Binning后=203
-2026-01-24 17:01:47.561 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=109/203, H_est是否单位矩阵=False
-2026-01-24 17:01:47.563 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=338, Spatial Binning后=204
-2026-01-24 17:01:47.565 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=101/204, H_est是否单位矩阵=False
-2026-01-24 17:01:50.014 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=84, Spatial Binning后=84
-2026-01-24 17:01:50.046 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=14/84, H_est是否单位矩阵=False
-2026-01-24 17:01:50.046 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (14), 可能导致配准质量差
-2026-01-24 17:01:50.047 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=124, Spatial Binning后=109
-2026-01-24 17:01:50.051 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=43/109, H_est是否单位矩阵=False
-2026-01-24 17:01:50.052 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=33, Spatial Binning后=33
-2026-01-24 17:01:50.057 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=12/33, H_est是否单位矩阵=False
-2026-01-24 17:01:50.057 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 17:01:50.058 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=34, Spatial Binning后=34
-2026-01-24 17:01:50.075 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=9/34, H_est是否单位矩阵=False
-2026-01-24 17:01:50.075 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:01:51.582 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=47, Spatial Binning后=47
-2026-01-24 17:01:51.615 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=9/47, H_est是否单位矩阵=False
-2026-01-24 17:01:51.616 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:01:51.617 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=139, Spatial Binning后=124
-2026-01-24 17:01:51.649 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=19/124, H_est是否单位矩阵=False
-2026-01-24 17:01:51.649 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (19), 可能导致配准质量差
-2026-01-24 17:01:51.650 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=61, Spatial Binning后=61
-2026-01-24 17:01:51.683 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=6/61, H_est是否单位矩阵=False
-2026-01-24 17:01:51.683 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (6), 可能导致配准质量差
-2026-01-24 17:01:51.684 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=25, Spatial Binning后=25
-2026-01-24 17:01:51.692 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=8/25, H_est是否单位矩阵=False
-2026-01-24 17:01:51.692 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 17:01:53.281 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=105, Spatial Binning后=102
-2026-01-24 17:01:53.313 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=11/102, H_est是否单位矩阵=False
-2026-01-24 17:01:53.313 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (11), 可能导致配准质量差
-2026-01-24 17:01:53.317 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=785, Spatial Binning后=253
-2026-01-24 17:01:53.321 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=116/253, H_est是否单位矩阵=False
-2026-01-24 17:01:53.323 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=566, Spatial Binning后=233
-2026-01-24 17:01:53.333 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=72/233, H_est是否单位矩阵=False
-2026-01-24 17:01:53.334 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=213, Spatial Binning后=131
-2026-01-24 17:01:53.336 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=77/131, H_est是否单位矩阵=False
-2026-01-24 17:01:55.183 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=348, Spatial Binning后=208
-2026-01-24 17:01:55.203 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=53/208, H_est是否单位矩阵=False
-2026-01-24 17:01:55.204 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=83, Spatial Binning后=83
-2026-01-24 17:01:55.236 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=10/83, H_est是否单位矩阵=False
-2026-01-24 17:01:55.236 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:01:55.237 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=92, Spatial Binning后=92
-2026-01-24 17:01:55.268 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=13/92, H_est是否单位矩阵=False
-2026-01-24 17:01:55.269 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (13), 可能导致配准质量差
-2026-01-24 17:01:55.270 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=150, Spatial Binning后=128
-2026-01-24 17:01:55.301 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=17/128, H_est是否单位矩阵=False
-2026-01-24 17:01:55.301 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (17), 可能导致配准质量差
-2026-01-24 17:01:56.754 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=14, Spatial Binning后=14
-2026-01-24 17:01:56.757 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=7/14, H_est是否单位矩阵=False
-2026-01-24 17:01:56.757 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:01:56.758 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=34, Spatial Binning后=34
-2026-01-24 17:01:56.759 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=18/34, H_est是否单位矩阵=False
-2026-01-24 17:01:56.760 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (18), 可能导致配准质量差
-2026-01-24 17:01:56.763 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=574, Spatial Binning后=265
-2026-01-24 17:01:56.766 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=106/265, H_est是否单位矩阵=False
-2026-01-24 17:01:56.767 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=30, Spatial Binning后=30
-2026-01-24 17:01:56.774 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=10/30, H_est是否单位矩阵=False
-2026-01-24 17:01:56.774 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:01:58.317 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 17:02:01.030 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
-2026-01-24 17:02:05.378 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 15 验证总结（真实数据） >> mse_real: 0.0209 | auc@5: 0.0594 | auc@10: 0.1605 | auc@20: 0.2586 | loss_c: 3.4334 | loss_f: 1.0000 | loss: 3.4334
-2026-01-24 17:02:06.541 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 15 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:03:20.066 | INFO     | __main__:on_train_epoch_end:418 - Epoch 16 训练总结 >> loss_c: 2.0993 | loss_f: 0.4062
-2026-01-24 17:03:20.084 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 16 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:04:33.301 | INFO     | __main__:on_train_epoch_end:418 - Epoch 17 训练总结 >> loss_c: 1.9620 | loss_f: 0.3938
-2026-01-24 17:04:33.318 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 17 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:05:47.963 | INFO     | __main__:on_train_epoch_end:418 - Epoch 18 训练总结 >> loss_c: 1.9087 | loss_f: 0.3828
-2026-01-24 17:05:47.981 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 18 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:07:02.137 | INFO     | __main__:on_train_epoch_end:418 - Epoch 19 训练总结 >> loss_c: 1.8336 | loss_f: 0.3792
-2026-01-24 17:07:02.154 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 19 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:08:16.324 | INFO     | __main__:on_train_epoch_end:418 - Epoch 20 训练总结 >> loss_c: 1.8443 | loss_f: 0.3694
-2026-01-24 17:08:17.437 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=1306, Spatial Binning后=318
-2026-01-24 17:08:17.442 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=131/318, H_est是否单位矩阵=False
-2026-01-24 17:08:17.444 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=156, Spatial Binning后=150
-2026-01-24 17:08:17.475 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=10/150, H_est是否单位矩阵=False
-2026-01-24 17:08:17.475 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:08:17.481 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=1161, Spatial Binning后=304
-2026-01-24 17:08:17.482 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=183/304, H_est是否单位矩阵=False
-2026-01-24 17:08:17.488 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=1472, Spatial Binning后=315
-2026-01-24 17:08:17.490 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=162/315, H_est是否单位矩阵=False
-2026-01-24 17:08:20.695 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=232, Spatial Binning后=150
-2026-01-24 17:08:20.699 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=60/150, H_est是否单位矩阵=False
-2026-01-24 17:08:20.702 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=680, Spatial Binning后=217
-2026-01-24 17:08:20.717 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=60/217, H_est是否单位矩阵=False
-2026-01-24 17:08:20.720 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=636, Spatial Binning后=200
-2026-01-24 17:08:20.722 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=102/200, H_est是否单位矩阵=False
-2026-01-24 17:08:20.726 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=737, Spatial Binning后=260
-2026-01-24 17:08:20.730 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=101/260, H_est是否单位矩阵=False
-2026-01-24 17:08:22.837 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=144, Spatial Binning后=136
-2026-01-24 17:08:22.869 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=21/136, H_est是否单位矩阵=False
-2026-01-24 17:08:22.870 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (21), 可能导致配准质量差
-2026-01-24 17:08:22.874 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=732, Spatial Binning后=274
-2026-01-24 17:08:22.877 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=113/274, H_est是否单位矩阵=False
-2026-01-24 17:08:22.880 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=562, Spatial Binning后=231
-2026-01-24 17:08:22.882 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=136/231, H_est是否单位矩阵=False
-2026-01-24 17:08:22.885 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=596, Spatial Binning后=227
-2026-01-24 17:08:22.886 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=140/227, H_est是否单位矩阵=False
-2026-01-24 17:08:25.961 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=84, Spatial Binning后=84
-2026-01-24 17:08:25.994 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=11/84, H_est是否单位矩阵=False
-2026-01-24 17:08:25.994 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (11), 可能导致配准质量差
-2026-01-24 17:08:25.996 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=221, Spatial Binning后=160
-2026-01-24 17:08:25.998 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=82/160, H_est是否单位矩阵=False
-2026-01-24 17:08:25.999 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=148, Spatial Binning后=116
-2026-01-24 17:08:26.001 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=58/116, H_est是否单位矩阵=False
-2026-01-24 17:08:26.002 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=35, Spatial Binning后=35
-2026-01-24 17:08:26.021 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=9/35, H_est是否单位矩阵=False
-2026-01-24 17:08:26.021 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:08:27.534 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=58, Spatial Binning后=58
-2026-01-24 17:08:27.564 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=13/58, H_est是否单位矩阵=False
-2026-01-24 17:08:27.565 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (13), 可能导致配准质量差
-2026-01-24 17:08:27.565 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=62, Spatial Binning后=60
-2026-01-24 17:08:27.596 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=13/60, H_est是否单位矩阵=False
-2026-01-24 17:08:27.596 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (13), 可能导致配准质量差
-2026-01-24 17:08:27.597 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=50, Spatial Binning后=50
-2026-01-24 17:08:27.628 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=8/50, H_est是否单位矩阵=False
-2026-01-24 17:08:27.628 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 17:08:27.629 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=53, Spatial Binning后=53
-2026-01-24 17:08:27.646 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=14/53, H_est是否单位矩阵=False
-2026-01-24 17:08:27.646 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (14), 可能导致配准质量差
-2026-01-24 17:08:28.925 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=103, Spatial Binning后=95
-2026-01-24 17:08:28.956 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=12/95, H_est是否单位矩阵=False
-2026-01-24 17:08:28.956 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 17:08:28.959 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=655, Spatial Binning后=267
-2026-01-24 17:08:28.964 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=105/267, H_est是否单位矩阵=False
-2026-01-24 17:08:28.966 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=345, Spatial Binning后=193
-2026-01-24 17:08:28.969 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=82/193, H_est是否单位矩阵=False
-2026-01-24 17:08:28.971 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=416, Spatial Binning后=171
-2026-01-24 17:08:28.973 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=91/171, H_est是否单位矩阵=False
-2026-01-24 17:08:31.022 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=342, Spatial Binning后=225
-2026-01-24 17:08:31.036 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=63/225, H_est是否单位矩阵=False
-2026-01-24 17:08:31.037 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=63, Spatial Binning后=63
-2026-01-24 17:08:31.067 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=9/63, H_est是否单位矩阵=False
-2026-01-24 17:08:31.067 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:08:31.068 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=168, Spatial Binning后=155
-2026-01-24 17:08:31.098 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=21/155, H_est是否单位矩阵=False
-2026-01-24 17:08:31.099 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (21), 可能导致配准质量差
-2026-01-24 17:08:31.101 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=366, Spatial Binning后=215
-2026-01-24 17:08:31.131 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=27/215, H_est是否单位矩阵=False
-2026-01-24 17:08:31.131 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (27), 可能导致配准质量差
-2026-01-24 17:08:32.707 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=49, Spatial Binning后=49
-2026-01-24 17:08:32.710 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=21/49, H_est是否单位矩阵=False
-2026-01-24 17:08:32.710 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (21), 可能导致配准质量差
-2026-01-24 17:08:32.711 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=23, Spatial Binning后=23
-2026-01-24 17:08:32.717 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=8/23, H_est是否单位矩阵=False
-2026-01-24 17:08:32.717 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 17:08:32.720 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=627, Spatial Binning后=268
-2026-01-24 17:08:32.723 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=116/268, H_est是否单位矩阵=False
-2026-01-24 17:08:32.724 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=42, Spatial Binning后=42
-2026-01-24 17:08:32.729 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=15/42, H_est是否单位矩阵=False
-2026-01-24 17:08:32.730 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (15), 可能导致配准质量差
-2026-01-24 17:08:34.064 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 17:08:37.352 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
-2026-01-24 17:08:41.672 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 20 验证总结（真实数据） >> mse_real: 0.0227 | auc@5: 0.1065 | auc@10: 0.2263 | auc@20: 0.3241 | loss_c: 3.4373 | loss_f: 1.0000 | loss: 3.4373
-2026-01-24 17:08:43.125 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 20 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:09:56.985 | INFO     | __main__:on_train_epoch_end:418 - Epoch 21 训练总结 >> loss_c: 1.9783 | loss_f: 0.3911
-2026-01-24 17:09:57.003 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 21 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:11:10.067 | INFO     | __main__:on_train_epoch_end:418 - Epoch 22 训练总结 >> loss_c: 1.8893 | loss_f: 0.3745
-2026-01-24 17:11:10.084 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 22 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:12:24.525 | INFO     | __main__:on_train_epoch_end:418 - Epoch 23 训练总结 >> loss_c: 1.8534 | loss_f: 0.3681
-2026-01-24 17:12:24.542 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 23 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:13:38.300 | INFO     | __main__:on_train_epoch_end:418 - Epoch 24 训练总结 >> loss_c: 1.9001 | loss_f: 0.3682
-2026-01-24 17:13:38.316 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 24 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:14:51.904 | INFO     | __main__:on_train_epoch_end:418 - Epoch 25 训练总结 >> loss_c: 1.8291 | loss_f: 0.3636
-2026-01-24 17:14:52.886 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=1229, Spatial Binning后=316
-2026-01-24 17:14:52.890 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=169/316, H_est是否单位矩阵=False
-2026-01-24 17:14:52.892 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=121, Spatial Binning后=121
-2026-01-24 17:14:52.923 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=8/121, H_est是否单位矩阵=False
-2026-01-24 17:14:52.923 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 17:14:52.928 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=1013, Spatial Binning后=295
-2026-01-24 17:14:52.930 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=187/295, H_est是否单位矩阵=False
-2026-01-24 17:14:52.937 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=1469, Spatial Binning后=307
-2026-01-24 17:14:52.938 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=184/307, H_est是否单位矩阵=False
-2026-01-24 17:14:56.381 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=338, Spatial Binning后=169
-2026-01-24 17:14:56.385 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=83/169, H_est是否单位矩阵=False
-2026-01-24 17:14:56.394 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=774, Spatial Binning后=224
-2026-01-24 17:14:56.402 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=73/224, H_est是否单位矩阵=False
-2026-01-24 17:14:56.407 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=736, Spatial Binning后=218
-2026-01-24 17:14:56.408 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=125/218, H_est是否单位矩阵=False
-2026-01-24 17:14:56.413 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=818, Spatial Binning后=267
-2026-01-24 17:14:56.418 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=105/267, H_est是否单位矩阵=False
-2026-01-24 17:14:59.152 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=52, Spatial Binning后=52
-2026-01-24 17:14:59.183 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=10/52, H_est是否单位矩阵=False
-2026-01-24 17:14:59.184 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:14:59.188 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=848, Spatial Binning后=287
-2026-01-24 17:14:59.192 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=119/287, H_est是否单位矩阵=False
-2026-01-24 17:14:59.194 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=430, Spatial Binning后=220
-2026-01-24 17:14:59.197 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=115/220, H_est是否单位矩阵=False
-2026-01-24 17:14:59.200 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=582, Spatial Binning后=225
-2026-01-24 17:14:59.202 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=122/225, H_est是否单位矩阵=False
-2026-01-24 17:15:02.218 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=13, Spatial Binning后=13
-2026-01-24 17:15:02.221 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=6/13, H_est是否单位矩阵=False
-2026-01-24 17:15:02.222 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (6), 可能导致配准质量差
-2026-01-24 17:15:02.223 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=47, Spatial Binning后=43
-2026-01-24 17:15:02.224 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=34/43, H_est是否单位矩阵=False
-2026-01-24 17:15:02.224 | WARNING  | src.utils.metrics:compute_homography_errors:230 - ⚠️ Batch 2: 匹配点数不足 (3 < 4)
-2026-01-24 17:15:02.225 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=4, Spatial Binning后=4
-2026-01-24 17:15:02.225 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=4/4, H_est是否单位矩阵=False
-2026-01-24 17:15:02.226 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 17:15:02.700 | WARNING  | __main__:_save_batch_results:487 - ⚠️ Batch 中有 1/4 个样本的 H_est 是单位矩阵
-2026-01-24 17:15:03.105 | WARNING  | __main__:_save_batch_results:526 - 样本 023_01_vs_023_02: H_est 是单位矩阵
-2026-01-24 17:15:03.619 | WARNING  | src.utils.metrics:compute_homography_errors:230 - ⚠️ Batch 0: 匹配点数不足 (2 < 4)
-2026-01-24 17:15:03.620 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=22, Spatial Binning后=22
-2026-01-24 17:15:03.629 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=7/22, H_est是否单位矩阵=False
-2026-01-24 17:15:03.629 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:15:03.629 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=9, Spatial Binning后=9
-2026-01-24 17:15:03.632 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=4/9, H_est是否单位矩阵=False
-2026-01-24 17:15:03.632 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 17:15:03.633 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=14, Spatial Binning后=14
-2026-01-24 17:15:03.635 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=7/14, H_est是否单位矩阵=False
-2026-01-24 17:15:03.635 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:15:03.956 | WARNING  | __main__:_save_batch_results:487 - ⚠️ Batch 中有 1/4 个样本的 H_est 是单位矩阵
-2026-01-24 17:15:03.958 | WARNING  | __main__:_save_batch_results:526 - 样本 067_01_vs_067_02: H_est 是单位矩阵
-2026-01-24 17:15:04.850 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=19, Spatial Binning后=19
-2026-01-24 17:15:04.855 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=7/19, H_est是否单位矩阵=False
-2026-01-24 17:15:04.855 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:15:04.857 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=171, Spatial Binning后=154
-2026-01-24 17:15:04.861 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=60/154, H_est是否单位矩阵=False
-2026-01-24 17:15:04.862 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=132, Spatial Binning后=107
-2026-01-24 17:15:04.866 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=45/107, H_est是否单位矩阵=False
-2026-01-24 17:15:04.867 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=110, Spatial Binning后=66
-2026-01-24 17:15:04.868 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=47/66, H_est是否单位矩阵=False
-2026-01-24 17:15:06.664 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=27, Spatial Binning后=27
-2026-01-24 17:15:06.666 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=13/27, H_est是否单位矩阵=False
-2026-01-24 17:15:06.666 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (13), 可能导致配准质量差
-2026-01-24 17:15:06.667 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=12, Spatial Binning后=12
-2026-01-24 17:15:06.670 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=5/12, H_est是否单位矩阵=False
-2026-01-24 17:15:06.671 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 17:15:06.671 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=32, Spatial Binning后=32
-2026-01-24 17:15:06.681 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=10/32, H_est是否单位矩阵=False
-2026-01-24 17:15:06.681 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:15:06.682 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=61, Spatial Binning后=61
-2026-01-24 17:15:06.692 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=19/61, H_est是否单位矩阵=False
-2026-01-24 17:15:06.693 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (19), 可能导致配准质量差
-2026-01-24 17:15:07.996 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=7, Spatial Binning后=7
-2026-01-24 17:15:07.998 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=4/7, H_est是否单位矩阵=False
-2026-01-24 17:15:07.998 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 17:15:07.998 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=4, Spatial Binning后=4
-2026-01-24 17:15:07.999 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=4/4, H_est是否单位矩阵=False
-2026-01-24 17:15:07.999 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 17:15:08.001 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=345, Spatial Binning后=208
-2026-01-24 17:15:08.004 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=110/208, H_est是否单位矩阵=False
-2026-01-24 17:15:08.004 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=5, Spatial Binning后=5
-2026-01-24 17:15:08.005 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=4/5, H_est是否单位矩阵=False
-2026-01-24 17:15:08.005 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 17:15:09.252 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 17:15:12.674 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
-2026-01-24 17:15:16.494 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 25 验证总结（真实数据） >> mse_real: 0.0290 | auc@5: 0.1468 | auc@10: 0.2778 | auc@20: 0.3472 | loss_c: 3.4365 | loss_f: 1.0000 | loss: 3.4365
-2026-01-24 17:15:17.532 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 25 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:16:32.947 | INFO     | __main__:on_train_epoch_end:418 - Epoch 26 训练总结 >> loss_c: 1.8345 | loss_f: 0.3607
-2026-01-24 17:16:32.967 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 26 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:17:46.193 | INFO     | __main__:on_train_epoch_end:418 - Epoch 27 训练总结 >> loss_c: 1.7349 | loss_f: 0.3506
-2026-01-24 17:17:46.211 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 27 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:19:00.748 | INFO     | __main__:on_train_epoch_end:418 - Epoch 28 训练总结 >> loss_c: 1.7380 | loss_f: 0.3440
-2026-01-24 17:19:00.765 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 28 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:20:14.146 | INFO     | __main__:on_train_epoch_end:418 - Epoch 29 训练总结 >> loss_c: 1.7660 | loss_f: 0.3595
-2026-01-24 17:20:14.163 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 29 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:21:28.072 | INFO     | __main__:on_train_epoch_end:418 - Epoch 30 训练总结 >> loss_c: 1.7247 | loss_f: 0.3527
-2026-01-24 17:21:29.101 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=1313, Spatial Binning后=311
-2026-01-24 17:21:29.104 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=145/311, H_est是否单位矩阵=False
-2026-01-24 17:21:29.106 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=178, Spatial Binning后=157
-2026-01-24 17:21:29.138 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=16/157, H_est是否单位矩阵=False
-2026-01-24 17:21:29.138 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (16), 可能导致配准质量差
-2026-01-24 17:21:29.145 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=1314, Spatial Binning后=304
-2026-01-24 17:21:29.146 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=210/304, H_est是否单位矩阵=False
-2026-01-24 17:21:29.153 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=1505, Spatial Binning后=302
-2026-01-24 17:21:29.155 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=172/302, H_est是否单位矩阵=False
-2026-01-24 17:21:32.540 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=457, Spatial Binning后=178
-2026-01-24 17:21:32.544 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=72/178, H_est是否单位矩阵=False
-2026-01-24 17:21:32.548 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=872, Spatial Binning后=219
-2026-01-24 17:21:32.552 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=91/219, H_est是否单位矩阵=False
-2026-01-24 17:21:32.556 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=988, Spatial Binning后=228
-2026-01-24 17:21:32.560 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=97/228, H_est是否单位矩阵=False
-2026-01-24 17:21:32.565 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=1067, Spatial Binning后=271
-2026-01-24 17:21:32.566 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=154/271, H_est是否单位矩阵=False
-2026-01-24 17:21:35.315 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=152, Spatial Binning后=125
-2026-01-24 17:21:35.346 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=18/125, H_est是否单位矩阵=False
-2026-01-24 17:21:35.347 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (18), 可能导致配准质量差
-2026-01-24 17:21:35.351 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=938, Spatial Binning后=270
-2026-01-24 17:21:35.353 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=139/270, H_est是否单位矩阵=False
-2026-01-24 17:21:35.356 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=601, Spatial Binning后=227
-2026-01-24 17:21:35.358 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=120/227, H_est是否单位矩阵=False
-2026-01-24 17:21:35.361 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=694, Spatial Binning后=236
-2026-01-24 17:21:35.363 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=139/236, H_est是否单位矩阵=False
-2026-01-24 17:21:38.761 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=18, Spatial Binning后=18
-2026-01-24 17:21:38.769 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=6/18, H_est是否单位矩阵=False
-2026-01-24 17:21:38.769 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (6), 可能导致配准质量差
-2026-01-24 17:21:38.770 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=17, Spatial Binning后=17
-2026-01-24 17:21:38.772 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=9/17, H_est是否单位矩阵=False
-2026-01-24 17:21:38.772 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:21:38.773 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=60, Spatial Binning后=57
-2026-01-24 17:21:38.774 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=38/57, H_est是否单位矩阵=False
-2026-01-24 17:21:38.775 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=23, Spatial Binning后=23
-2026-01-24 17:21:38.795 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=6/23, H_est是否单位矩阵=False
-2026-01-24 17:21:38.795 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (6), 可能导致配准质量差
-2026-01-24 17:21:40.318 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=7, Spatial Binning后=7
-2026-01-24 17:21:40.320 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=5/7, H_est是否单位矩阵=False
-2026-01-24 17:21:40.320 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 17:21:40.322 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=46, Spatial Binning后=46
-2026-01-24 17:21:40.353 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=12/46, H_est是否单位矩阵=False
-2026-01-24 17:21:40.354 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 17:21:40.356 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=40, Spatial Binning后=40
-2026-01-24 17:21:40.417 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=8/40, H_est是否单位矩阵=False
-2026-01-24 17:21:40.418 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 17:21:40.420 | WARNING  | src.utils.metrics:compute_homography_errors:230 - ⚠️ Batch 3: 匹配点数不足 (2 < 4)
-2026-01-24 17:21:40.784 | WARNING  | __main__:_save_batch_results:487 - ⚠️ Batch 中有 1/4 个样本的 H_est 是单位矩阵
-2026-01-24 17:21:41.360 | WARNING  | __main__:_save_batch_results:526 - 样本 054_01_vs_054_02: H_est 是单位矩阵
-2026-01-24 17:21:41.707 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=33, Spatial Binning后=33
-2026-01-24 17:21:41.722 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=9/33, H_est是否单位矩阵=False
-2026-01-24 17:21:41.723 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:21:41.724 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=65, Spatial Binning后=65
-2026-01-24 17:21:41.735 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=19/65, H_est是否单位矩阵=False
-2026-01-24 17:21:41.735 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (19), 可能导致配准质量差
-2026-01-24 17:21:41.736 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=23, Spatial Binning后=23
-2026-01-24 17:21:41.739 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=10/23, H_est是否单位矩阵=False
-2026-01-24 17:21:41.739 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:21:41.740 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=25, Spatial Binning后=25
-2026-01-24 17:21:41.741 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=16/25, H_est是否单位矩阵=False
-2026-01-24 17:21:41.741 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (16), 可能导致配准质量差
-2026-01-24 17:21:43.017 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=67, Spatial Binning后=53
-2026-01-24 17:21:43.021 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=26/53, H_est是否单位矩阵=False
-2026-01-24 17:21:43.021 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (26), 可能导致配准质量差
-2026-01-24 17:21:43.022 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=43, Spatial Binning后=43
-2026-01-24 17:21:43.056 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=10/43, H_est是否单位矩阵=False
-2026-01-24 17:21:43.056 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:21:43.057 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=41, Spatial Binning后=41
-2026-01-24 17:21:43.089 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=7/41, H_est是否单位矩阵=False
-2026-01-24 17:21:43.089 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:21:43.090 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=35, Spatial Binning后=35
-2026-01-24 17:21:43.097 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=12/35, H_est是否单位矩阵=False
-2026-01-24 17:21:43.097 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 17:21:44.457 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=8, Spatial Binning后=8
-2026-01-24 17:21:44.459 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=4/8, H_est是否单位矩阵=False
-2026-01-24 17:21:44.459 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 17:21:44.460 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=9, Spatial Binning后=9
-2026-01-24 17:21:44.462 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=5/9, H_est是否单位矩阵=False
-2026-01-24 17:21:44.462 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 17:21:44.465 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=447, Spatial Binning后=244
-2026-01-24 17:21:44.470 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=104/244, H_est是否单位矩阵=False
-2026-01-24 17:21:44.471 | WARNING  | src.utils.metrics:compute_homography_errors:230 - ⚠️ Batch 3: 匹配点数不足 (3 < 4)
-2026-01-24 17:21:44.879 | WARNING  | __main__:_save_batch_results:487 - ⚠️ Batch 中有 1/4 个样本的 H_est 是单位矩阵
-2026-01-24 17:21:45.576 | WARNING  | __main__:_save_batch_results:526 - 样本 058_01_vs_058_02: H_est 是单位矩阵
-2026-01-24 17:21:45.807 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 17:21:49.448 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
-2026-01-24 17:21:53.463 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 30 验证总结（真实数据） >> mse_real: 0.0265 | auc@5: 0.1725 | auc@10: 0.2891 | auc@20: 0.3529 | loss_c: 3.4339 | loss_f: 1.0000 | loss: 3.4339
-2026-01-24 17:21:54.661 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 30 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:23:09.826 | INFO     | __main__:on_train_epoch_end:418 - Epoch 31 训练总结 >> loss_c: 1.7208 | loss_f: 0.3471
-2026-01-24 17:23:09.844 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 31 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:24:23.215 | INFO     | __main__:on_train_epoch_end:418 - Epoch 32 训练总结 >> loss_c: 1.6343 | loss_f: 0.3373
-2026-01-24 17:24:23.233 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 32 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:25:38.627 | INFO     | __main__:on_train_epoch_end:418 - Epoch 33 训练总结 >> loss_c: 1.6701 | loss_f: 0.3368
-2026-01-24 17:25:38.644 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 33 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:26:52.665 | INFO     | __main__:on_train_epoch_end:418 - Epoch 34 训练总结 >> loss_c: 1.6607 | loss_f: 0.3482
-2026-01-24 17:26:52.684 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 34 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
-2026-01-24 17:28:06.203 | INFO     | __main__:on_train_epoch_end:418 - Epoch 35 训练总结 >> loss_c: 1.6344 | loss_f: 0.3388
-2026-01-24 17:28:07.241 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=1727, Spatial Binning后=320
-2026-01-24 17:28:07.245 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=157/320, H_est是否单位矩阵=False
-2026-01-24 17:28:07.247 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=257, Spatial Binning后=216
-2026-01-24 17:28:07.279 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=8/216, H_est是否单位矩阵=False
-2026-01-24 17:28:07.280 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 17:28:07.286 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=1390, Spatial Binning后=304
-2026-01-24 17:28:07.288 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=167/304, H_est是否单位矩阵=False
-2026-01-24 17:28:07.297 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=1917, Spatial Binning后=320
-2026-01-24 17:28:07.298 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=185/320, H_est是否单位矩阵=False
-2026-01-24 17:28:11.286 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=605, Spatial Binning后=175
-2026-01-24 17:28:11.290 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=74/175, H_est是否单位矩阵=False
-2026-01-24 17:28:11.297 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=1048, Spatial Binning后=237
-2026-01-24 17:28:11.306 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=90/237, H_est是否单位矩阵=False
-2026-01-24 17:28:11.313 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=1161, Spatial Binning后=234
-2026-01-24 17:28:11.315 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=143/234, H_est是否单位矩阵=False
-2026-01-24 17:28:11.323 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=1367, Spatial Binning后=282
-2026-01-24 17:28:11.327 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=127/282, H_est是否单位矩阵=False
-2026-01-24 17:28:14.560 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=169, Spatial Binning后=141
-2026-01-24 17:28:14.595 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=11/141, H_est是否单位矩阵=False
-2026-01-24 17:28:14.596 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (11), 可能导致配准质量差
-2026-01-24 17:28:14.602 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=1248, Spatial Binning后=294
-2026-01-24 17:28:14.605 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=135/294, H_est是否单位矩阵=False
-2026-01-24 17:28:14.609 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=861, Spatial Binning后=242
-2026-01-24 17:28:14.611 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=143/242, H_est是否单位矩阵=False
-2026-01-24 17:28:14.616 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=907, Spatial Binning后=248
-2026-01-24 17:28:14.618 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=138/248, H_est是否单位矩阵=False
-2026-01-24 17:28:18.532 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=99, Spatial Binning后=99
-2026-01-24 17:28:18.574 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=14/99, H_est是否单位矩阵=False
-2026-01-24 17:28:18.574 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (14), 可能导致配准质量差
-2026-01-24 17:28:18.575 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=43, Spatial Binning后=43
-2026-01-24 17:28:18.576 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=29/43, H_est是否单位矩阵=False
-2026-01-24 17:28:18.577 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (29), 可能导致配准质量差
-2026-01-24 17:28:18.578 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=22, Spatial Binning后=22
-2026-01-24 17:28:18.580 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=12/22, H_est是否单位矩阵=False
-2026-01-24 17:28:18.580 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 17:28:18.581 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=29, Spatial Binning后=29
-2026-01-24 17:28:18.602 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=8/29, H_est是否单位矩阵=False
-2026-01-24 17:28:18.602 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (8), 可能导致配准质量差
-2026-01-24 17:28:20.129 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=11, Spatial Binning后=11
-2026-01-24 17:28:20.132 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=5/11, H_est是否单位矩阵=False
-2026-01-24 17:28:20.133 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 17:28:20.134 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=32, Spatial Binning后=32
-2026-01-24 17:28:20.166 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=7/32, H_est是否单位矩阵=False
-2026-01-24 17:28:20.166 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:28:20.167 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=20, Spatial Binning后=20
-2026-01-24 17:28:20.189 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=5/20, H_est是否单位矩阵=False
-2026-01-24 17:28:20.189 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (5), 可能导致配准质量差
-2026-01-24 17:28:20.190 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=41, Spatial Binning后=41
-2026-01-24 17:28:20.221 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=9/41, H_est是否单位矩阵=False
-2026-01-24 17:28:20.222 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:28:21.676 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=52, Spatial Binning后=52
-2026-01-24 17:28:21.711 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=12/52, H_est是否单位矩阵=False
-2026-01-24 17:28:21.711 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (12), 可能导致配准质量差
-2026-01-24 17:28:21.714 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=85, Spatial Binning后=85
-2026-01-24 17:28:21.717 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=40/85, H_est是否单位矩阵=False
-2026-01-24 17:28:21.718 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=114, Spatial Binning后=93
-2026-01-24 17:28:21.723 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=35/93, H_est是否单位矩阵=False
-2026-01-24 17:28:21.724 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=53, Spatial Binning后=53
-2026-01-24 17:28:21.725 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=34/53, H_est是否单位矩阵=False
-2026-01-24 17:28:23.169 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=60, Spatial Binning后=60
-2026-01-24 17:28:23.182 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=18/60, H_est是否单位矩阵=False
-2026-01-24 17:28:23.182 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (18), 可能导致配准质量差
-2026-01-24 17:28:23.183 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=36, Spatial Binning后=36
-2026-01-24 17:28:23.205 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=9/36, H_est是否单位矩阵=False
-2026-01-24 17:28:23.205 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (9), 可能导致配准质量差
-2026-01-24 17:28:23.206 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=30, Spatial Binning后=30
-2026-01-24 17:28:23.239 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=6/30, H_est是否单位矩阵=False
-2026-01-24 17:28:23.239 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (6), 可能导致配准质量差
-2026-01-24 17:28:23.240 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=41, Spatial Binning后=41
-2026-01-24 17:28:23.264 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=10/41, H_est是否单位矩阵=False
-2026-01-24 17:28:23.265 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (10), 可能导致配准质量差
-2026-01-24 17:28:24.568 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=30, Spatial Binning后=30
-2026-01-24 17:28:24.600 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=6/30, H_est是否单位矩阵=False
-2026-01-24 17:28:24.600 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (6), 可能导致配准质量差
-2026-01-24 17:28:24.601 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=15, Spatial Binning后=15
-2026-01-24 17:28:24.603 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=7/15, H_est是否单位矩阵=False
-2026-01-24 17:28:24.604 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (7), 可能导致配准质量差
-2026-01-24 17:28:24.605 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=181, Spatial Binning后=146
-2026-01-24 17:28:24.611 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=53/146, H_est是否单位矩阵=False
-2026-01-24 17:28:24.611 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=4, Spatial Binning后=4
-2026-01-24 17:28:24.612 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=4/4, H_est是否单位矩阵=False
-2026-01-24 17:28:24.612 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (4), 可能导致配准质量差
-2026-01-24 17:28:26.281 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
-2026-01-24 17:28:30.255 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
-2026-01-24 17:28:34.226 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 35 验证总结（真实数据） >> mse_real: 0.0230 | auc@5: 0.1564 | auc@10: 0.2756 | auc@20: 0.3461 | loss_c: 3.4335 | loss_f: 1.0000 | loss: 3.4335
+2026-01-24 22:24:20.551 | INFO     | __main__:main:623 - 日志将同时保存到: results/cffa/260124_5/log.txt
+2026-01-24 22:24:20.553 | INFO     | __main__:main:641 - 正在加载预训练权重: weights/outdoor_ds.ckpt
+2026-01-24 22:24:20.906 | INFO     | src.lightning.lightning_loftr:__init__:59 - 成功加载预训练权重: 'weights/outdoor_ds.ckpt'
+2026-01-24 22:24:20.907 | INFO     | __main__:main:653 - 域随机化增强已启用，将在训练时应用（包括sanity check阶段）
+2026-01-24 22:24:20.908 | INFO     | __main__:main:654 - 将在训练开始时保存前2个batch的域随机化可视化
+2026-01-24 22:24:21.064 | INFO     | __main__:main:691 - 开始训练: 260124_5 (模式: cffa)
+2026-01-24 22:24:23.617 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=511, Spatial Binning后=262
+2026-01-24 22:24:23.623 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=106/262, H_est是否单位矩阵=False
+2026-01-24 22:24:23.625 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=345, Spatial Binning后=243
+2026-01-24 22:24:23.628 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=108/243, H_est是否单位矩阵=False
+2026-01-24 22:24:23.629 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=276, Spatial Binning后=169
+2026-01-24 22:24:23.632 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=80/169, H_est是否单位矩阵=False
+2026-01-24 22:24:23.635 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=574, Spatial Binning后=288
+2026-01-24 22:24:23.636 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=155/288, H_est是否单位矩阵=False
+2026-01-24 22:24:25.867 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=261, Spatial Binning后=175
+2026-01-24 22:24:25.869 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=103/175, H_est是否单位矩阵=False
+2026-01-24 22:24:25.872 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=328, Spatial Binning后=225
+2026-01-24 22:24:25.876 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=118/225, H_est是否单位矩阵=False
+2026-01-24 22:24:25.879 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=215, Spatial Binning后=141
+2026-01-24 22:24:25.882 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=76/141, H_est是否单位矩阵=False
+2026-01-24 22:24:25.884 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=436, Spatial Binning后=285
+2026-01-24 22:24:25.887 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=143/285, H_est是否单位矩阵=False
+2026-01-24 22:24:27.677 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=358, Spatial Binning后=244
+2026-01-24 22:24:27.681 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=106/244, H_est是否单位矩阵=False
+2026-01-24 22:24:27.686 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=263, Spatial Binning后=213
+2026-01-24 22:24:27.692 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=85/213, H_est是否单位矩阵=False
+2026-01-24 22:24:27.693 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=161, Spatial Binning后=122
+2026-01-24 22:24:27.695 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=63/122, H_est是否单位矩阵=False
+2026-01-24 22:24:27.696 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=221, Spatial Binning后=140
+2026-01-24 22:24:27.700 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=55/140, H_est是否单位矩阵=False
+2026-01-24 22:24:30.357 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=608, Spatial Binning后=319
+2026-01-24 22:24:30.359 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=196/319, H_est是否单位矩阵=False
+2026-01-24 22:24:30.363 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=789, Spatial Binning后=320
+2026-01-24 22:24:30.366 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=147/320, H_est是否单位矩阵=False
+2026-01-24 22:24:30.370 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=723, Spatial Binning后=320
+2026-01-24 22:24:30.371 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=175/320, H_est是否单位矩阵=False
+2026-01-24 22:24:30.374 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=603, Spatial Binning后=304
+2026-01-24 22:24:30.376 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=162/304, H_est是否单位矩阵=False
+2026-01-24 22:24:32.691 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=580, Spatial Binning后=298
+2026-01-24 22:24:32.694 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=140/298, H_est是否单位矩阵=False
+2026-01-24 22:24:32.696 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=301, Spatial Binning后=258
+2026-01-24 22:24:32.703 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=109/258, H_est是否单位矩阵=False
+2026-01-24 22:24:32.705 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=324, Spatial Binning后=268
+2026-01-24 22:24:32.709 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=116/268, H_est是否单位矩阵=False
+2026-01-24 22:24:32.711 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=545, Spatial Binning后=302
+2026-01-24 22:24:32.713 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=154/302, H_est是否单位矩阵=False
+2026-01-24 22:24:34.845 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=332, Spatial Binning后=271
+2026-01-24 22:24:34.850 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=109/271, H_est是否单位矩阵=False
+2026-01-24 22:24:34.853 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=605, Spatial Binning后=285
+2026-01-24 22:24:34.855 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=156/285, H_est是否单位矩阵=False
+2026-01-24 22:24:34.859 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=930, Spatial Binning后=320
+2026-01-24 22:24:34.861 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=178/320, H_est是否单位矩阵=False
+2026-01-24 22:24:34.864 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=495, Spatial Binning后=303
+2026-01-24 22:24:34.865 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=177/303, H_est是否单位矩阵=False
+2026-01-24 22:24:36.825 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
+2026-01-24 22:24:39.251 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
+2026-01-24 22:24:42.279 | INFO     | __main__:on_validation_epoch_end:426 - Sanity check 完成，跳过模型保存和最优更新
+2026-01-24 22:24:42.304 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 0 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:24:43.386 | INFO     | __main__:training_step:340 - 已保存第 1/2 个batch的域随机化可视化（训练模式，Epoch 1, Batch 0）
+2026-01-24 22:24:46.593 | INFO     | __main__:training_step:340 - 已保存第 2/2 个batch的域随机化可视化（训练模式，Epoch 1, Batch 1）
+2026-01-24 22:25:56.086 | INFO     | __main__:on_train_epoch_end:418 - Epoch 1 训练总结 >> loss_c: 3.3962 | loss_f: 0.5946
+2026-01-24 22:25:56.103 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 1 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:27:08.442 | INFO     | __main__:on_train_epoch_end:418 - Epoch 2 训练总结 >> loss_c: 3.2394 | loss_f: 0.5535
+2026-01-24 22:27:08.462 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 2 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:28:22.529 | INFO     | __main__:on_train_epoch_end:418 - Epoch 3 训练总结 >> loss_c: 2.9900 | loss_f: 0.5331
+2026-01-24 22:28:22.548 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 3 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:29:35.749 | INFO     | __main__:on_train_epoch_end:418 - Epoch 4 训练总结 >> loss_c: 2.7692 | loss_f: 0.5315
+2026-01-24 22:29:35.768 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 4 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:30:49.947 | INFO     | __main__:on_train_epoch_end:418 - Epoch 5 训练总结 >> loss_c: 2.6768 | loss_f: 0.5435
+2026-01-24 22:30:51.107 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=765, Spatial Binning后=277
+2026-01-24 22:30:51.122 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=79/277, H_est是否单位矩阵=False
+2026-01-24 22:30:51.124 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=156, Spatial Binning后=141
+2026-01-24 22:30:51.156 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=8/141, H_est是否单位矩阵=False
+2026-01-24 22:30:51.156 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (8), 可能导致配准质量差
+2026-01-24 22:30:51.159 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=544, Spatial Binning后=247
+2026-01-24 22:30:51.167 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=81/247, H_est是否单位矩阵=False
+2026-01-24 22:30:51.169 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=345, Spatial Binning后=179
+2026-01-24 22:30:51.202 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=40/179, H_est是否单位矩阵=False
+2026-01-24 22:30:53.506 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=38, Spatial Binning后=38
+2026-01-24 22:30:53.541 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=8/38, H_est是否单位矩阵=False
+2026-01-24 22:30:53.541 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (8), 可能导致配准质量差
+2026-01-24 22:30:53.543 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=246, Spatial Binning后=157
+2026-01-24 22:30:53.577 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=22/157, H_est是否单位矩阵=False
+2026-01-24 22:30:53.577 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (22), 可能导致配准质量差
+2026-01-24 22:30:53.578 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=121, Spatial Binning后=113
+2026-01-24 22:30:53.612 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=10/113, H_est是否单位矩阵=False
+2026-01-24 22:30:53.612 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (10), 可能导致配准质量差
+2026-01-24 22:30:53.613 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=75, Spatial Binning后=75
+2026-01-24 22:30:53.646 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=8/75, H_est是否单位矩阵=False
+2026-01-24 22:30:53.646 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (8), 可能导致配准质量差
+2026-01-24 22:30:55.563 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=137, Spatial Binning后=117
+2026-01-24 22:30:55.616 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=13/117, H_est是否单位矩阵=False
+2026-01-24 22:30:55.617 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (13), 可能导致配准质量差
+2026-01-24 22:30:55.618 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=83, Spatial Binning后=83
+2026-01-24 22:30:55.673 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=7/83, H_est是否单位矩阵=False
+2026-01-24 22:30:55.673 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (7), 可能导致配准质量差
+2026-01-24 22:30:55.676 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=107, Spatial Binning后=88
+2026-01-24 22:30:55.716 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=12/88, H_est是否单位矩阵=False
+2026-01-24 22:30:55.716 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (12), 可能导致配准质量差
+2026-01-24 22:30:55.718 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=186, Spatial Binning后=166
+2026-01-24 22:30:55.730 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=48/166, H_est是否单位矩阵=False
+2026-01-24 22:30:58.908 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=169, Spatial Binning后=151
+2026-01-24 22:30:58.961 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=13/151, H_est是否单位矩阵=False
+2026-01-24 22:30:58.962 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (13), 可能导致配准质量差
+2026-01-24 22:30:58.967 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=537, Spatial Binning后=229
+2026-01-24 22:30:58.970 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=126/229, H_est是否单位矩阵=False
+2026-01-24 22:30:58.974 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=456, Spatial Binning后=225
+2026-01-24 22:30:58.980 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=88/225, H_est是否单位矩阵=False
+2026-01-24 22:30:58.982 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=59, Spatial Binning后=59
+2026-01-24 22:30:59.033 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=7/59, H_est是否单位矩阵=False
+2026-01-24 22:30:59.034 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (7), 可能导致配准质量差
+2026-01-24 22:31:01.856 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=91, Spatial Binning后=90
+2026-01-24 22:31:01.913 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=10/90, H_est是否单位矩阵=False
+2026-01-24 22:31:01.914 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (10), 可能导致配准质量差
+2026-01-24 22:31:01.916 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=157, Spatial Binning后=143
+2026-01-24 22:31:01.972 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=17/143, H_est是否单位矩阵=False
+2026-01-24 22:31:01.973 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (17), 可能导致配准质量差
+2026-01-24 22:31:01.975 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=105, Spatial Binning后=99
+2026-01-24 22:31:02.014 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=9/99, H_est是否单位矩阵=False
+2026-01-24 22:31:02.014 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (9), 可能导致配准质量差
+2026-01-24 22:31:02.016 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=54, Spatial Binning后=54
+2026-01-24 22:31:02.049 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=14/54, H_est是否单位矩阵=False
+2026-01-24 22:31:02.050 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (14), 可能导致配准质量差
+2026-01-24 22:31:04.015 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=198, Spatial Binning后=175
+2026-01-24 22:31:04.064 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=26/175, H_est是否单位矩阵=False
+2026-01-24 22:31:04.064 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (26), 可能导致配准质量差
+2026-01-24 22:31:04.068 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=598, Spatial Binning后=224
+2026-01-24 22:31:04.072 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=92/224, H_est是否单位矩阵=False
+2026-01-24 22:31:04.073 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=231, Spatial Binning后=131
+2026-01-24 22:31:04.080 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=50/131, H_est是否单位矩阵=False
+2026-01-24 22:31:04.082 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=408, Spatial Binning后=205
+2026-01-24 22:31:04.085 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=101/205, H_est是否单位矩阵=False
+2026-01-24 22:31:06.751 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=436, Spatial Binning后=234
+2026-01-24 22:31:06.803 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=50/234, H_est是否单位矩阵=False
+2026-01-24 22:31:06.805 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=172, Spatial Binning后=153
+2026-01-24 22:31:06.862 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=11/153, H_est是否单位矩阵=False
+2026-01-24 22:31:06.862 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (11), 可能导致配准质量差
+2026-01-24 22:31:06.865 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=260, Spatial Binning后=153
+2026-01-24 22:31:06.878 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=46/153, H_est是否单位矩阵=False
+2026-01-24 22:31:06.880 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=237, Spatial Binning后=182
+2026-01-24 22:31:06.926 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=31/182, H_est是否单位矩阵=False
+2026-01-24 22:31:09.652 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=250, Spatial Binning后=204
+2026-01-24 22:31:09.676 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=54/204, H_est是否单位矩阵=False
+2026-01-24 22:31:09.678 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=57, Spatial Binning后=57
+2026-01-24 22:31:09.691 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=18/57, H_est是否单位矩阵=False
+2026-01-24 22:31:09.692 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (18), 可能导致配准质量差
+2026-01-24 22:31:09.696 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=431, Spatial Binning后=262
+2026-01-24 22:31:09.710 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=89/262, H_est是否单位矩阵=False
+2026-01-24 22:31:09.712 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=71, Spatial Binning后=70
+2026-01-24 22:31:09.764 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=14/70, H_est是否单位矩阵=False
+2026-01-24 22:31:09.765 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (14), 可能导致配准质量差
+2026-01-24 22:31:11.829 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
+2026-01-24 22:31:15.234 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
+2026-01-24 22:31:21.367 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 5 验证总结（真实数据） >> mse_real: 0.0196 | auc@5: 0.0312 | auc@10: 0.0644 | auc@20: 0.1262 | loss_c: 3.4367 | loss_f: 1.0000 | loss: 3.4367
+2026-01-24 22:31:22.085 | INFO     | __main__:on_validation_epoch_end:470 - 发现新的最优模型! Epoch 5, MSE: 0.019643
+2026-01-24 22:31:22.443 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 5 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:32:40.433 | INFO     | __main__:on_train_epoch_end:418 - Epoch 6 训练总结 >> loss_c: 2.6152 | loss_f: 0.5492
+2026-01-24 22:32:40.453 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 6 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:33:55.129 | INFO     | __main__:on_train_epoch_end:418 - Epoch 7 训练总结 >> loss_c: 2.5918 | loss_f: 0.5555
+2026-01-24 22:33:55.153 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 7 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:35:13.538 | INFO     | __main__:on_train_epoch_end:418 - Epoch 8 训练总结 >> loss_c: 2.4158 | loss_f: 0.5855
+2026-01-24 22:35:13.564 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 8 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:36:29.371 | INFO     | __main__:on_train_epoch_end:418 - Epoch 9 训练总结 >> loss_c: 2.4389 | loss_f: 0.5733
+2026-01-24 22:36:29.390 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 9 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
+2026-01-24 22:37:44.167 | INFO     | __main__:on_train_epoch_end:418 - Epoch 10 训练总结 >> loss_c: 2.3351 | loss_f: 0.5848
+2026-01-24 22:37:45.197 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=419, Spatial Binning后=255
+2026-01-24 22:37:45.227 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=61/255, H_est是否单位矩阵=False
+2026-01-24 22:37:45.229 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=189, Spatial Binning后=189
+2026-01-24 22:37:45.261 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=8/189, H_est是否单位矩阵=False
+2026-01-24 22:37:45.261 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (8), 可能导致配准质量差
+2026-01-24 22:37:45.265 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=578, Spatial Binning后=249
+2026-01-24 22:37:45.268 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=104/249, H_est是否单位矩阵=False
+2026-01-24 22:37:45.273 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=930, Spatial Binning后=265
+2026-01-24 22:37:45.280 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=94/265, H_est是否单位矩阵=False
+2026-01-24 22:37:48.431 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=30, Spatial Binning后=30
+2026-01-24 22:37:48.463 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=6/30, H_est是否单位矩阵=False
+2026-01-24 22:37:48.464 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (6), 可能导致配准质量差
+2026-01-24 22:37:48.467 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=557, Spatial Binning后=192
+2026-01-24 22:37:48.496 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=45/192, H_est是否单位矩阵=False
+2026-01-24 22:37:48.498 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=327, Spatial Binning后=181
+2026-01-24 22:37:48.512 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=60/181, H_est是否单位矩阵=False
+2026-01-24 22:37:48.514 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=433, Spatial Binning后=234
+2026-01-24 22:37:48.539 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=56/234, H_est是否单位矩阵=False
+2026-01-24 22:37:50.624 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=180, Spatial Binning后=132
+2026-01-24 22:37:50.658 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=11/132, H_est是否单位矩阵=False
+2026-01-24 22:37:50.658 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (11), 可能导致配准质量差
+2026-01-24 22:37:50.660 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=295, Spatial Binning后=178
+2026-01-24 22:37:50.668 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=61/178, H_est是否单位矩阵=False
+2026-01-24 22:37:50.669 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=81, Spatial Binning后=81
+2026-01-24 22:37:50.702 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=10/81, H_est是否单位矩阵=False
+2026-01-24 22:37:50.703 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (10), 可能导致配准质量差
+2026-01-24 22:37:50.705 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=437, Spatial Binning后=220
+2026-01-24 22:37:50.710 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=85/220, H_est是否单位矩阵=False
+2026-01-24 22:37:53.715 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=134, Spatial Binning后=129
+2026-01-24 22:37:53.748 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=10/129, H_est是否单位矩阵=False
+2026-01-24 22:37:53.748 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (10), 可能导致配准质量差
+2026-01-24 22:37:53.750 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=103, Spatial Binning后=90
+2026-01-24 22:37:53.802 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=8/90, H_est是否单位矩阵=False
+2026-01-24 22:37:53.803 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (8), 可能导致配准质量差
+2026-01-24 22:37:53.808 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=420, Spatial Binning后=217
+2026-01-24 22:37:53.815 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=90/217, H_est是否单位矩阵=False
+2026-01-24 22:37:53.817 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=95, Spatial Binning后=95
+2026-01-24 22:37:53.867 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=7/95, H_est是否单位矩阵=False
+2026-01-24 22:37:53.868 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (7), 可能导致配准质量差
+2026-01-24 22:37:55.757 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=110, Spatial Binning后=99
+2026-01-24 22:37:55.789 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=11/99, H_est是否单位矩阵=False
+2026-01-24 22:37:55.790 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (11), 可能导致配准质量差
+2026-01-24 22:37:55.791 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=252, Spatial Binning后=173
+2026-01-24 22:37:55.823 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=14/173, H_est是否单位矩阵=False
+2026-01-24 22:37:55.824 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (14), 可能导致配准质量差
+2026-01-24 22:37:55.825 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=131, Spatial Binning后=120
+2026-01-24 22:37:55.858 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=9/120, H_est是否单位矩阵=False
+2026-01-24 22:37:55.858 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (9), 可能导致配准质量差
+2026-01-24 22:37:55.859 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=80, Spatial Binning后=67
+2026-01-24 22:37:55.891 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=10/67, H_est是否单位矩阵=False
+2026-01-24 22:37:55.892 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (10), 可能导致配准质量差
+2026-01-24 22:37:58.027 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=169, Spatial Binning后=158
+2026-01-24 22:37:58.061 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=9/158, H_est是否单位矩阵=False
+2026-01-24 22:37:58.061 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (9), 可能导致配准质量差
+2026-01-24 22:37:58.064 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=461, Spatial Binning后=219
+2026-01-24 22:37:58.090 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=53/219, H_est是否单位矩阵=False
+2026-01-24 22:37:58.093 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=569, Spatial Binning后=237
+2026-01-24 22:37:58.101 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=80/237, H_est是否单位矩阵=False
+2026-01-24 22:37:58.102 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=154, Spatial Binning后=126
+2026-01-24 22:37:58.130 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=30/126, H_est是否单位矩阵=False
+2026-01-24 22:38:00.222 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=541, Spatial Binning后=269
+2026-01-24 22:38:00.265 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=67/269, H_est是否单位矩阵=False
+2026-01-24 22:38:00.267 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=155, Spatial Binning后=143
+2026-01-24 22:38:00.331 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=9/143, H_est是否单位矩阵=False
+2026-01-24 22:38:00.332 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (9), 可能导致配准质量差
+2026-01-24 22:38:00.334 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=195, Spatial Binning后=169
+2026-01-24 22:38:00.373 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=21/169, H_est是否单位矩阵=False
+2026-01-24 22:38:00.374 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 2: Inliers 数量较少 (21), 可能导致配准质量差
+2026-01-24 22:38:00.376 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=273, Spatial Binning后=197
+2026-01-24 22:38:00.437 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=12/197, H_est是否单位矩阵=False
+2026-01-24 22:38:00.437 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (12), 可能导致配准质量差
+2026-01-24 22:38:02.229 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 0: 总匹配点=67, Spatial Binning后=67
+2026-01-24 22:38:02.261 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 0: RANSAC 成功, inliers=15/67, H_est是否单位矩阵=False
+2026-01-24 22:38:02.262 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 0: Inliers 数量较少 (15), 可能导致配准质量差
+2026-01-24 22:38:02.263 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 1: 总匹配点=53, Spatial Binning后=53
+2026-01-24 22:38:02.293 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 1: RANSAC 成功, inliers=12/53, H_est是否单位矩阵=False
+2026-01-24 22:38:02.294 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 1: Inliers 数量较少 (12), 可能导致配准质量差
+2026-01-24 22:38:02.297 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 2: 总匹配点=586, Spatial Binning后=265
+2026-01-24 22:38:02.300 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 2: RANSAC 成功, inliers=121/265, H_est是否单位矩阵=False
+2026-01-24 22:38:02.301 | INFO     | src.utils.metrics:compute_homography_errors:247 - 🔍 Batch 3: 总匹配点=89, Spatial Binning后=81
+2026-01-24 22:38:02.329 | INFO     | src.utils.metrics:compute_homography_errors:270 - ✅ Batch 3: RANSAC 成功, inliers=19/81, H_est是否单位矩阵=False
+2026-01-24 22:38:02.330 | WARNING  | src.utils.metrics:compute_homography_errors:277 - ⚠️ Batch 3: Inliers 数量较少 (19), 可能导致配准质量差
+2026-01-24 22:38:04.295 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 12 unique items...
+2026-01-24 22:38:07.592 | INFO     | src.utils.metrics:aggregate_metrics:350 - Aggregating metrics over 18 unique items...
+2026-01-24 22:38:12.835 | INFO     | __main__:on_validation_epoch_end:450 - Epoch 10 验证总结（真实数据） >> mse_real: 0.0232 | auc@5: 0.0408 | auc@10: 0.1433 | auc@20: 0.2342 | loss_c: 3.4353 | loss_f: 1.0000 | loss: 3.4353
+2026-01-24 22:38:14.542 | INFO     | src.lightning.lightning_loftr:on_train_epoch_start:157 - Curriculum Learning | Epoch 10 | Phase 1: Global Perception | lambda: 0.00 | bg_weight: 1.00
