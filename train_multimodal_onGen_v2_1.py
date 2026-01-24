@@ -139,7 +139,7 @@ def parse_args():
     parser.add_argument('--num_workers', type=int, default=8, help='数据加载线程数')
     parser.add_argument('--img_size', type=int, default=512, help='图像输入尺寸')
     parser.add_argument('--vessel_sigma', type=float, default=6.0, help='血管高斯软掩码的 σ（像素单位），用于损失加权')
-    parser.add_argument('--pretrained_ckpt', type=str, default=None, help='预训练权重路径（设置为 None 则从随机初始化开始）')
+    parser.add_argument('--pretrained_ckpt', type=str, default='weights/outdoor_ds.ckpt', help='预训练权重路径（默认使用 LoFTR outdoor_ds 权重）')
     parser.add_argument('--use_domain_randomization', action='store_true', default=True, help='是否启用域随机化增强')
     parser.add_argument('--val_on_real', action='store_true', default=True, help='是否在真实数据集上验证')
     parser.add_argument('--main_cfg_path', type=str, default=None, help='主配置文件路径')
@@ -419,6 +419,11 @@ class MultimodalValidationCallback(Callback):
 
     def on_validation_epoch_end(self, trainer, pl_module):
         if not self.epoch_mses:
+            return
+        
+        # 在 sanity check 阶段不进行模型保存和最优更新
+        if trainer.sanity_checking:
+            loguru_logger.info(f"Sanity check 完成，跳过模型保存和最优更新")
             return
             
         epoch = trainer.current_epoch + 1
