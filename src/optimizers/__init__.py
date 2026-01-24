@@ -20,12 +20,12 @@ def build_optimizer(model, config):
     backbone_params = []
     transformer_params = []
     
-    for name, param in model.named_parameters():
+    for param_name, param in model.named_parameters():
         if not param.requires_grad:
             continue
         # 根据参数名判断属于 backbone 还是 transformer
         # LoFTR 中 backbone 参数通常以 'matcher.backbone' 开头
-        if 'backbone' in name:
+        if 'backbone' in param_name:
             backbone_params.append(param)
         else:
             transformer_params.append(param)
