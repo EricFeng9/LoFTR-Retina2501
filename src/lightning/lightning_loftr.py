@@ -42,7 +42,22 @@ class PL_LoFTR(pl.LightningModule):
         self.matcher = LoFTR(config=_config['loftr'])
         self.loss = LoFTRLoss(_config)
 
-        # Pretrained weights\r\n        if pretrained_ckpt:\r\n            state_dict = torch.load(pretrained_ckpt, map_location='cpu')['state_dict']\r\n            \r\n            # 【最简方案】完整加载预训练权重\r\n            missing_keys, unexpected_keys = self.matcher.load_state_dict(state_dict, strict=False)\r\n            \r\n            logger.info(f\"成功加载预训练权重: '{pretrained_ckpt}'\")\r\n            if missing_keys:\r\n                logger.warning(f\"缺失的键: {missing_keys[:3]}...\")\r\n            if unexpected_keys:\r\n                logger.warning(f\"多余的键: {unexpected_keys[:3]}...\")
+        # Pretrained weights
+        if pretrained_ckpt:
+            state_dict = torch.load(pretrained_ckpt, map_location='cpu')['state_dict']
+            
+            # 【方案 B 改进】混合初始化策略 (Hybrid Initialization)
+            # 1. 仅加载 Backbone 权重 (它们是通用的视觉特征，可迁移)
+            # 2. 丢弃 Transformer 权重 (它们包含 MegaDepth 的同模态匹配偏见，不适合跨模态，需从头学习)
+            backbone_only = {k: v for k, v in state_dict.items() if 'backbone' in k}
+            
+            # 确保至少加载了一些东西
+            if len(backbone_only) > 0:
+                missing_keys, unexpected_keys = self.matcher.load_state_dict(backbone_only, strict=False)
+                logger.info(f"成功加载预训练 Backbone 权重: '{pretrained_ckpt}' ({len(backbone_only)} tensors)")
+                logger.info("Transformer 部分已随机初始化，准备从头学习跨模态匹配。")
+            else:
+                logger.warning(f"警告: 在 '{pretrained_ckpt}' 中未找到 backbone 权重！")
         
         # Testing
         self.dump_dir = dump_dir

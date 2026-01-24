@@ -12,10 +12,33 @@ def build_optimizer(model, config):
     name = config.TRAINER.OPTIMIZER
     lr = config.TRAINER.TRUE_LR
 
+    # 【方案 B 改进】分层学习率
+    # Backbone 使用 0.1x LR 微调
+    # Transformer 及其他部分使用 1.0x LR 从头学习
+    
+    # 获取需要优化的参数
+    backbone_params = []
+    transformer_params = []
+    
+    for name, param in model.named_parameters():
+        if not param.requires_grad:
+            continue
+        # 根据参数名判断属于 backbone 还是 transformer
+        # LoFTR 中 backbone 参数通常以 'matcher.backbone' 开头
+        if 'backbone' in name:
+            backbone_params.append(param)
+        else:
+            transformer_params.append(param)
+            
+    param_groups = [
+        {'params': backbone_params, 'lr': lr * 0.1},
+        {'params': transformer_params, 'lr': lr * 1.0}
+    ]
+
     if name == "adam":
-        return torch.optim.Adam(model.parameters(), lr=lr, weight_decay=config.TRAINER.ADAM_DECAY)
+        return torch.optim.Adam(param_groups, lr=lr, weight_decay=config.TRAINER.ADAM_DECAY)
     elif name == "adamw":
-        return torch.optim.AdamW(model.parameters(), lr=lr, weight_decay=config.TRAINER.ADAMW_DECAY)
+        return torch.optim.AdamW(param_groups, lr=lr, weight_decay=config.TRAINER.ADAMW_DECAY)
     else:
         raise ValueError(f"TRAINER.OPTIMIZER = {name} is not a valid optimizer!")
 
