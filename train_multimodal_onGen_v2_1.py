@@ -25,10 +25,71 @@ from data.FIVES_extract.FIVES_extract import MultiModalDataset
 from src.utils.plotting import make_matching_figures
 
 # 导入真实数据集（用于验证）
-from dataset.CF_OCTA_v2_repaired.cf_octa_v2_repaired_dataset import CFOCTADataset
-from dataset.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import CFFADataset
-from dataset.operation_pre_filtered_cfoct.operation_pre_filtered_cfoct_dataset import CFOCTDataset
-from dataset.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset import OCTFADataset
+from data.CF_OCTA_v2_repaired.cf_octa_v2_repaired_dataset import CFOCTADataset
+from data.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import CFFADataset
+from data.operation_pre_filtered_cfoct.operation_pre_filtered_cfoct_dataset import CFOCTDataset
+from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset import OCTFADataset
+
+# 数据集包装器：将真实数据集的元组格式转换为 LoFTR 需要的字典格式
+class RealDatasetWrapper(torch.utils.data.Dataset):
+    """包装真实数据集，使其输出格式与 MultiModalDataset 一致"""
+    def __init__(self, base_dataset):
+        self.base_dataset = base_dataset
+        
+    def __len__(self):
+        return len(self.base_dataset)
+    
+    def __getitem__(self, idx):
+        # 真实数据集返回: (fix_tensor, moving_original_tensor, moving_gt_tensor, fix_path, moving_path, T_0to1)
+        fix_tensor, moving_original_tensor, moving_gt_tensor, fix_path, moving_path, T_0to1 = self.base_dataset[idx]
+        
+        # 注意：真实数据集的 moving_original_tensor 和 moving_gt_tensor 在 [-1, 1] 范围
+        # 需要转换回 [0, 1] 范围以匹配生成数据集的格式
+        moving_original_tensor = (moving_original_tensor + 1) / 2  # [-1, 1] -> [0, 1]
+        moving_gt_tensor = (moving_gt_tensor + 1) / 2  # [-1, 1] -> [0, 1]
+        # fix_tensor 已经在 [0, 1] 范围，不需要转换
+        
+        # 转换为 LoFTR 需要的字典格式
+        # fix_tensor 和 moving_gt_tensor 是 [C, H, W]，需要转换为 [1, H, W] (灰度)
+        if fix_tensor.shape[0] == 3:
+            fix_gray = 0.299 * fix_tensor[0] + 0.587 * fix_tensor[1] + 0.114 * fix_tensor[2]
+            fix_gray = fix_gray.unsqueeze(0)
+        else:
+            fix_gray = fix_tensor
+            
+        if moving_gt_tensor.shape[0] == 3:
+            moving_gray = 0.299 * moving_gt_tensor[0] + 0.587 * moving_gt_tensor[1] + 0.114 * moving_gt_tensor[2]
+            moving_gray = moving_gray.unsqueeze(0)
+        else:
+            moving_gray = moving_gt_tensor
+            
+        if moving_original_tensor.shape[0] == 3:
+            moving_orig_gray = 0.299 * moving_original_tensor[0] + 0.587 * moving_original_tensor[1] + 0.114 * moving_original_tensor[2]
+            moving_orig_gray = moving_orig_gray.unsqueeze(0)
+        else:
+            moving_orig_gray = moving_original_tensor
+        
+        # 从完整路径中提取文件名
+        import os
+        fix_name = os.path.basename(fix_path)
+        moving_name = os.path.basename(moving_path)
+        
+        # 注意：真实数据集返回的 T_0to1 是从 moving 到 fix 的变换 (fix = H * moving)
+        # 而 LoFTR 评估逻辑期望 T_0to1 是从 image0 (fix) 到 image1 (moving) 的变换
+        # 因此我们需要取逆矩阵
+        try:
+            T_fix_to_moving = torch.inverse(T_0to1)
+        except:
+            T_fix_to_moving = T_0to1 # 退化情况
+            
+        return {
+            'image0': fix_gray,  # [1, H, W], [0, 1] 范围 - 固定图 (Target)
+            'image1': moving_orig_gray,  # [1, H, W], [0, 1] 范围 - 原始待配准图 (Input)
+            'image1_gt': moving_gray,  # [1, H, W], [0, 1] 范围 - GT配准后的待配准图 (Reference for MSE)
+            'T_0to1': T_fix_to_moving,  # [3, 3] 从 image0 (fix) 到 image1 (moving) 的 GT 变换
+            'pair_names': (fix_name, moving_name),  # 元组 (str, str)
+            'dataset_name': 'MultiModal'  # 统一数据集名称
+        }
 
 # 导入域随机化增强模块
 from gen_data_enhance import apply_domain_randomization, save_batch_visualization
@@ -78,9 +139,7 @@ def parse_args():
     parser.add_argument('--num_workers', type=int, default=8, help='数据加载线程数')
     parser.add_argument('--img_size', type=int, default=512, help='图像输入尺寸')
     parser.add_argument('--vessel_sigma', type=float, default=6.0, help='血管高斯软掩码的 σ（像素单位），用于损失加权')
-    parser.add_argument('--pretrained_ckpt', type=str, 
-                        default='/data/student/Fengjunming/LoFTR/third_party/MINIMA/weights/minima_loftr.ckpt', 
-                        help='MINIMA 预训练权重路径')
+    parser.add_argument('--pretrained_ckpt', type=str, default=None, help='预训练权重路径（设置为 None 则从随机初始化开始）')
     parser.add_argument('--use_domain_randomization', action='store_true', default=True, help='是否启用域随机化增强')
     parser.add_argument('--val_on_real', action='store_true', default=True, help='是否在真实数据集上验证')
     parser.add_argument('--main_cfg_path', type=str, default=None, help='主配置文件路径')
@@ -119,13 +178,16 @@ class MultimodalDataModule(pl.LightningDataModule):
             if self.args.val_on_real:
                 # 使用真实数据集验证（与 train_multimodal_v3_3.py 一致）
                 if self.args.mode == 'cfocta':
-                    self.val_dataset_real = CFOCTADataset(root_dir='dataset/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
+                    base_dataset = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
                 elif self.args.mode == 'cffa':
-                    self.val_dataset_real = CFFADataset(root_dir='dataset/operation_pre_filtered_cffa', split='val', mode='fa2cf')
+                    base_dataset = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
                 elif self.args.mode == 'cfoct':
-                    self.val_dataset_real = CFOCTDataset(root_dir='dataset/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
+                    base_dataset = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
                 elif self.args.mode == 'octfa':
-                    self.val_dataset_real = OCTFADataset(root_dir='dataset/operation_pre_filtered_octfa', split='val', mode='fa2oct')
+                    base_dataset = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='val', mode='fa2oct')
+                
+                # 包装真实数据集，使其输出格式与 MultiModalDataset 一致
+                self.val_dataset_real = RealDatasetWrapper(base_dataset)
                 
                 # 同时保留生成数据验证集用于可视化对比
                 self.val_dataset_gen = MultiModalDataset(
@@ -236,8 +298,8 @@ class PL_LoFTR_WithDomainRand(PL_LoFTR):
         self.result_dir = result_dir  # 保存结果目录
         
     def training_step(self, batch, batch_idx):
-        """重写 training_step，在模型输入前应用域随机化"""
-        if self.use_domain_rand:
+        """重写 training_step，在模型输入前应用域随机化（仅训练时）"""
+        if self.use_domain_rand and self.training:  # 添加 self.training 检查
             # 保存原始图像（用于前2个batch的可视化，包括sanity check）
             # 只在前2个batch保存可视化
             if self.saved_batches < 2:
@@ -275,10 +337,16 @@ class PL_LoFTR_WithDomainRand(PL_LoFTR):
                     vessel_mask=vessel_mask
                 )
                 self.saved_batches += 1
-                loguru_logger.info(f"已保存第 {self.saved_batches}/2 个batch的域随机化可视化（Epoch {epoch_label}, Batch {batch_idx}）")
+                loguru_logger.info(f"已保存第 {self.saved_batches}/2 个batch的域随机化可视化（训练模式，Epoch {epoch_label}, Batch {batch_idx}）")
         
         # 调用原始的 training_step
         return super().training_step(batch, batch_idx)
+    
+    def validation_step(self, batch, batch_idx, dataloader_idx=0):
+        """重写 validation_step 以支持多数据集验证（接受 dataloader_idx 参数）
+        注意：验证时不应用域随机化，直接使用原始图像"""
+        # 验证时不应用域随机化，直接调用基类方法
+        return super().validation_step(batch, batch_idx)
 
 class MultimodalValidationCallback(Callback):
     """
@@ -424,7 +492,10 @@ class MultimodalValidationCallback(Callback):
             
             img0 = (batch['image0'][i, 0].cpu().numpy() * 255).astype(np.uint8)
             img1 = (batch['image1'][i, 0].cpu().numpy() * 255).astype(np.uint8)
-            img1_origin = (batch['image1_origin'][i, 0].cpu().numpy() * 255).astype(np.uint8)
+            
+            # 兼容性处理：真实数据用 image1_gt，生成数据用 image1_origin
+            ref_key = 'image1_gt' if 'image1_gt' in batch else 'image1_origin'
+            img1_gt = (batch[ref_key][i, 0].cpu().numpy() * 255).astype(np.uint8)
             
             # 保存血管掩码（如果存在）
             if 'mask0' in batch:
@@ -455,34 +526,36 @@ class MultimodalValidationCallback(Callback):
                 H_inv = np.linalg.inv(H_est)
                 img1_result = cv2.warpPerspective(img1, H_inv, (w, h))
             except Exception as e:
-                loguru_logger.error(f"样本 {sample_name}: H_est 求逆失败: {e}")
-                img1_result = np.zeros_like(img0)
+                loguru_logger.error(f"样本 {sample_name}: H_est 求逆失败（匹配点可能共线或不足）: {e}")
+                # 失败时默认输出原始未配准图，保证 MSE 计算的是初始误差而非全黑图误差
+                img1_result = img1.copy()
                 
             # 计算有效区域 MSE
             try:
-                res_f, orig_f = filter_valid_area(img1_result, img1_origin)
+                res_f, orig_f = filter_valid_area(img1_result, img1_gt)
                 mask = (res_f > 0)
                 if np.any(mask):
                     mse = np.mean(((res_f[mask] / 255.0) - (orig_f[mask] / 255.0)) ** 2)
                 else:
-                    mse = np.mean(((img1_result / 255.0) - (img1_origin / 255.0)) ** 2)
+                    mse = np.mean(((img1_result / 255.0) - (img1_gt / 255.0)) ** 2)
             except:
-                mse = np.mean(((img1_result / 255.0) - (img1_origin / 255.0)) ** 2)
+                mse = np.mean(((img1_result / 255.0) - (img1_gt / 255.0)) ** 2)
             
             mses.append(mse)
             
             # 保存各模态图像
             cv2.imwrite(str(save_path / "fix.png"), img0)
             cv2.imwrite(str(save_path / "moving.png"), img1)
-            cv2.imwrite(str(save_path / "moving_origin.png"), img1_origin)
+            cv2.imwrite(str(save_path / "moving_gt.png"), img1_gt)
             cv2.imwrite(str(save_path / "moving_result.png"), img1_result)
             
-            # 保存棋盘图
+            # 保存棋盘图：必须对比【模型配准后的FA (img1_result)】和【原始固定图CF (img0)】
+            # 这样才能直观看到跨模态配准效果
             try:
-                chessboard = create_chessboard(img1_result, img1_origin)
+                chessboard = create_chessboard(img1_result, img0)
                 cv2.imwrite(str(save_path / "chessboard.png"), chessboard)
-            except:
-                pass
+            except Exception as e:
+                loguru_logger.error(f"样本 {sample_name}: 生成棋盘图失败: {e}")
             
             # 复用 Matches 可视化图 (针对单个样本生成)
             try:
@@ -559,18 +632,22 @@ def main():
     config.TRAINER.TRUE_LR = config.TRAINER.CANONICAL_LR * _scaling
     
     # 3. 初始化模型与数据
-    # 加载 MINIMA 预训练权重，并应用域随机化包装
-    loguru_logger.info(f"正在加载 MINIMA 预训练权重: {args.pretrained_ckpt}")
+    if args.pretrained_ckpt:
+        loguru_logger.info(f"正在加载预训练权重: {args.pretrained_ckpt}")
+    else:
+        loguru_logger.info("未提供预训练权重，模型将从随机初始化开始训练")
+        
     model = PL_LoFTR_WithDomainRand(
         config, 
         pretrained_ckpt=args.pretrained_ckpt, 
         use_domain_rand=args.use_domain_randomization,
         result_dir=str(result_dir)  # 传递结果目录
     )
+    
     if args.use_domain_randomization:
         loguru_logger.info("域随机化增强已启用，将在训练时应用（包括sanity check阶段）")
         loguru_logger.info("将在训练开始时保存前2个batch的域随机化可视化")
-    loguru_logger.info("MINIMA 预训练权重加载完成，开始在此基础上训练")
+    
     data_module = MultimodalDataModule(args, config)
 
     # 4. 初始化训练器
