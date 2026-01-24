@@ -229,16 +229,18 @@ def create_chessboard(img1, img2, grid_size=4):
 
 class PL_LoFTR_WithDomainRand(PL_LoFTR):
     """PL_LoFTR 的包装类，在训练时应用域随机化增强"""
-    def __init__(self, config, pretrained_ckpt=None, profiler=None, dump_dir=None, use_domain_rand=True):
+    def __init__(self, config, pretrained_ckpt=None, profiler=None, dump_dir=None, use_domain_rand=True, result_dir=None):
         super().__init__(config, pretrained_ckpt, profiler, dump_dir)
         self.use_domain_rand = use_domain_rand
-        self.epoch_counter = 0  # 用于保存第一个epoch的可视化
+        self.saved_batches = 0  # 用于跟踪已保存的batch数量
+        self.result_dir = result_dir  # 保存结果目录
         
     def training_step(self, batch, batch_idx):
         """重写 training_step，在模型输入前应用域随机化"""
         if self.use_domain_rand:
-            # 保存原始图像（用于第一个epoch的可视化）
-            if self.current_epoch == 0 and batch_idx < 2:
+            # 保存原始图像（用于前2个batch的可视化，包括sanity check）
+            # 只在前2个batch保存可视化
+            if self.saved_batches < 2:
                 img0_orig = batch['image0'].clone()
                 img1_orig = batch['image1'].clone()
             
@@ -247,21 +249,33 @@ class PL_LoFTR_WithDomainRand(PL_LoFTR):
             batch['image0'] = apply_domain_randomization(batch['image0'])
             batch['image1'] = apply_domain_randomization(batch['image1'])
             
-            # 保存第一个epoch的前两个batch的可视化（检查域随机化效果）
-            if self.current_epoch == 0 and batch_idx < 2:
-                result_dir = Path(f"results/{self.config.DATASET.TRAINVAL_DATA_SOURCE}/{self.config.TRAINER.EXP_NAME}")
+            # 保存前2个batch的可视化（检查域随机化效果）
+            if self.saved_batches < 2:
+                if self.result_dir is None:
+                    result_dir = Path(f"results/{self.config.DATASET.TRAINVAL_DATA_SOURCE}/{self.config.TRAINER.EXP_NAME}")
+                else:
+                    result_dir = Path(self.result_dir)
                 result_dir.mkdir(parents=True, exist_ok=True)
                 
                 vessel_mask = batch.get('mask0', None)
+                
+                # 根据当前状态决定epoch标记
+                if self.trainer.sanity_checking:
+                    epoch_label = 0  # sanity check阶段标记为epoch 0
+                else:
+                    epoch_label = self.current_epoch + 1
+                
                 save_batch_visualization(
                     img0_orig, img1_orig, 
                     batch['image0'], batch['image1'],
                     str(result_dir), 
-                    epoch=self.current_epoch + 1, 
-                    step=batch_idx + 1, 
+                    epoch=epoch_label, 
+                    step=self.saved_batches + 1, 
                     batch_size=batch['image0'].shape[0],
                     vessel_mask=vessel_mask
                 )
+                self.saved_batches += 1
+                loguru_logger.info(f"已保存第 {self.saved_batches}/2 个batch的域随机化可视化（Epoch {epoch_label}, Batch {batch_idx}）")
         
         # 调用原始的 training_step
         return super().training_step(batch, batch_idx)
@@ -550,10 +564,12 @@ def main():
     model = PL_LoFTR_WithDomainRand(
         config, 
         pretrained_ckpt=args.pretrained_ckpt, 
-        use_domain_rand=args.use_domain_randomization
+        use_domain_rand=args.use_domain_randomization,
+        result_dir=str(result_dir)  # 传递结果目录
     )
     if args.use_domain_randomization:
-        loguru_logger.info("域随机化增强已启用，将在训练时应用")
+        loguru_logger.info("域随机化增强已启用，将在训练时应用（包括sanity check阶段）")
+        loguru_logger.info("将在训练开始时保存前2个batch的域随机化可视化")
     loguru_logger.info("MINIMA 预训练权重加载完成，开始在此基础上训练")
     data_module = MultimodalDataModule(args, config)
 
