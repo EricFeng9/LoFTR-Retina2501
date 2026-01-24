@@ -24,7 +24,8 @@ _CN.LOFTR.COARSE.TEMP_BUG_FIX = True
 
 # 3. Coarse-Matching config
 _CN.LOFTR.MATCH_COARSE = CN()
-_CN.LOFTR.MATCH_COARSE.THR = 0.2
+#_CN.LOFTR.MATCH_COARSE.THR = 0.2
+_CN.LOFTR.MATCH_COARSE.THR = 0.1  # 降低置信度阈值，允许更多候选匹配（原值 0.2）
 _CN.LOFTR.MATCH_COARSE.BORDER_RM = 2
 _CN.LOFTR.MATCH_COARSE.MATCH_TYPE = 'dual_softmax'  # options: ['dual_softmax, 'sinkhorn']
 _CN.LOFTR.MATCH_COARSE.DSMAX_TEMPERATURE = 0.1
@@ -61,9 +62,10 @@ _CN.LOFTR.LOSS.NEG_WEIGHT = 1.0
 
 # -- # fine-level
 _CN.LOFTR.LOSS.FINE_TYPE = 'l2_with_std'  # ['l2_with_std', 'l2']
-_CN.LOFTR.LOSS.FINE_WEIGHT = 1.0
-_CN.LOFTR.LOSS.FINE_CORRECT_THR = 1.0  # for filtering valid fine-level gts (some gt matches might fall out of the fine-level window)
-
+_CN.LOFTR.LOSS.FINE_WEIGHT = 0.25  # 降低 fine-level 权重，跨模态不需要亚像素精度（原值 1.0）
+_CN.LOFTR.LOSS.FINE_CORRECT_THR = 2.0  # 放宽 fine-level 有效性阈值，允许更大偏差（原值 1.0）
+#_CN.LOFTR.LOSS.FINE_WEIGHT = 1.0
+#_CN.LOFTR.LOSS.FINE_CORRECT_THR = 1.0 
 
 ##############  Dataset  ##############
 _CN.DATASET = CN()
