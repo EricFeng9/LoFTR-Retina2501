@@ -675,11 +675,11 @@ def main():
     val_callback = MultimodalValidationCallback(args)
     lr_monitor = LearningRateMonitor(logging_interval='step')
     
-    # 启用早停机制：epoch 50 后，如果连续 5 次验证 (即 25 epoch) loss 不下降则停止
+    # 启用早停机制：epoch 100 后，如果连续 5 次验证 (即 25 epoch) loss 不下降则停止
     # 注意：check_val_every_n_epoch=5，所以 patience=5 对应 5 次验证检查
-    # 使用自定义 EarlyStopping，在 epoch 50 之前不计数
-    # 既然是预训练权重微调，直接启用早停 (patience=5 对应 25个epoch)
-    early_stop_callback = EarlyStopping(
+    # 使用自定义 DelayedEarlyStopping，在 epoch 100 之前不计数
+    early_stop_callback = DelayedEarlyStopping(
+        start_epoch=100,
         monitor='val_mse', 
         patience=5,
         verbose=True,
