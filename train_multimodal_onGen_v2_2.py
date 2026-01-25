@@ -79,6 +79,125 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
             'dataset_name': 'MultiModal'
         }
 
+# 数据集根目录硬编码
+DATA_ROOT = "/data/student/Fengjunming/LoFTR/data/FIVES_extract_v2"
+
+class MultimodalDataModule(pl.LightningDataModule):
+    def __init__(self, args, config):
+        super().__init__()
+        self.args = args
+        self.config = config
+        self.loader_params = {
+            'batch_size': args.batch_size,
+            'num_workers': args.num_workers,
+            'pin_memory': True
+        }
+
+    def setup(self, stage=None):
+        if stage == 'fit' or stage is None:
+            # 训练集：每次形变随机（生成数据）
+            self.train_dataset = MultiModalDataset(
+                DATA_ROOT, mode=self.args.mode, split='train', img_size=self.args.img_size, vessel_sigma=self.args.vessel_sigma)
+            
+            # 验证集：根据参数选择
+            if self.args.val_on_real:
+                # 使用真实数据集验证（与 train_multimodal_v3_3.py 一致）
+                if self.args.mode == 'cfocta':
+                    base_dataset = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
+                elif self.args.mode == 'cffa':
+                    base_dataset = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
+                elif self.args.mode == 'cfoct':
+                    base_dataset = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
+                elif self.args.mode == 'octfa':
+                    base_dataset = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='val', mode='fa2oct')
+                
+                # 包装真实数据集，使其输出格式与 MultiModalDataset 一致
+                self.val_dataset_real = RealDatasetWrapper(base_dataset)
+                
+                # 同时保留生成数据验证集用于可视化对比
+                self.val_dataset_gen = MultiModalDataset(
+                    DATA_ROOT, mode=self.args.mode, split='val', img_size=self.args.img_size, vessel_sigma=self.args.vessel_sigma)
+            else:
+                # 仅使用生成数据验证
+                self.val_dataset = MultiModalDataset(
+                    DATA_ROOT, mode=self.args.mode, split='val', img_size=self.args.img_size, vessel_sigma=self.args.vessel_sigma)
+
+    def train_dataloader(self):
+        return torch.utils.data.DataLoader(self.train_dataset, shuffle=True, **self.loader_params)
+
+    def val_dataloader(self):
+        if self.args.val_on_real:
+            # 返回双验证数据集：[生成数据, 真实数据]
+            # 注意：生成数据验证仅用于可视化，真实数据用于计算指标
+            return [
+                torch.utils.data.DataLoader(self.val_dataset_gen, shuffle=False, **self.loader_params),
+                torch.utils.data.DataLoader(self.val_dataset_real, shuffle=False, **self.loader_params)
+            ]
+        else:
+            return torch.utils.data.DataLoader(self.val_dataset, shuffle=False, **self.loader_params)
+
+def filter_valid_area(img1, img2):
+    """筛选有效区域：只保留两张图片都不为纯黑像素的部分，并裁剪使有效区域填满画布"""
+    assert img1.shape[:2] == img2.shape[:2], "两张图片的尺寸必须一致"
+    if len(img1.shape) == 3:
+        mask1 = np.any(img1 > 10, axis=2)
+    else:
+        mask1 = img1 > 0
+    if len(img2.shape) == 3:
+        mask2 = np.any(img2 > 10, axis=2)
+    else:
+        mask2 = img2 > 0
+    valid_mask = mask1 & mask2
+    rows = np.any(valid_mask, axis=1)
+    cols = np.any(valid_mask, axis=0)
+    if not np.any(rows) or not np.any(cols):
+        return img1, img2
+    row_min, row_max = np.where(rows)[0][[0, -1]]
+    col_min, col_max = np.where(cols)[0][[0, -1]]
+    filtered_img1 = img1[row_min:row_max+1, col_min:col_max+1].copy()
+    filtered_img2 = img2[row_min:row_max+1, col_min:col_max+1].copy()
+    valid_mask_cropped = valid_mask[row_min:row_max+1, col_min:col_max+1]
+    if len(filtered_img1.shape) == 3:
+        filtered_img1[~valid_mask_cropped] = 0
+    else:
+        filtered_img1[~valid_mask_cropped] = 0
+    if len(filtered_img2.shape) == 3:
+        filtered_img2[~valid_mask_cropped] = 0
+    else:
+        filtered_img2[~valid_mask_cropped] = 0
+    return filtered_img1, filtered_img2
+
+def compute_corner_error(H_est, H_gt, height, width):
+    """计算角点误差 (Corner Error)"""
+    corners = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32)
+    corners_homo = np.concatenate([corners, np.ones((4, 1), dtype=np.float32)], axis=1)
+    corners_gt_homo = (H_gt @ corners_homo.T).T
+    corners_gt = corners_gt_homo[:, :2] / (corners_gt_homo[:, 2:] + 1e-6)
+    corners_est_homo = (H_est @ corners_homo.T).T
+    corners_est = corners_est_homo[:, :2] / (corners_est_homo[:, 2:] + 1e-6)
+    try:
+        errors = np.sqrt(np.sum((corners_est - corners_gt)**2, axis=1))
+        mace = np.mean(errors)
+    except:
+        mace = float('inf')
+    return mace
+
+def create_chessboard(img1, img2, grid_size=4):
+    """创建棋盘图"""
+    H, W = img1.shape
+    cell_h = H // grid_size
+    cell_w = W // grid_size
+    chessboard = np.zeros((H, W), dtype=img1.dtype)
+    for i in range(grid_size):
+        for j in range(grid_size):
+            y_start, y_end = i * cell_h, (i + 1) * cell_h
+            x_start, x_end = j * cell_w, (j + 1) * cell_w
+            if (i + j) % 2 == 0:
+                chessboard[y_start:y_end, x_start:x_end] = img1[y_start:y_end, x_start:x_end]
+            else:
+                chessboard[y_start:y_end, x_start:x_end] = img2[y_start:y_end, x_start:x_end]
+    return chessboard
+
 # 日志配置 (同 v2.1)
 loguru_logger = get_rank_zero_only_logger(logger)
 loguru_logger.remove()
@@ -307,8 +426,7 @@ class MultimodalValidationCallback(Callback):
         pair_names0 = batch['pair_names'][0]
         pair_names1 = batch['pair_names'][1]
         
-        # 导入辅助函数
-        from train_multimodal_onGen_v2_1 import filter_valid_area, compute_corner_error, create_chessboard
+        # 直接使用本地定义的辅助函数
 
         for i in range(batch_size):
             sample_name = f"{Path(pair_names0[i]).stem}_vs_{Path(pair_names1[i]).stem}"
