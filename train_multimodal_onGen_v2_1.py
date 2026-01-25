@@ -92,7 +92,7 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
         }
 
 # 导入域随机化增强模块
-from gen_data_enhance import apply_domain_randomization, save_batch_visualization
+from gen_data_enhance_v2 import apply_domain_randomization, save_batch_visualization
 
 # 数据集根目录硬编码
 DATA_ROOT = "/data/student/Fengjunming/LoFTR/data/FIVES_extract_v2"
