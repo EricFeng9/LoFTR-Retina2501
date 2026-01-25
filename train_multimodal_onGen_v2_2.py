@@ -516,7 +516,10 @@ def main():
     pl.seed_everything(config.TRAINER.SEED)
     
     _n_gpus = setup_gpus(args.gpus)
-    config.TRAINER.WORLD_SIZE = max(_n_gpus, 1)
+    config.TRAINER.WORLD_SIZE = max(_n_gpus, 1) * getattr(args, 'num_nodes', 1)
+    config.TRAINER.TRUE_BATCH_SIZE = config.TRAINER.WORLD_SIZE * args.batch_size
+    _scaling = config.TRAINER.TRUE_BATCH_SIZE / config.TRAINER.CANONICAL_BS
+    config.TRAINER.TRUE_LR = config.TRAINER.CANONICAL_LR * _scaling
     
     model = PL_LoFTR_V2(
         config, 
