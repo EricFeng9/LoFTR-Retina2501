@@ -330,6 +330,24 @@ class PL_LoFTR_V2(PL_LoFTR):
         
         return super().training_step(batch, batch_idx)
 
+    def validation_step(self, batch, batch_idx, dataloader_idx=0):
+        """支持多数据集验证"""
+        # 验证时不应用域随机化，直接调用基类方法
+        # 注意：PL_LoFTR 的 validation_step 不接受 dataloader_idx，所以我们手动调用 _trainval_inference
+        self._trainval_inference(batch)
+        ret_dict, _ = self._compute_metrics(batch)
+        
+        val_plot_interval = max(self.trainer.num_val_batches[0] // self.n_vals_plot, 1)
+        figures = {self.config.TRAINER.PLOT_MODE: []}
+        if batch_idx % val_plot_interval == 0:
+            figures = make_matching_figures(batch, self.config, mode=self.config.TRAINER.PLOT_MODE)
+
+        return {
+            **ret_dict,
+            'loss_scalars': batch['loss_scalars'],
+            'figures': figures,
+        }
+
 # 复用 MultimodalValidationCallback (完全一致)
 class MultimodalValidationCallback(Callback):
     def __init__(self, args):
