@@ -21,7 +21,7 @@ import logging
 from src.config.default import get_cfg_defaults
 from src.utils.misc import get_rank_zero_only_logger, setup_gpus
 from src.lightning.lightning_loftr import PL_LoFTR
-from data.FIVES_extract.FIVES_extract import MultiModalDataset
+from data.FIVES_extract_v2.FIVES_extract_v2 import MultiModalDataset
 from src.utils.plotting import make_matching_figures
 
 # 导入真实数据集（用于验证）
@@ -131,7 +131,7 @@ def parse_args():
     - **完全弃用血管掩码**：vessel_soft_lambda = 0, loss_weight = 1.0
     - 模型必须完全自主学习跨模态特征
     - 支持加载 MINIMA 预训练权重作为初始化
-    - 支持大角度旋转（±90°）和翻转（10%概率）
+    - 支持大角度旋转（±90°）和翻转（20%概率）
     """)
     parser.add_argument('--mode', type=str, default='cffa', choices=['cffa', 'cfoct', 'octfa', 'cfocta'], help='配准模式')
     parser.add_argument('--name', '-n', type=str, default='loftr_multimodal_fives', help='本次训练的名称')
