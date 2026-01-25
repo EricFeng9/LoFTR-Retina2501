@@ -1,6 +1,5 @@
 [text](plan_v2.md)我现在在做一个课题，目标是目标是基于我们已有的生成数据集（结构完全相同且对齐的cf-oct-fa图像对）训练出一个支持cf-fa，cf-oct（cf均为fix）的多模态配准模型。我们目前在用fractMorph模型进行2D化改造后的模型，但是fractMorph2D只能针对一些微小血管形变进行对齐和修复，但是针对真实情况不对齐图像中出现的血管大尺度旋转（如15 30度的旋转角度）、大的位置偏移的情况下配准效果较差，1是原先的逐像素点移动的模式很差2是我们修改成让模型直接预测放射参数，效果也很差，几乎不收敛。我现在的想法是改造loftr，学习cf图像和oct/fa图像之间的关键点匹配，然后利用这些匹配出来的关键点计算放射矩阵，对跨模态图像进行配准。
 
-@data/CF_260116_expand 数据集每一个文件夹下面是一组多模态数据集，格式为[编号]_[模态]_[其他备注].png。配准模式共有cffa（cf为fix），cfoct（cf为fix），octfa（oct为fix），cfocta（cf为fix）四种模式。_cf_clip_512(或者_cf_gen_clip_512)和_octa_gen用于cfocta配准的训练，剩下的_cf_512(_cf_gen_512)、_fa(_fa_gen)、_oct(_oct_gen)分别用于对应的cffa和cfoct和faoct配准。
 **重要更新：v2.1 (No Mask Strategy)**
 本版本完全移除血管掩码引导策略。
 - `vessel_mask = None`
