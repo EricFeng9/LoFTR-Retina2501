@@ -253,6 +253,51 @@ def filter_valid_area(img1, img2):
     
     return filtered_img1, filtered_img2
 
+def compute_corner_error(H_est, H_gt, height, width):
+    """
+    计算角点误差 (Corner Error)
+    Args:
+        H_est: 估计的单应矩阵 [3, 3]
+        H_gt: 真实的单应矩阵 [3, 3]
+        height: 图像高度
+        width: 图像宽度
+    Returns:
+        corner_error: 4个角点的平均欧氏距离误差 (像素)
+    """
+    # 定义 4 个角点坐标 (x, y)
+    corners = np.array([
+        [0, 0],
+        [width, 0],
+        [width, height],
+        [0, height]
+    ], dtype=np.float32) # [4, 2]
+    
+    # 将角点转换为齐次坐标 [4, 3]
+    corners_homo = np.concatenate([corners, np.ones((4, 1), dtype=np.float32)], axis=1) # [4, 3]
+    
+    # 使用 GT 变换角点
+    corners_gt_homo = (H_gt @ corners_homo.T).T # [4, 3]
+    corners_gt = corners_gt_homo[:, :2] / (corners_gt_homo[:, 2:] + 1e-6) # [4, 2]
+    
+    # 使用 估计矩阵 变换角点
+    corners_est_homo = (H_est @ corners_homo.T).T # [4, 3]
+    corners_est = corners_est_homo[:, :2] / (corners_est_homo[:, 2:] + 1e-6) # [4, 2]
+    
+    # 计算距离误差
+    # errors = np.linalg.norm(corners_est - corners_gt, axis=1)
+    # mace = np.mean(errors)
+    
+    # 另一种更稳健的写法，处理可能的无效值
+    try:
+        errors = np.sqrt(np.sum((corners_est - corners_gt)**2, axis=1))
+        mace = np.mean(errors)
+    except Exception as e:
+        loguru_logger.warning(f"计算角点误差失败: {e}")
+        mace = float('inf')
+        
+    return mace
+
+
 def create_chessboard(img1, img2, grid_size=4):
     """
     创建棋盘图，将两张图交替拼接成4x4的棋盘
@@ -371,13 +416,15 @@ class MultimodalValidationCallback(Callback):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.best_val_mse = float('inf')
+        self.best_val = float('inf')
         self.result_dir = Path(f"results/{args.mode}/{args.name}")
         self.result_dir.mkdir(parents=True, exist_ok=True)
         self.epoch_mses = []
+        self.epoch_maces = [] # 新增：存储角点误差
 
     def on_validation_epoch_start(self, trainer, pl_module):
         self.epoch_mses = []
+        self.epoch_maces = []
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
         """处理验证批次结束事件，支持多数据集验证"""
@@ -401,14 +448,16 @@ class MultimodalValidationCallback(Callback):
         
         # 批量处理并保存当前 batch 的所有样本
         # 直接使用 validation_step 计算好的结果，避免重复推理
-        batch_mses = self._save_batch_results(trainer, pl_module, batch, outputs, epoch_dir)
+        batch_mses, batch_maces = self._save_batch_results(trainer, pl_module, batch, outputs, epoch_dir)
         
         # 仅在真实数据集上收集 MSE 用于模型选择
         if self.args.val_on_real:
             if dataloader_idx == 1:  # 真实数据集
                 self.epoch_mses.extend(batch_mses)
+                self.epoch_maces.extend(batch_maces)
         else:
             self.epoch_mses.extend(batch_mses)
+            self.epoch_maces.extend(batch_maces)
 
     def on_train_epoch_end(self, trainer, pl_module):
         epoch = trainer.current_epoch + 1
@@ -444,9 +493,10 @@ class MultimodalValidationCallback(Callback):
         
         # 计算整个验证集的平均 MSE（仅来自真实数据集）
         avg_mse = sum(self.epoch_mses) / len(self.epoch_mses)
+        avg_mace = sum(self.epoch_maces) / len(self.epoch_maces) if self.epoch_maces else float('inf')
         
         # 简化验证指标显示
-        display_metrics = {'mse_real': avg_mse}  # 重命名为 mse_real 以区分
+        display_metrics = {'mse_real': avg_mse, 'mace_real': avg_mace}  # 重命名为 mse_real 以区分
         
         # 提取 AUC 指标（来自真实数据集）
         for k in ['auc@5', 'auc@10', 'auc@20']:
@@ -464,28 +514,32 @@ class MultimodalValidationCallback(Callback):
         
         # 记录验证 MSE 供 Trainer 和 EarlyStopping 监控
         pl_module.log("val_mse", avg_mse, on_epoch=True, prog_bar=False, logger=True)
+        pl_module.log("val_mace", avg_mace, on_epoch=True, prog_bar=True, logger=True)
         
         # 更新最新权重
         latest_path = self.result_dir / "latest_checkpoint"
         latest_path.mkdir(exist_ok=True)
         trainer.save_checkpoint(latest_path / "model.ckpt")
         with open(latest_path / "log.txt", "w") as f:
-            f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}")
+            f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
             
-        # 更新最优权重
-        if avg_mse < self.best_val_mse:
-            self.best_val_mse = avg_mse
+        # 更新最优模型（改为使用 MACE 监控）
+        # 注意：这里我们使用 MACE 作为主要指标
+        metric_monitor = avg_mace
+        if metric_monitor < self.best_val: # 变量名暂不改，减少改动量，实际存的是MACE
+            self.best_val = metric_monitor
             best_path = self.result_dir / "best_checkpoint"
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
             with open(best_path / "log.txt", "w") as f:
-                f.write(f"Epoch: {epoch}\nBest MSE: {avg_mse:.6f}")
-            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, MSE: {avg_mse:.6f}")
+                f.write(f"Epoch: {epoch}\nBest MACE: {avg_mace:.6f}\nBest MSE: {avg_mse:.6f}")
+            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, MACE: {avg_mace:.4f}")
 
     def _save_batch_results(self, trainer, pl_module, batch, outputs, epoch_dir):
         # 此时 batch 已经在 validation_step 中被处理过，包含了 H_est 和匹配点信息
         batch_size = batch['image0'].shape[0]
         mses = []
+        maces = []
         
         # 获取估计的单应矩阵 H_est (由 metrics.py 中的 compute_homography_errors 提供)
         # 注意：H_est 是在 validation_step 的 _compute_metrics 中生成的，存储在 outputs 中
@@ -501,6 +555,14 @@ class MultimodalValidationCallback(Callback):
         
         pair_names0 = batch['pair_names'][0]
         pair_names1 = batch['pair_names'][1]
+        
+        # 获取 GT 变换矩阵 (T_0to1: image0 -> image1 的变换，即 fix -> moving)
+        # 注意 LoFTR 输出的 H_est 是从 image0 -> image1 的映射关系？需确认
+        # 通常 LoFTR: H_est 使得 x1 = H * x0. 
+        # 我们的数据集: T_0to1 是从 moving 到 fix 的?? 
+        # 上面代码 RealDatasetWrapper: T_fix_to_moving = torch.inverse(T_0to1)
+        # 所以 batch['T_0to1'] 现在是 fix -> moving (image0 -> image1) 的矩阵
+        Ts_gt = batch['T_0to1'].cpu().numpy()
 
         for i in range(batch_size):
             # 为每个样本创建独立文件夹
@@ -561,6 +623,11 @@ class MultimodalValidationCallback(Callback):
             
             mses.append(mse)
             
+            # 计算角点误差 (MACE)
+            H_gt = Ts_gt[i]
+            mace = compute_corner_error(H_est, H_gt, h, w)
+            maces.append(mace)
+            
             # 保存各模态图像
             cv2.imwrite(str(save_path / "fix.png"), img0)
             cv2.imwrite(str(save_path / "moving.png"), img1)
@@ -606,7 +673,7 @@ class MultimodalValidationCallback(Callback):
             except Exception as e:
                 pass
                 
-        return mses
+        return mses, maces
 
 class DelayedEarlyStopping(EarlyStopping):
     """自定义早停回调，在指定 epoch 之后才开始计数"""
@@ -680,11 +747,11 @@ def main():
     # 使用自定义 DelayedEarlyStopping，在 epoch 100 之前不计数
     early_stop_callback = DelayedEarlyStopping(
         start_epoch=100,
-        monitor='val_mse', 
+        monitor='val_mace', # 改为监控 MACE
         patience=5,
         verbose=True,
         mode='min',
-        min_delta=0.0001
+        min_delta=0.01 # MACE 误差，单位是像素，0.01 px 已经很小了
     )
 
     trainer = pl.Trainer.from_argparse_args(

@@ -104,7 +104,7 @@ LoFTR 的核心是舍弃特征检测器，直接在稠密特征上通过 Transfo
 
 **增强策略：**
 * **旋转：** 均匀采样 $[-90^\circ, 90^\circ]$
-* **翻转：** 20% 概率水平/垂直翻转
+* **翻转：** 10% 概率水平/垂直翻转
 
 ### 2. 建立坐标映射 (Ground Truth)
 
@@ -144,7 +144,8 @@ $$j_{gt} = T \cdot [x, y, 1]^T$$
 
 - **始终保持：** `vessel_soft_lambda = 0`
 - **始终保持：** `loss_weight = 1.0`
-- **早停策略：** `DelayedEarlyStopping(start_epoch=100, patience=5)`
+- **早停策略：** `DelayedEarlyStopping(start_epoch=100, patience=5, monitor='val_mace')`
+- **验证指标：** 弃用 MSE，改用 **Corner Error (MACE)** 监控模型配准质量。
 
 ---
 
