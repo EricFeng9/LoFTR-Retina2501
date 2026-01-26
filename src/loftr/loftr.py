@@ -51,28 +51,6 @@ class LoFTR(nn.Module):
             'hw0_f': feat_f0.shape[2:], 'hw1_f': feat_f1.shape[2:]
         })
 
-        # 2. 基于血管软掩码对 coarse 特征进行加权（高斯扩展，见 plan.md）
-        if 'vessel_weight0' in data and 'vessel_weight1' in data:
-            # 将软掩码下采样到 coarse 分辨率，使用双线性插值保持平滑
-            v_w0 = data['vessel_weight0']
-            v_w1 = data['vessel_weight1']
-            if v_w0.dim() == 4:
-                v_w0 = v_w0.squeeze(1)
-                v_w1 = v_w1.squeeze(1)
-            if v_w0.shape[1:] != data['hw0_c']:
-                v_w0_c = F.interpolate(v_w0.unsqueeze(1), size=data['hw0_c'], mode='bilinear', align_corners=False).squeeze(1)
-                v_w1_c = F.interpolate(v_w1.unsqueeze(1), size=data['hw1_c'], mode='bilinear', align_corners=False).squeeze(1)
-            else:
-                v_w0_c, v_w1_c = v_w0, v_w1
-            data.update({'vessel_weight0_c': v_w0_c, 'vessel_weight1_c': v_w1_c})
-
-            # 使用 (alpha * W + beta) 对 coarse 特征做通道共享的缩放
-            alpha = self.config['coarse'].get('vessel_alpha', 1.0)
-            beta = self.config['coarse'].get('vessel_beta', 0.3)
-            # 【方案 B 改进】取消在 Backbone 阶段直接乘以掩码，让模型看到完整图像以保持全局位置编码的正确性
-            # feat_c0 = feat_c0 * (alpha * v_w0_c.unsqueeze(1) + beta)
-            # feat_c1 = feat_c1 * (alpha * v_w1_c.unsqueeze(1) + beta)
-
         # 3. coarse-level loftr module
         # add featmap with positional encoding, then flatten it to sequence [N, HW, C]
         feat_c0 = rearrange(self.pos_encoding(feat_c0), 'n c h w -> n (h w) c')
@@ -84,20 +62,10 @@ class LoFTR(nn.Module):
             mask_c0, mask_c1 = self._process_mask(data['mask0'], data['mask1'], data)
             data.update({'mask0': mask_c0, 'mask1': mask_c1})
             
-            if 'vessel_mask0' in data:
-                v_mask_c0, v_mask_c1 = self._process_mask(data['vessel_mask0'], data['vessel_mask1'], data)
-                data.update({'vessel_mask0': v_mask_c0, 'vessel_mask1': v_mask_c1})
-            
             mask_c0, mask_c1 = mask_c0.flatten(-2), mask_c1.flatten(-2)
-
-        # 若存在 coarse 级别的血管软权重，则展平成 [N, L] 供 coarse matching 使用
-        if 'vessel_weight0_c' in data and 'vessel_weight1_c' in data:
-            v_w0_flat = data['vessel_weight0_c'].flatten(-2)
-            v_w1_flat = data['vessel_weight1_c'].flatten(-2)
-            data.update({
-                'vessel_weight0_c_flat': v_w0_flat,
-                'vessel_weight1_c_flat': v_w1_flat
-            })
+        
+        # [V2.3 Clean Up] We removed all vessel mask injection logic.
+        # forward() is now purely vision-based.
             
         feat_c0, feat_c1 = self.loftr_coarse(feat_c0, feat_c1, mask_c0, mask_c1)
 

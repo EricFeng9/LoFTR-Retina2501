@@ -89,9 +89,17 @@ def spvs_coarse_homo(data, config):
         if m1.ndim == 3:
             m1 = m1.unsqueeze(1)
             
-        # Use bilinear interpolation for soft weights
-        m0_c = torch.nn.functional.interpolate(m0, size=(h0, w0), mode='bilinear', align_corners=False)
-        m1_c = torch.nn.functional.interpolate(m1, size=(h1, w1), mode='bilinear', align_corners=False)
+        # [V2.3 Change] Use Max Pooling ("Existence is Hit")
+        # Instead of interpolating (which blurs) or thresholding (which misses thin lines),
+        # we efficiently check if ANY pixel in the 8x8 block is a vessel.
+        # This ensures high recall for vessel regions.
+        # Assuming scale = 8 (512 -> 64), so stride=8, kernel=8 covers the block.
+        # We also need to handle the size carefully if input size isn't perfectly divisible, 
+        # but here we assume standard LoFTR sizing (divisible by 8).
+        # Note: adaptive_max_pool2d is safer for varying sizes.
+        
+        m0_c = torch.nn.functional.adaptive_max_pool2d(m0, output_size=(h0, w0))
+        m1_c = torch.nn.functional.adaptive_max_pool2d(m1, output_size=(h1, w1))
         
         # Squeeze back to [N, h, w]
         m0_c = m0_c.squeeze(1)
