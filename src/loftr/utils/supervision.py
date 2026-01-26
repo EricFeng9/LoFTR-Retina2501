@@ -80,10 +80,15 @@ def spvs_coarse_homo(data, config):
     # --- Feature: Generate Vessel Weights for Coarse Matching & Loss ---
     if 'mask0' in data and 'mask1' in data:
         # Resize masks to coarse resolution
-        # mask0: [N, H0, W0] -> [N, 1, H0, W0] for interpolate
-        m0 = data['mask0'].unsqueeze(1).float()
-        m1 = data['mask1'].unsqueeze(1).float()
+        m0 = data['mask0'].float()
+        m1 = data['mask1'].float()
         
+        # Ensure 4D: [N, 1, H, W]
+        if m0.ndim == 3:
+            m0 = m0.unsqueeze(1)
+        if m1.ndim == 3:
+            m1 = m1.unsqueeze(1)
+            
         # Use bilinear interpolation for soft weights
         m0_c = torch.nn.functional.interpolate(m0, size=(h0, w0), mode='bilinear', align_corners=False)
         m1_c = torch.nn.functional.interpolate(m1, size=(h1, w1), mode='bilinear', align_corners=False)

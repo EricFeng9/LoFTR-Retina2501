@@ -167,6 +167,7 @@ def filter_valid_area(img1, img2):
         filtered_img2[~valid_mask_cropped] = 0
     return filtered_img1, filtered_img2
 
+
 def compute_corner_error(H_est, H_gt, height, width):
     """计算角点误差 (Corner Error)"""
     corners = np.array([[0, 0], [width, 0], [width, height], [0, height]], dtype=np.float32)
@@ -181,6 +182,33 @@ def compute_corner_error(H_est, H_gt, height, width):
     except:
         mace = float('inf')
     return mace
+
+class CLAHE_Preprocess:
+    """
+    CLAHE 预处理：增强血管对比度
+    """
+    def __init__(self, clip_limit=2.0, tile_grid_size=(8, 8)):
+        self.clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+
+    def __call__(self, img_tensor):
+        """
+        Args:
+            img_tensor: [B, 1, H, W], values in [0, 1]
+        Returns:
+            processed_tensor: [B, 1, H, W], values in [0, 1]
+        """
+        device = img_tensor.device
+        B = img_tensor.shape[0]
+        res = []
+        for b in range(B):
+            # Convert to numpy uint8
+            img_np = (img_tensor[b, 0].detach().cpu().numpy() * 255).astype(np.uint8)
+            # Apply CLAHE
+            img_clahe = self.clahe.apply(img_np)
+            # Convert back
+            res.append(torch.from_numpy(img_clahe).float() / 255.0)
+        return torch.stack(res).unsqueeze(1).to(device)
+
 
 def create_chessboard(img1, img2, grid_size=4):
     """创建棋盘图"""
@@ -280,6 +308,7 @@ class PL_LoFTR_V2(PL_LoFTR):
         self.result_dir = result_dir
         # 初始化 curriculum 参数
         self.curriculum_loss_weight = 1.0 
+        self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
         
     def on_train_epoch_start(self):
         # 覆盖父类 v2.1 的逻辑，不做任何“强制清零”操作
@@ -288,10 +317,24 @@ class PL_LoFTR_V2(PL_LoFTR):
         
     def training_step(self, batch, batch_idx):
         if self.use_domain_rand and self.training:
+            # [Fix 1] 强制归一化到 [0, 1]
+            # 检查最小值，如果小于 0，说明是 [-1, 1] 范围，需要转换
+            if batch['image0'].min() < 0:
+                batch['image0'] = (batch['image0'] + 1) / 2
+                batch['image1'] = (batch['image1'] + 1) / 2
+            
+            # [Fix 2] 应用 CLAHE 增强对比度 (让血管跳出来)
+            # 对所有数据应用（包括 real_val），但这里只在 training block
+            # 实际上，最好是一视同仁
+            # 考虑到 LoFTR 对 intensity 敏感，我们先对 raw images 做 CLAHE
+            batch['image0'] = self.clahe(batch['image0'])
+            batch['image1'] = self.clahe(batch['image1'])
+
             if self.saved_batches < 2:
                 img0_orig = batch['image0'].clone()
                 img1_orig = batch['image1'].clone()
             
+            # [Fix 3] 此时输入已保证是 [0, 1]，增强函数可以正常工作
             batch['image0'] = apply_domain_randomization(batch['image0'])
             batch['image1'] = apply_domain_randomization(batch['image1'])
             
