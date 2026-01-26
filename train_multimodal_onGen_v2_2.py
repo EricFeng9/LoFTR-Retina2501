@@ -330,20 +330,36 @@ class PL_LoFTR_V2(PL_LoFTR):
         
         return super().training_step(batch, batch_idx)
 
-    def validation_step(self, batch, batch_idx, dataloader_idx=0):
-        """支持多数据集验证"""
-        # 验证时不应用域随机化，直接调用基类方法
-        # 注意：PL_LoFTR 的 validation_step 不接受 dataloader_idx，所以我们手动调用 _trainval_inference
-        self._trainval_inference(batch)
-        ret_dict, _ = self._compute_metrics(batch)
-        
-        val_plot_interval = max(self.trainer.num_val_batches[0] // self.n_vals_plot, 1)
-        figures = {self.config.TRAINER.PLOT_MODE: []}
-        if batch_idx % val_plot_interval == 0:
-            figures = make_matching_figures(batch, self.config, mode=self.config.TRAINER.PLOT_MODE)
+        # --- 新增：提取所有候选匹配点 (用于判断是取点有问题还是匹配有问题) ---
+        all_candidates = []
+        if 'conf_matrix' in batch:
+            conf_matrix = batch['conf_matrix'] # [N, L, S]
+            thr = self.matcher.coarse_matching.thr
+            hw0c = batch['hw0_c']
+            hw1c = batch['hw1_c']
+            # 注意：hw0_i 可能在 batch 里是 [H, W]
+            scale0 = batch['image0'].shape[2] / hw0c[0]
+            scale1 = batch['image1'].shape[2] / hw1c[0]
+            
+            for b in range(conf_matrix.shape[0]):
+                # image0 中 max_conf > thr 的点
+                mask0 = conf_matrix[b].max(dim=1)[0] > thr
+                indices0 = torch.where(mask0)[0]
+                kpts0 = torch.stack([indices0 % hw0c[1], indices0 // hw0c[1]], dim=1).float() * scale0
+                
+                # image1 中 max_conf > thr 的点
+                mask1 = conf_matrix[b].max(dim=0)[0] > thr
+                indices1 = torch.where(mask1)[0]
+                kpts1 = torch.stack([indices1 % hw1c[1], indices1 // hw1c[1]], dim=1).float() * scale1
+                
+                all_candidates.append({
+                    'kpts0': kpts0.detach().cpu().numpy(),
+                    'kpts1': kpts1.detach().cpu().numpy()
+                })
 
         return {
             **ret_dict,
+            'kpts_candidates': all_candidates,
             'loss_scalars': batch['loss_scalars'],
             'figures': figures,
         }
@@ -425,13 +441,18 @@ class MultimodalValidationCallback(Callback):
         latest_path = self.result_dir / "latest_checkpoint"
         latest_path.mkdir(exist_ok=True)
         trainer.save_checkpoint(latest_path / "model.ckpt")
-        
+        with open(latest_path / "log.txt", "w") as f:
+            f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
+            
+        # 更新最优模型（改为使用 MACE 监控）
         metric_monitor = avg_mace
         if metric_monitor < self.best_val:
             self.best_val = metric_monitor
             best_path = self.result_dir / "best_checkpoint"
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
+            with open(best_path / "log.txt", "w") as f:
+                f.write(f"Epoch: {epoch}\nBest MACE: {avg_mace:.6f}\nBest MSE: {avg_mse:.6f}")
             loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, MACE: {avg_mace:.4f}")
 
     def _save_batch_results(self, trainer, pl_module, batch, outputs, epoch_dir):
@@ -475,9 +496,47 @@ class MultimodalValidationCallback(Callback):
             mace = compute_corner_error(H_est, Ts_gt[i], h, w)
             maces.append(mace)
             
+            # 保存各个结果图像
             cv2.imwrite(str(save_path / "fix.png"), img0)
             cv2.imwrite(str(save_path / "moving.png"), img1)
+            cv2.imwrite(str(save_path / "moving_gt.png"), img1_gt)
             cv2.imwrite(str(save_path / "moving_result.png"), img1_result)
+
+            # --- 新增：在 fix 和 moving 上画出所有候选点 (白色) 和 最终匹配点 (红色) ---
+            img0_kpts = cv2.cvtColor(img0, cv2.COLOR_GRAY2BGR)
+            img1_kpts = cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
+            
+            # 1. 先画出所有候选点 (白色小点)
+            if 'kpts_candidates' in outputs and len(outputs['kpts_candidates']) > i:
+                cands = outputs['kpts_candidates'][i]
+                for pt in cands['kpts0']:
+                    cv2.circle(img0_kpts, (int(pt[0]), int(pt[1])), 2, (255, 255, 255), -1)
+                for pt in cands['kpts1']:
+                    cv2.circle(img1_kpts, (int(pt[0]), int(pt[1])), 2, (255, 255, 255), -1)
+
+            # 2. 再画出匹配成功的点 (红色，略大一点)
+            if 'm_bids' in batch:
+                mask_i = (batch['m_bids'] == i)
+                kpts0_m = batch['mkpts0_f'][mask_i].cpu().numpy()
+                kpts1_m = batch['mkpts1_f'][mask_i].cpu().numpy()
+                
+                for pt in kpts0_m:
+                    cv2.circle(img0_kpts, (int(pt[0]), int(pt[1])), 4, (0, 0, 255), -1)
+                for pt in kpts1_m:
+                    cv2.circle(img1_kpts, (int(pt[0]), int(pt[1])), 4, (0, 0, 255), -1)
+            
+            cv2.imwrite(str(save_path / "fix_with_kpts.png"), img0_kpts)
+            cv2.imwrite(str(save_path / "moving_with_kpts.png"), img1_kpts)
+
+            # --- 新增：保存血管掩码（如果存在） ---
+            if 'mask0' in batch:
+                m0 = batch['mask0'][i].cpu().numpy()
+                m1 = batch['mask1'][i].cpu().numpy()
+                if m0.ndim == 3: m0 = m0[0]
+                if m1.ndim == 3: m1 = m1[0]
+                cv2.imwrite(str(save_path / "mask0_vessel.png"), (m0 * 255).astype(np.uint8))
+                cv2.imwrite(str(save_path / "mask1_vessel_warped.png"), (m1 * 255).astype(np.uint8))
+                
             try:
                 cb = create_chessboard(img1_result, img0)
                 cv2.imwrite(str(save_path / "chessboard.png"), cb)
