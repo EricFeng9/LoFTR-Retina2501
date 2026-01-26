@@ -463,16 +463,23 @@ class MultimodalValidationCallback(Callback):
         with open(latest_path / "log.txt", "w") as f:
             f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
             
-        # 更新最优模型（改为使用 MACE 监控）
-        metric_monitor = avg_mace
-        if metric_monitor < self.best_val:
+        # 更新最优模型（改为使用 AUC@10 监控，越大越好）
+        # MACE 容易受异常值(Outliers)欺骗，AUC 才是硬指标
+        metric_monitor = display_metrics.get('auc@10', 0)
+        
+        # 注意：这里我们是要 Maximize AUC，所以逻辑反过来
+        # 为了复用 self.best_val 变量，我们存 -AUC (使其越小越好) 或者改逻辑
+        # 简单起见，我们改逻辑：只存最佳 AUC 值
+        if self.best_val == float('inf'): self.best_val = 0 # Init for maximization
+        
+        if metric_monitor > self.best_val:
             self.best_val = metric_monitor
             best_path = self.result_dir / "best_checkpoint"
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
             with open(best_path / "log.txt", "w") as f:
-                f.write(f"Epoch: {epoch}\nBest MACE: {avg_mace:.6f}\nBest MSE: {avg_mse:.6f}")
-            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, MACE: {avg_mace:.4f}")
+                f.write(f"Epoch: {epoch}\nBest AUC@10: {metric_monitor:.4f}\nCorresponding MACE: {avg_mace:.4f}")
+            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, AUC@10: {metric_monitor:.4f}")
 
     def _save_batch_results(self, trainer, pl_module, batch, outputs, epoch_dir):
         # 简化版实现，同 v2.1
@@ -624,11 +631,40 @@ def main():
         result_dir=str(result_dir)
     )
     
+    # 强制全权重加载 (覆盖 V2.3 的 Random Init 策略)
+    # 如果用户提供了 pretrained_ckpt，我们希望利用这里面所有的知识
+    if args.pretrained_ckpt:
+        checkpoint = torch.load(args.pretrained_ckpt, map_location='cpu')
+        if 'state_dict' in checkpoint:
+            state_dict = checkpoint['state_dict']
+        else:
+            state_dict = checkpoint
+            
+        # 移除 'matcher.' 前缀 (如果存在)
+        state_dict = {k.replace('matcher.', ''): v for k, v in state_dict.items()}
+        
+        # 加载所有通过 key 匹配的权重 (Backbone + Transformer)
+        # strict=False 允许部分不匹配 (如检测头参数可能不同)
+        keys = model.matcher.load_state_dict(state_dict, strict=False)
+        loguru_logger.info(f"已强制加载全量预训练权重 (Backbone + Transformer)")
+        loguru_logger.info(f"Missing keys: {keys.missing_keys}")
+        
+    
     data_module = MultimodalDataModule(args, config)
     tb_logger = TensorBoardLogger(save_dir='logs/tb_logs', name=args.name)
     val_callback = MultimodalValidationCallback(args)
     lr_monitor = LearningRateMonitor(logging_interval='step')
-    early_stop_callback = DelayedEarlyStopping(start_epoch=100, monitor='val_mace', patience=5, min_delta=0.01)
+    
+    # [Monitor Change] MACE -> AUC@10
+    # 防止选出 "MACE 很小但全是交叉点" 的模型
+    # 我们希望 AUC@10 越高越好，所以 mode='max'
+    early_stop_callback = DelayedEarlyStopping(
+        start_epoch=20, 
+        monitor='auc@10', 
+        mode='max', 
+        patience=8, 
+        min_delta=0.001
+    )
     
     trainer = pl.Trainer.from_argparse_args(
         args,
