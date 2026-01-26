@@ -23,6 +23,7 @@ from src.lightning.lightning_loftr import PL_LoFTR
 from data.FIVES_extract_v2.FIVES_extract_v2 import MultiModalDataset
 from src.utils.plotting import make_matching_figures
 from gen_data_enhance_v2 import apply_domain_randomization, save_batch_visualization
+from src.utils.metrics import error_auc
 
 # 导入真实数据集
 from data.CF_OCTA_v2_repaired.cf_octa_v2_repaired_dataset import CFOCTADataset
@@ -447,9 +448,16 @@ class MultimodalValidationCallback(Callback):
         avg_mse = sum(self.epoch_mses) / len(self.epoch_mses)
         avg_mace = sum(self.epoch_maces) / len(self.epoch_maces) if self.epoch_maces else float('inf')
         
-        display_metrics = {'mse_real': avg_mse, 'mace_real': avg_mace}
-        for k in ['auc@5', 'auc@10', 'auc@20']:
-            if k in metrics: display_metrics[k] = metrics[k].item()
+        # [Fix] 显式计算真实数据的 AUC，而不是使用 trainer.metrics (它是 Gen 和 Real 的平均)
+        aucs = error_auc(self.epoch_maces, [5, 10, 20])
+        
+        display_metrics = {
+            'mse_real': avg_mse, 
+            'mace_real': avg_mace,
+            'auc@5': aucs['auc@5'],
+            'auc@10': aucs['auc@10'],
+            'auc@20': aucs['auc@20']
+        }
         
         metric_str = " | ".join([f"{k}: {v:.4f}" for k, v in display_metrics.items()])
         loguru_logger.info(f"Epoch {epoch} 验证总结（真实数据） >> {metric_str}")
@@ -457,19 +465,19 @@ class MultimodalValidationCallback(Callback):
         pl_module.log("val_mse", avg_mse, on_epoch=True, prog_bar=False, logger=True)
         pl_module.log("val_mace", avg_mace, on_epoch=True, prog_bar=True, logger=True)
         
+        # 记录真实数据 AUC 到 TensorBoard (方便对比)
+        pl_module.log("val_auc@10_real", aucs['auc@10'], on_epoch=True, logger=True)
+        
         latest_path = self.result_dir / "latest_checkpoint"
         latest_path.mkdir(exist_ok=True)
         trainer.save_checkpoint(latest_path / "model.ckpt")
         with open(latest_path / "log.txt", "w") as f:
             f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
             
-        # 更新最优模型（改为使用 AUC@10 监控，越大越好）
-        # MACE 容易受异常值(Outliers)欺骗，AUC 才是硬指标
+        # 更新最优模型（使用重新计算的 Real AUC@10）
         metric_monitor = display_metrics.get('auc@10', 0)
         
-        # 注意：这里我们是要 Maximize AUC，所以逻辑反过来
-        # 为了复用 self.best_val 变量，我们存 -AUC (使其越小越好) 或者改逻辑
-        # 简单起见，我们改逻辑：只存最佳 AUC 值
+        # Logic: Maximize AUC
         if self.best_val == float('inf'): self.best_val = 0 # Init for maximization
         
         if metric_monitor > self.best_val:
@@ -660,7 +668,7 @@ def main():
     # 我们希望 AUC@10 越高越好，所以 mode='max'
     early_stop_callback = DelayedEarlyStopping(
         start_epoch=20, 
-        monitor='auc@10', 
+        monitor='val_auc@10_real', 
         mode='max', 
         patience=8, 
         min_delta=0.001
