@@ -330,7 +330,21 @@ class PL_LoFTR_V2(PL_LoFTR):
         
         return super().training_step(batch, batch_idx)
 
-        # --- 新增：提取所有候选匹配点 (用于判断是取点有问题还是匹配有问题) ---
+    def validation_step(self, batch, batch_idx, dataloader_idx=0):
+        self._trainval_inference(batch)
+        ret_dict, _ = self._compute_metrics(batch)
+        
+        # 处理多验证集时的绘图间隔
+        num_val_batches = self.trainer.num_val_batches
+        if isinstance(num_val_batches, list):
+            num_val_batches = num_val_batches[dataloader_idx]
+        val_plot_interval = max(num_val_batches // self.n_vals_plot, 1)
+        
+        figures = {self.config.TRAINER.PLOT_MODE: []}
+        if batch_idx % val_plot_interval == 0:
+            figures = make_matching_figures(batch, self.config, mode=self.config.TRAINER.PLOT_MODE)
+
+        # --- 提取所有候选匹配点 (用于判断是取点有问题还是匹配有问题) ---
         all_candidates = []
         if 'conf_matrix' in batch:
             conf_matrix = batch['conf_matrix'] # [N, L, S]
