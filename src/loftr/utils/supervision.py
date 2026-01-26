@@ -77,6 +77,28 @@ def spvs_coarse_homo(data, config):
         'spv_pt1_i': grid_pt1_i
     })
 
+    # --- Feature: Generate Vessel Weights for Coarse Matching & Loss ---
+    if 'mask0' in data and 'mask1' in data:
+        # Resize masks to coarse resolution
+        # mask0: [N, H0, W0] -> [N, 1, H0, W0] for interpolate
+        m0 = data['mask0'].unsqueeze(1).float()
+        m1 = data['mask1'].unsqueeze(1).float()
+        
+        # Use bilinear interpolation for soft weights
+        m0_c = torch.nn.functional.interpolate(m0, size=(h0, w0), mode='bilinear', align_corners=False)
+        m1_c = torch.nn.functional.interpolate(m1, size=(h1, w1), mode='bilinear', align_corners=False)
+        
+        # Squeeze back to [N, h, w]
+        m0_c = m0_c.squeeze(1)
+        m1_c = m1_c.squeeze(1)
+        
+        data.update({
+            'vessel_weight0_c': m0_c,
+            'vessel_weight1_c': m1_c,
+            'vessel_weight0_c_flat': m0_c.flatten(1),
+            'vessel_weight1_c_flat': m1_c.flatten(1)
+        })
+
 
 @torch.no_grad()
 def mask_pts_at_padded_regions(grid_pt, mask):

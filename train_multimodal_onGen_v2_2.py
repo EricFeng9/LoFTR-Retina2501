@@ -251,14 +251,16 @@ class CurriculumScheduler(pl.Callback):
         if hasattr(pl_module.matcher, 'coarse_matching'):
             pl_module.matcher.coarse_matching.vessel_soft_lambda = sched_lambda
             
-        # 修改 Loss Weight (假设我们复用 vessel_loss_weight 概念)
-        # 实际上 LoFTRLoss 内部可能没有直接暴露动态权重接口，或者是在 compute_losses 时传入
-        # 我们这里将权重存入 pl_module，然后在 training_step 传递给 batch 或者直接修改 Loss 对象
-        # 检查 LoFTRLoss: 如果它使用 config 初始化，可能需要运行时修改属性
-        # 假设 LoFTRLoss 有 background_weight 或类似属性。
-        # 如果没有，我们可以给 pl_module 添加属性，然后在 training_step 中处理
-        
-        pl_module.curriculum_loss_weight = sched_loss_w # 存储到 module 中供 training_step 使用
+        # 修改 Loss Weight
+        # 直接修改 LoFTRLoss 实例的 c_pos_w (positive sample weight)
+        if hasattr(pl_module, 'loss') and hasattr(pl_module.loss, 'c_pos_w'):
+            # 默认配置中 pos_weight通常为1.0, 我们将其乘以 sched_loss_w 或直接设为 sched_loss_w
+            # 根据 Plan v2.2, loss_weight=5.0 是强惩罚, 且 Independence Phase 回归 1.0.
+            # 这意味着 sched_loss_w 就是目标权重值.
+            pl_module.loss.c_pos_w = sched_loss_w
+            
+        # 兼容性: 同时也保留到 module 属性中, 以防其他地方引用
+        pl_module.curriculum_loss_weight = sched_loss_w
         
         # 3. 记录日志
         if trainer.global_rank == 0:
