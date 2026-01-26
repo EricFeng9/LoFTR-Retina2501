@@ -21,6 +21,9 @@ class LoFTRLoss(nn.Module):
         
         # 【方案 B 改进】梯度保底权重 (默认 0.1)
         self.background_weight = 0.1
+        
+        # [V2.3] Spatial Loss Weight Scale (Updated by Schedule)
+        self.vessel_loss_weight_scaler = 1.0
 
     def compute_coarse_loss(self, conf, conf_gt, weight=None):
         """ 粗级匹配损失 (对应 plan.md 中的 Lc)
@@ -154,28 +157,41 @@ class LoFTRLoss(nn.Module):
 
         return loss
     
+ 
+
     @torch.no_grad()
     def compute_c_weight(self, data):
-        """ compute element-wise weights for computing coarse-level loss. """
-        # 优先使用 coarse 级别的血管高斯软掩码作为 Loss 权重，其次退回到二值掩码
+        """ 
+        compute element-wise weights for computing coarse-level loss. 
+        [V2.3] Spatial Loss Weighting Engine
+        """
+        # 1. 获取 coarse 级别的血管高斯软掩码
         weight0_c = data.get('vessel_weight0_c', None)
         weight1_c = data.get('vessel_weight1_c', None)
 
         if weight0_c is not None and weight1_c is not None:
-            w0 = weight0_c.flatten(-2)
-            w1 = weight1_c.flatten(-2)
-            c_weight = (w0[..., None] * w1[:, None, :]).float()
-            # 【方案 B 改进】梯度保底 (Gradient Guard)
-            # 不要给非血管区域 0 权重，要给它们一个“低保”权重 (Curriculum Learning 动态调整)
-            # 这样即使点对落在背景上，也会产生微弱梯度推动模型学习大尺度的几何变换
-            c_weight = torch.clamp(c_weight, min=self.background_weight)
+            # 2. 构建基础血管概率图 W_pair (N, L, S) [0.0 ~ 1.0]
+            w0 = weight0_c.flatten(-2) # [N, L]
+            w1 = weight1_c.flatten(-2) # [N, S]
+            W_pair = (w0[..., None] * w1[:, None, :]).float()
+            
+            # 3. 应用动态 Scaler 构建最终权重图
+            # Formula: Weight = 1.0 + Mask * (Scaler - 1.0)
+            # Background (Mask=0) -> Weight = 1.0
+            # Vessel (Mask=1) -> Weight = Scaler (e.g., 10.0)
+            scaler = self.vessel_loss_weight_scaler
+            c_weight = 1.0 + W_pair * (scaler - 1.0)
+            
             return c_weight
 
-        # 回退：使用二值血管掩码或有效区域掩码
-        mask0 = data.get('vessel_mask0', data.get('mask0'))
-        mask1 = data.get('vessel_mask1', data.get('mask1'))
+        # 回退逻辑：如果没有软掩码（比如纯背景图），尝试使用硬掩码
+        # 但在 V2.3 中，只要有 vessel_mask 就会生成 soft mask，所以这里主要是防崩
+        mask0 = data.get('mask0')
+        mask1 = data.get('mask1')
         
         if mask0 is not None:
+            # 如果没有血管权重但有 Padding Mask，则只处理 Padding
+            # 这种情况下无法进行血管加权，只能返回 Padding Mask (0 or 1)
             c_weight = (mask0.flatten(-2)[..., None] * mask1.flatten(-2)[:, None]).float()
         else:
             c_weight = None

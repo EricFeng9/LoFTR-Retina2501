@@ -259,15 +259,16 @@ class CurriculumScheduler(pl.Callback):
     def on_train_epoch_start(self, trainer, pl_module):
         epoch = trainer.current_epoch
         
-        # 1. 计算当前参数 (v2.2 计划)
+        # 1. 计算当前参数 (v2.3 双引擎计划)
         if epoch < 25: # [Stage 1: Teaching] 强监督
             sched_lambda = 2.0
-            sched_loss_w = 5.0
+            sched_loss_w = 10.0
             phase = "Teaching"
         elif epoch < 50: # [Stage 2: Weaning] 线性衰减
             progress = (epoch - 25) / (50 - 25)
             sched_lambda = 2.0 * (1.0 - progress)
-            sched_loss_w = 5.0 - (4.0 * progress) # 5.0 -> 1.0
+            # Loss weight 线性衰减 10.0 -> 1.0
+            sched_loss_w = 10.0 - (9.0 * progress)
             phase = "Weaning"
         else: # [Stage 3: Independence] 自主学习
             sched_lambda = 0.0
@@ -275,27 +276,22 @@ class CurriculumScheduler(pl.Callback):
             phase = "Independence"
             
         # 2. 注入模型
-        # 修改 Attention Bias (coarse_matching)
+        
+        # Engine 1: Attention Bias (前向引导)
         if hasattr(pl_module.matcher, 'coarse_matching'):
             pl_module.matcher.coarse_matching.vessel_soft_lambda = sched_lambda
             
-        # 修改 Loss Weight
-        # 直接修改 LoFTRLoss 实例的 c_pos_w (positive sample weight)
-        if hasattr(pl_module, 'loss') and hasattr(pl_module.loss, 'c_pos_w'):
-            # 默认配置中 pos_weight通常为1.0, 我们将其乘以 sched_loss_w 或直接设为 sched_loss_w
-            # 根据 Plan v2.2, loss_weight=5.0 是强惩罚, 且 Independence Phase 回归 1.0.
-            # 这意味着 sched_loss_w 就是目标权重值.
-            pl_module.loss.c_pos_w = sched_loss_w
-            
-        # 兼容性: 同时也保留到 module 属性中, 以防其他地方引用
-        pl_module.curriculum_loss_weight = sched_loss_w
+        # Engine 2: Spatial Loss Weighting (后向惩罚)
+        # 我们不再修改 c_pos_w (全局正样本权重)，而是引入一个新的 scaler
+        # 这个 scaler 将用于构建空间权重图: Weight_Map = 1.0 + Mask * (scaler - 1.0)
+        pl_module.vessel_loss_weight_scaler = sched_loss_w
         
         # 3. 记录日志
         if trainer.global_rank == 0:
-            loguru_logger.info(f"Curriculum Scheduler | Epoch {epoch} ({phase}) | λ={sched_lambda:.4f}, Loss_W={sched_loss_w:.4f}")
+            loguru_logger.info(f"Curriculum Scheduler | Epoch {epoch} ({phase}) | λ={sched_lambda:.4f}, Vessel_Loss_Scaler={sched_loss_w:.4f}")
             
         pl_module.log('sched/lambda', sched_lambda, on_epoch=True, logger=True)
-        pl_module.log('sched/loss_w', sched_loss_w, on_epoch=True, logger=True)
+        pl_module.log('sched/vessel_loss_scaler', sched_loss_w, on_epoch=True, logger=True)
 
 # ==========================================
 # 核心改动 2: PL_LoFTR_V2 (恢复 Mask 输入)
@@ -316,6 +312,10 @@ class PL_LoFTR_V2(PL_LoFTR):
         pass
         
     def training_step(self, batch, batch_idx):
+        # [V2.3] 注入 Spatial Loss Scaler 到 Loss 模块
+        if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
+            self.loss.vessel_loss_weight_scaler = self.vessel_loss_weight_scaler
+
         if self.use_domain_rand and self.training:
             # [Fix 1] 强制归一化到 [0, 1]
             # 检查最小值，如果小于 0，说明是 [-1, 1] 范围，需要转换

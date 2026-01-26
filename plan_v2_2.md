@@ -7,27 +7,38 @@
 *   **原因**：由于 Sim-to-Real 的域差异，真实图像下半部分的弱纹理区域无法激活 LoFTR 特征。Transformer 在无引导情况下，学会了将所有点映射到 FA 图像顶部唯一的高响应区域。
 *   **对策**：必须在训练初期强制模型“看血管”，利用血管的拓扑结构作为唯一可靠的跨模态锚点。
 
-## 核心机制：三阶段课程学习 (Curriculum Learning)
+## 核心机制：双引擎课程学习 (Dual-Engine Curriculum Learning)
 
-通过动态调整 `vessel_soft_lambda` (注意力偏置) 和 `loss_weight` (血管损失权重)，实现从“强监督”到“自适应”的过渡。
+我们采用 **“前向引导 + 后向惩罚”** 的双重约束策略，解决 Sim-to-Real 的 Mode Collapse 问题。
+
+1.  **Engine 1: Attention Bias (前向引导)**
+    *   在 Transformer 的 Attention Map 上直接叠加血管 Mask 偏置。
+    *   作用：在推理阶段“手把手”告诉模型应该关注哪里，防止注意力发散。
+    *   变量：`vessel_soft_lambda` (范围: 2.0 -> 0.0)。
+
+2.  **Engine 2: Spatial Loss Weighting (后向惩罚)**
+    *   利用血管 Mask 构建空间权重图 (Spatial Weight Map)。所有落在血管区域的像素（无论正负样本），其 Loss 权重被放大。
+    *   **公式**: `Weight = 1.0 + Mask * (Scaler - 1.0)`
+    *   作用：在反向传播阶段“严惩”血管区域的错误，迫使模型优先优化血管特征。背景区域权重保持 1.0。
+    *   变量：`vessel_loss_weight_scaler` (范围: 10.0 -> 1.0)。
 
 ### 阶段一：教学期 (Teaching Phase) —— "强制关注"
 *   **Epoch 0 - 25**
-*   `vessel_soft_lambda = 2.0` (强注意力偏置)
-*   `loss_weight = 5.0` (强惩罚)
-*   **目的**：强迫 Transformer 忽略背景噪声，锁定血管结构。打破“瞎猜”的局部最优解。
+*   `vessel_soft_lambda = 2.0` (强引导)
+*   `vessel_loss_weight_scaler = 10.0` (强惩罚：血管区域 Loss 放大 10 倍)
+*   **目的**：利用双重约束，强迫模型忽略背景噪声，迅速锁定血管结构。
 
 ### 阶段二：断奶期 (Weaning Phase) —— "逐渐放手"
 *   **Epoch 25 - 50**
 *   `vessel_soft_lambda`: 线性衰减 2.0 -> 0.0
-*   `loss_weight`: 线性衰减 5.0 -> 1.0
-*   **目的**：随着外部辅助减弱，模型必须把“关注血管”的知识内化到权重中。
+*   `vessel_loss_weight_scaler`: 线性衰减 10.0 -> 1.0
+*   **目的**：随着模型内化血管特征，逐渐移除外部辅助，防止过拟合 Mask。
 
 ### 阶段三：独立期 (Independence Phase) —— "自由泛化"
 *   **Epoch 50+**
 *   `vessel_soft_lambda = 0.0`
-*   `loss_weight = 1.0`
-*   **目的**：完全依靠学习到的特征进行匹配，允许模型探索背景上下文（如果有用的话），此时模型已有良好的初始化状态。
+*   `vessel_loss_weight_scaler = 1.0` (普通模式)
+*   **目的**：完全依靠学习到的特征进行匹配，允许模型探索背景上下文。
 
 ## 代码实现计划
 
