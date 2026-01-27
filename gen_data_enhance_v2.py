@@ -23,7 +23,7 @@ import numpy as np
 import cv2
 import random
 
-def generate_intensity_bias_field_numpy(H, W, num_control_points=4, strength_range=(0.7, 1.3)):
+def generate_intensity_bias_field_numpy(H, W, num_control_points=4, strength_range=(0.85, 1.15)):
     """
     Numpy version of bias field generation
     """
@@ -82,16 +82,16 @@ def apply_signal_dropout_numpy(img, num_regions_range=(1, 3), region_size_range=
     return img * mask
 
 def apply_domain_randomization_numpy(img, 
-                                   gamma_range=(0.7, 1.5), 
-                                   contrast_range=(0.7, 1.3),
-                                   brightness_range=(-0.15, 0.15),
-                                   noise_std_range=(0.0, 0.05),
-                                   blur_prob=0.3, blur_kernel_range=(3, 7),
-                                   bias_field_prob=0.5,
-                                   speckle_prob=0.3,
-                                   poisson_prob=0.2,
-                                   downsample_prob=0.03,
-                                   dropout_prob=0.3):
+                                   gamma_range=(0.85, 1.25), 
+                                   contrast_range=(0.85, 1.15),
+                                   brightness_range=(-0.05, 0.05),
+                                   noise_std_range=(0.0, 0.02),
+                                   blur_prob=0.1, blur_kernel_range=(3, 7),
+                                   bias_field_prob=0.2,
+                                   speckle_prob=0.1,
+                                   poisson_prob=0.1,
+                                   downsample_prob=0.01,
+                                   dropout_prob=0.1):
     """
     Apply domain randomization to a single numpy image.
     Args:
@@ -156,7 +156,7 @@ def apply_domain_randomization_numpy(img,
 
 
 
-def generate_intensity_bias_field(H, W, device, num_control_points=4, strength_range=(0.7, 1.3)):
+def generate_intensity_bias_field(H, W, device, num_control_points=4, strength_range=(0.85, 1.15)):
     """
     生成随机 Intensity Bias Field (空间渐变亮度场)
     模拟真实眼底成像中的光照不均匀性 (如边缘比中心暗)
@@ -300,16 +300,16 @@ def apply_signal_dropout(img, num_regions_range=(1, 3), region_size_range=(0.1, 
         
     return img * mask
 
-def apply_domain_randomization(img_tensor, gamma_range=(0.7, 1.5), 
-                                contrast_range=(0.7, 1.3),
-                                brightness_range=(-0.15, 0.15),
-                                noise_std_range=(0.0, 0.05),
-                                blur_prob=0.3, blur_kernel_range=(3, 7),
-                                bias_field_prob=0.5,
-                                speckle_prob=0.3,
-                                poisson_prob=0.2,
-                                downsample_prob=0.03,
-                                dropout_prob=0.3): # 新增 dropout_prob
+def apply_domain_randomization(img_tensor, gamma_range=(0.85, 1.25), 
+                                contrast_range=(0.85, 1.15),
+                                brightness_range=(-0.05, 0.05),
+                                noise_std_range=(0.0, 0.02),
+                                blur_prob=0.1, blur_kernel_range=(3, 7),
+                                bias_field_prob=0.2,
+                                speckle_prob=0.1,
+                                poisson_prob=0.1,
+                                downsample_prob=0.01,
+                                dropout_prob=0.1): # 新增 dropout_prob
     """
     对输入图像张量应用域随机化增强 (增强版)
     """
