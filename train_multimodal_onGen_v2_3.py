@@ -646,6 +646,7 @@ def parse_args():
     parser.add_argument('--img_size', type=int, default=512)
     parser.add_argument('--vessel_sigma', type=float, default=6.0)
     parser.add_argument('--pretrained_ckpt', type=str, default='weights/outdoor_ds.ckpt')
+    parser.add_argument('--start_point', type=str, default=None, help='训练断点路径 (.ckpt)')
     parser.add_argument('--use_domain_randomization', action='store_true', default=True)
     parser.add_argument('--val_on_real', action='store_true', default=True)
     parser.add_argument('--main_cfg_path', type=str, default=None)
@@ -727,7 +728,7 @@ def main():
     )
     
     loguru_logger.info(f"开始训练 V2.3 (Minimalist): {args.name}")
-    trainer.fit(model, datamodule=data_module)
+    trainer.fit(model, datamodule=data_module, ckpt_path=args.start_point)
 
 if __name__ == '__main__':
     main()
