@@ -163,18 +163,7 @@ def compute_corner_error(H_est, H_gt, height, width):
         mace = float('inf')
     return mace
 
-class CLAHE_Preprocess:
-    def __init__(self, clip_limit=3.0, tile_grid_size=(8, 8)):
-        self.clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
-    def __call__(self, img_tensor):
-        device = img_tensor.device
-        B = img_tensor.shape[0]
-        res = []
-        for b in range(B):
-            img_np = (img_tensor[b, 0].detach().cpu().numpy() * 255).astype(np.uint8)
-            img_clahe = self.clahe.apply(img_np)
-            res.append(torch.from_numpy(img_clahe).float() / 255.0)
-        return torch.stack(res).unsqueeze(1).to(device)
+# Removed CLAHE_Preprocess class
 
 def create_chessboard(img1, img2, grid_size=4):
     H, W = img1.shape
@@ -222,20 +211,17 @@ class PL_LoFTR_V3(PL_LoFTR):
         self.result_dir = result_dir
         # 在真实图像上训练，默认不使用额外的血管损失权重（因为数据集没有 mask）
         self.vessel_loss_weight_scaler = 1.0 
-        self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
+        # Removed CLAHE initialization
         
     def _trainval_inference(self, batch):
-        # 统一预处理
         for img_key in ['image0', 'image1']:
             if img_key in batch:
                 if batch[img_key].min() < 0:
                     batch[img_key] = (batch[img_key] + 1) / 2
-                batch[img_key] = self.clahe(batch[img_key])
         
         if 'image1_gt' in batch:
             if batch['image1_gt'].min() < 0:
                 batch['image1_gt'] = (batch['image1_gt'] + 1) / 2
-            batch['image1_gt'] = self.clahe(batch['image1_gt'])
 
         if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
             self.loss.vessel_loss_weight_scaler = self.vessel_loss_weight_scaler
