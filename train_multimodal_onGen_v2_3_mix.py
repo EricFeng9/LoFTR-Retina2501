@@ -771,7 +771,7 @@ def main():
     trainer = pl.Trainer.from_argparse_args(
         args,
         max_epochs=args.max_epochs,
-        min_epochs=100,
+        min_epochs=0,
         check_val_every_n_epoch=1,
         num_sanity_val_steps=0,
         callbacks=[val_callback, lr_monitor, early_stop_callback],
