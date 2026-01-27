@@ -492,11 +492,19 @@ class MultimodalValidationCallback(Callback):
 
     def on_validation_epoch_end(self, trainer, pl_module):
         if not self.epoch_mses: return
-        if trainer.sanity_checking: return
-        epoch = trainer.current_epoch + 1
-        metrics = trainer.callback_metrics
+        
+        # [Requirement] 允许在 Sanity Check 期间输出结果，方便用户确认初始状态
         avg_mse = sum(self.epoch_mses) / len(self.epoch_mses)
         avg_mace = sum(self.epoch_maces) / len(self.epoch_maces) if self.epoch_maces else float('inf')
+        
+        if trainer.sanity_checking:
+            loguru_logger.info(f"--- [Sanity Check] 初始状态验证总结 ---")
+            loguru_logger.info(f"MSE: {avg_mse:.6f} | MACE: {avg_mace:.4f}")
+            # 为 Sanity Check 触发一次特殊的可视化
+            self._trigger_visualization(trainer, pl_module, is_best=False, epoch=0)
+            return
+
+        epoch = trainer.current_epoch + 1
         
         display_metrics = {'mse_real': avg_mse, 'mace_real': avg_mace}
         for k in ['auc@5', 'auc@10', 'auc@20']:

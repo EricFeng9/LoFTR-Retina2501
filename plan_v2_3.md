@@ -21,13 +21,13 @@
 
 ### 2.2 强化数据预处理 (Enhanced Preprocessing)
 原始 LoFTR 假设输入为自然场景图像，而眼底图像通常对比度极低，且不同模态（CF, FA, OCT）间灰度分布差异巨大。
-*   **CLAHE 对比度增强**: 
+*   **CLAHE 对比度增强 (全流程一致性)**: 
     *   在输入网络前，强制对所有图像应用 **CLAHE (Contrast Limited Adaptive Histogram Equalization)**。
     *   参数: `clip_limit=3.0`, `tile_grid_size=(8,8)`。
-    *   **目的**: 显著增强微细血管与背景的对比度，使特征更易被 Backbone 提取。
-*   **强域随机化 (Strong Domain Randomization)**:
-    *   在训练阶段，对生成数据（Generated Data）进行大幅度的亮度、对比度、Gamma 扰动。
-    *   **目的**: 模拟真实临床数据的复杂分布，提高模型的泛化能力 (Sim-to-Real)。
+    *   **核心修复**: 通过重写 `_trainval_inference`，确保 **训练 (Training)** 和 **验证 (Validation)** 过程应用完全相同的 CLAHE。消除了之前验证集使用原图导致的分布漂移 (Distribution Shift)。
+*   **强域随机化 (Consolidated Domain Randomization)**:
+    *   在训练阶段，对生成数据（Generated Data）应用包含强度偏移、斑点噪声、泊松噪声、平滑 Dropout 的混合增强。
+    *   **架构修复**: 合并了冗余的 `training_step` 定义，确保增强逻辑在每一个训练 Step 都能切实执行，而非仅作“回调”。
 
 ### 2.3 初始化策略 (Initialization Strategy)
 *   **操作**: 强制加载 **Full MegaDepth Pretrained Weights** (Backbone + Transformer)。
@@ -46,7 +46,7 @@
 ### 3.2 优化器与调度
 *   **Optimizer**: AdamW, `weight_decay=0.01`。
 *   **Batch Size**: 4 (受限于显存，配合梯度累积)。
-*   **Monitor**: 监控 `auc@10` (Area Under Curve @ 10px error)。
+*   **Monitor**: 监控 **Combined AUC** (AUC@5, 10, 20 的算术平均值)。
 
 ---
 
@@ -54,9 +54,18 @@
 
 鉴于眼底图像无法像自然图像那样通过肉眼直观判断匹配质量（尤其是重叠不准确时），我们建立了一套基于 **几何一致性** 的评估体系。
 
-### 4.1 核心指标: AUC@10
-*   **定义**: 计算配准误差小于 10 像素的样本比例及其分布。
-*   **取代 MACE**: 放弃传统的平均误差 (MACE)，因为在存在大量 Outliers（配准完全失败）的情况下，MACE 均值没有参考价值。AUC 能过滤掉失败样本，只统计成功配准的比例，指标更硬核。
+### 4.1 核心指标: 综合 AUC (Combined AUC)
+*   **定义**: 取 `(auc@5 + auc@10 + auc@20) / 3`。
+*   **优化理由**: 单一的 `auc@10` 容易受到局部运气成分影响（如某次验证刚好有几个点落在10px内）。综合指标要求模型在不同精度层级上均有提升，筛选出的 `Best Model` 在真实场景下更稳健，肉眼对齐效果更佳。
+
+### 4.2 几何鲁棒性: RANSAC Threshold 调整
+*   **设置**: 将 `RANSAC_PIXEL_THR` 从默认的 `0.5` 放宽至 **`2.0`**。
+*   **物理考量**: 跨模态眼底图像（如 CF vs OCTA）中，血管中心点往往由于物理成像原理存在约 1 像素的天然偏移。过严的阈值会导致 RANSAC 误杀大量正确匹配，使指标虚低。`2.0` 像素是针对多模态配准的宽容度修正。
+
+### 4.3 实时调试: 训练首批可视化 (Early-Batch Visualization)
+*   **机制**: 在第 1 个 Epoch 的前 2 个 batch，自动输出：
+    *   **增强对比图**: `comparison_orig_vs_aug.png` 系列，用于确认增强强度是否合理。
+    *   **注册全流程可视化**: 自动运行一轮 Evaluation，生成棋盘图和匹配热图，确保模型在“带毒训练”初期依然具备基本的几何感官。
 
 ### 4.2 可视化辅助: RANSAC Filtering
 *   **机制**: 在验证回调中，增加 RANSAC 几何校验步骤。
