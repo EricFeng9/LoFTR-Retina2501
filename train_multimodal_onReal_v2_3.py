@@ -222,20 +222,20 @@ class PL_LoFTR_V3(PL_LoFTR):
         self.result_dir = result_dir
         # 在真实图像上训练，默认不使用额外的血管损失权重（因为数据集没有 mask）
         self.vessel_loss_weight_scaler = 1.0 
-        self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
+        # self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
         
     def _trainval_inference(self, batch):
-        # 统一预处理
+        # 统一预处理 (移除 CLAHE)
         for img_key in ['image0', 'image1']:
             if img_key in batch:
                 if batch[img_key].min() < 0:
                     batch[img_key] = (batch[img_key] + 1) / 2
-                batch[img_key] = self.clahe(batch[img_key])
+                # batch[img_key] = self.clahe(batch[img_key])
         
         if 'image1_gt' in batch:
             if batch['image1_gt'].min() < 0:
                 batch['image1_gt'] = (batch['image1_gt'] + 1) / 2
-            batch['image1_gt'] = self.clahe(batch['image1_gt'])
+            # batch['image1_gt'] = self.clahe(batch['image1_gt'])
 
         if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
             self.loss.vessel_loss_weight_scaler = self.vessel_loss_weight_scaler
@@ -243,16 +243,8 @@ class PL_LoFTR_V3(PL_LoFTR):
         super()._trainval_inference(batch)
 
     def training_step(self, batch, batch_idx):
-        # 核心优化：只运行推理和 Loss 计算，绝对不运行 RANSAC 指标和绘图
-        # 这样训练速度将从 25s/it 回归到 1s/it
-        self._trainval_inference(batch)
-        
-        # 只记录 Loss 相关指标
-        for k, v in batch['loss_scalars'].items():
-            self.log(f'train/{k}', v, on_step=True, on_epoch=True, prog_bar=False, logger=True)
-        self.log('train/loss', batch['loss'], on_step=True, on_epoch=True, prog_bar=True, logger=True)
-        
-        return {'loss': batch['loss']}
+        # 在真实图像训练中，去除了 Domain Randomization (直接调用基类)
+        return super().training_step(batch, batch_idx)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         self._trainval_inference(batch)
