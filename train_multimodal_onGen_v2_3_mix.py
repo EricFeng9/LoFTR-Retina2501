@@ -36,10 +36,8 @@ from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset impo
 
 # 复用 v2.1 中的 RealDatasetWrapper 等辅助类
 # 为了完整性，这里重新定义一遍，避免 import 依赖问题
-class RealDatasetWrapper(torch.utils.data.Dataset):
     def __init__(self, base_dataset):
         self.base_dataset = base_dataset
-        self.clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
         
     def __len__(self):
         return len(self.base_dataset)
@@ -60,19 +58,12 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
                 return gray.unsqueeze(0)
             return tensor
             
-        fix_gray_raw = to_gray(fix_tensor)
-        moving_orig_gray_raw = to_gray(moving_original_tensor)
-        moving_gray_raw = to_gray(moving_gt_tensor)
+        fix_gray = to_gray(fix_tensor)
+        moving_orig_gray = to_gray(moving_original_tensor)
+        moving_gray = to_gray(moving_gt_tensor)
         
-        # 4. 应用 CLAHE
-        def apply_clahe(tensor):
-            img_np = (tensor[0].numpy() * 255).astype(np.uint8)
-            img_clahe = self.clahe.apply(img_np)
-            return torch.from_numpy(img_clahe).float().unsqueeze(0) / 255.0
-
-        fix_gray = apply_clahe(fix_gray_raw)
-        moving_orig_gray = apply_clahe(moving_orig_gray_raw)
-        moving_gray = apply_clahe(moving_gray_raw)
+        # 保存原始未处理灰度图用于参考 (这里 raw 和 processed 已经一样了)
+        moving_orig_gray_raw = moving_orig_gray.clone()
         
         fix_name = os.path.basename(fix_path)
         moving_name = os.path.basename(moving_path)
@@ -87,11 +78,23 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
             'image0': fix_gray,
             'image1': moving_orig_gray,
             'image1_gt': moving_gray,
+            'image1_origin': moving_orig_gray_raw, # 原始未 CLAHE 的灰度图，用于 MSE 计算参考
             'image0_orig': fix_gray.clone(), # 真实数据不应用 DR，所以 orig 和 input 一致
             'image1_orig': moving_orig_gray.clone(),
             'T_0to1': T_fix_to_moving,
             'pair_names': (fix_name, moving_name),
-            'dataset_name': 'MultiModal'
+            'dataset_name': 'MultiModal',
+            # 补全生成数据集特有的键（占位符），确保 Batch Collation 成功
+            'mask0': torch.ones_like(fix_gray),        # 真实数据假设全图有效
+            'mask1': torch.ones_like(fix_gray),
+            'vessel_mask0': torch.zeros_like(fix_gray), # 真实数据没有血管掩码
+            'vessel_mask1': torch.zeros_like(fix_gray),
+            'vessel_weight0': torch.zeros_like(fix_gray),
+            'vessel_weight1': torch.zeros_like(fix_gray),
+            'flip_h': False,
+            'flip_v': False,
+            'mask_quality': 1.0,
+            'pair_id': idx
         }
 
 # 数据集根目录硬编码
