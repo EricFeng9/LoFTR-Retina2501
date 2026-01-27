@@ -11,6 +11,7 @@ import torch.utils.data as data
 
 from src.config.default import get_cfg_defaults
 from src.lightning.lightning_loftr import PL_LoFTR
+from pytorch_lightning.callbacks import EarlyStopping
 from src.utils.plotting import make_matching_figures
 from measurement_LoFTR import calculate_metrics
 
@@ -31,6 +32,25 @@ DATA_ROOTS = {
     'cfocta': "/data/student/Fengjunming/LoFTR/data/CF_OCTA_v2_repaired"
 }
 
+
+# Added missing classes to support loading training checkpoints
+class DelayedEarlyStopping(EarlyStopping):
+    def __init__(self, start_epoch=50, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.start_epoch = start_epoch
+    def on_validation_end(self, trainer, pl_module):
+        if trainer.current_epoch >= self.start_epoch:
+            super().on_validation_end(trainer, pl_module)
+
+class PL_LoFTR_V3(PL_LoFTR):
+    """Placeholder for loading v2.3/mix checkpoints"""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+class MultimodalValidationCallback:
+    """Placeholder for loading v2.3/mix checkpoints"""
+    def __init__(self, *args, **kwargs):
+        pass
 
 # Removed CLAHE_Preprocess class to match v2.3 training
 
