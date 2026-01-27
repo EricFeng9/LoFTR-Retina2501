@@ -91,17 +91,32 @@ class PL_LoFTR(pl.LightningModule):
         optimizer.zero_grad()
     
     def _trainval_inference(self, batch):
+        import time
+        
+        t0 = time.time()
         with self.profiler.profile("Compute coarse supervision"):
             compute_supervision_coarse(batch, self.config)
+        t1 = time.time()
         
         with self.profiler.profile("LoFTR"):
             self.matcher(batch)
+        t2 = time.time()
         
         with self.profiler.profile("Compute fine supervision"):
             compute_supervision_fine(batch, self.config)
+        t3 = time.time()
             
         with self.profiler.profile("Compute losses"):
             self.loss(batch)
+        t4 = time.time()
+        
+        # 打印详细计时（只打印前 20 次）
+        if not hasattr(self, '_base_timing_count'):
+            self._base_timing_count = 0
+        self._base_timing_count += 1
+        
+        if self._base_timing_count <= 20:
+            logger.info(f"[BASE TIMING] coarse_spv: {t1-t0:.3f}s | matcher: {t2-t1:.3f}s | fine_spv: {t3-t2:.3f}s | loss: {t4-t3:.3f}s | TOTAL: {t4-t0:.3f}s")
     
     def _compute_metrics(self, batch):
         with self.profiler.profile("Copmute metrics"):
