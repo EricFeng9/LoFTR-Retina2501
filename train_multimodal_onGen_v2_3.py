@@ -522,16 +522,12 @@ class MultimodalValidationCallback(Callback):
         # 直接使用本地定义的辅助函数
 
         for i in range(batch_size):
-            sample_name = f"{Path(pair_names0[i]).stem}_vs_{Path(pair_names1[i]).stem}"
-            save_path = epoch_dir / sample_name
-            save_path.mkdir(parents=True, exist_ok=True)
-            
             img0 = (batch['image0'][i, 0].cpu().numpy() * 255).astype(np.uint8)
             img1 = (batch['image1'][i, 0].cpu().numpy() * 255).astype(np.uint8)
             ref_key = 'image1_gt' if 'image1_gt' in batch else 'image1_origin'
             img1_gt = (batch[ref_key][i, 0].cpu().numpy() * 255).astype(np.uint8)
             
-            H_est = H_ests[i]
+            # 使用图像实际尺寸
             h, w = img0.shape
             try:
                 H_inv = np.linalg.inv(H_est)
@@ -553,6 +549,10 @@ class MultimodalValidationCallback(Callback):
             if not save_images:
                 continue
                 
+            sample_name = f"{Path(pair_names0[i]).stem}_vs_{Path(pair_names1[i]).stem}"
+            save_path = epoch_dir / sample_name
+            save_path.mkdir(parents=True, exist_ok=True)
+
             # 保存各个结果图像
             cv2.imwrite(str(save_path / "fix.png"), img0)
             cv2.imwrite(str(save_path / "moving.png"), img1)
