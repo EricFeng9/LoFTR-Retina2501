@@ -406,7 +406,7 @@ class MultimodalValidationCallback(Callback):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.best_val = -1.0 # 改为 AUC，越高越好
+        self.best_val = -1.0 # 既然修复了 GT 矩阵尺度问题，改回使用 AUC，越高越好
         self.result_dir = Path(f"results/{args.mode}/{args.name}")
         self.result_dir.mkdir(parents=True, exist_ok=True)
         self.epoch_mses = []
@@ -468,7 +468,7 @@ class MultimodalValidationCallback(Callback):
         with open(latest_path / "log.txt", "w") as f:
             f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
             
-        # [Update] 使用 AUC@10 作为 Best 评价指标 (越高越好)
+        # [Update] 既然修复了尺度 Bug，改回使用 AUC@10 作为 Best 评价指标 (越高越好)
         is_best = False
         current_auc = display_metrics.get('auc@10', 0.0)
         
@@ -479,7 +479,7 @@ class MultimodalValidationCallback(Callback):
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
             with open(best_path / "log.txt", "w") as f:
-                f.write(f"Epoch: {epoch}\nBest AUC@10: {current_auc:.4f}\nMACE: {avg_mace:.4f}")
+                f.write(f"Epoch: {epoch}\nBest AUC@10: {current_auc:.4f}\nMSE: {avg_mse:.6f}\nMACE: {avg_mace:.4f}")
             loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, AUC@10: {current_auc:.4f}")
 
         # 管理可视化文件夹的保存
@@ -705,8 +705,8 @@ def main():
     val_callback = MultimodalValidationCallback(args)
     lr_monitor = LearningRateMonitor(logging_interval='step')
     
-    # [Monitor Change] MACE -> AUC@10
-    # 我们希望 AUC@10 越高越好，所以 mode='max'
+    # [Monitor Change] MSE -> AUC@10
+    # 既然尺度问题已解决，AUC@10 是最能反应配准成功率的指标
     early_stop_callback = DelayedEarlyStopping(
         start_epoch=100, 
         monitor='auc@10', 
