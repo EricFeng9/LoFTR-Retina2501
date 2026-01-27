@@ -390,7 +390,7 @@ class MultimodalValidationCallback(Callback):
     def __init__(self, args):
         super().__init__()
         self.args = args
-        self.best_val = float('inf')
+        self.best_val = -1.0 # 改为 AUC，越高越好
         self.result_dir = Path(f"results/{args.mode}/{args.name}")
         self.result_dir.mkdir(parents=True, exist_ok=True)
         self.epoch_mses = []
@@ -452,17 +452,19 @@ class MultimodalValidationCallback(Callback):
         with open(latest_path / "log.txt", "w") as f:
             f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
             
-        # [Revert] 用户要求回退到 MACE (越小越好)
+        # [Update] 使用 AUC@10 作为 Best 评价指标 (越高越好)
         is_best = False
-        if avg_mace < self.best_val:
-            self.best_val = avg_mace
+        current_auc = display_metrics.get('auc@10', 0.0)
+        
+        if current_auc > self.best_val:
+            self.best_val = current_auc
             is_best = True
             best_path = self.result_dir / "best_checkpoint"
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
             with open(best_path / "log.txt", "w") as f:
-                f.write(f"Epoch: {epoch}\nBest MACE: {avg_mace:.4f}")
-            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, MACE: {avg_mace:.4f}")
+                f.write(f"Epoch: {epoch}\nBest AUC@10: {current_auc:.4f}\nMACE: {avg_mace:.4f}")
+            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, AUC@10: {current_auc:.4f}")
 
         # 管理可视化文件夹的保存
         if is_best or (epoch % 5 == 0):
@@ -687,14 +689,13 @@ def main():
     lr_monitor = LearningRateMonitor(logging_interval='step')
     
     # [Monitor Change] MACE -> AUC@10
-    # 防止选出 "MACE 很小但全是交叉点" 的模型
     # 我们希望 AUC@10 越高越好，所以 mode='max'
     early_stop_callback = DelayedEarlyStopping(
         start_epoch=100, 
-        monitor='val_mace', 
-        mode='min', 
+        monitor='auc@10', 
+        mode='max', 
         patience=10, 
-        min_delta=0.001
+        min_delta=0.0001
     )
     
     trainer = pl.Trainer.from_argparse_args(
