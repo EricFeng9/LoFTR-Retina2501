@@ -392,6 +392,14 @@ class MultimodalValidationCallback(Callback):
                     fig.savefig(str(save_path / "matches.png"), bbox_inches='tight')
         return mses, maces
 
+class DelayedEarlyStopping(EarlyStopping):
+    def __init__(self, start_epoch=50, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.start_epoch = start_epoch
+    def on_validation_end(self, trainer, pl_module):
+        if trainer.current_epoch >= self.start_epoch:
+            super().on_validation_end(trainer, pl_module)
+
 def parse_args():
     parser = argparse.ArgumentParser(description="LoFTR V2.3 Real-Data Baseline")
     parser.add_argument('--mode', type=str, default='cffa', choices=['cffa', 'cfoct', 'octfa', 'cfocta'])
@@ -443,7 +451,13 @@ def main():
     data_module = MultimodalDataModule(args, config)
     tb_logger = TensorBoardLogger(save_dir='logs/tb_logs', name=f"onReal_{args.name}")
     
-    early_stop_callback = EarlyStopping(monitor='auc@10', mode='max', patience=15, min_delta=0.0001)
+    early_stop_callback = DelayedEarlyStopping(
+        start_epoch=100,
+        monitor='auc@10', 
+        mode='max', 
+        patience=15, 
+        min_delta=0.0001
+    )
     
     trainer = pl.Trainer.from_argparse_args(
         args,
