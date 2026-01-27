@@ -1,5 +1,6 @@
 import sys
 import os
+import shutil
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -347,7 +348,7 @@ class PL_LoFTR_V3(PL_LoFTR):
         val_plot_interval = max(num_val_batches // self.n_vals_plot, 1)
         
         figures = {self.config.TRAINER.PLOT_MODE: []}
-        if batch_idx % val_plot_interval == 0:
+        if getattr(self, 'force_viz', False):
             figures = make_matching_figures(batch, self.config, mode=self.config.TRAINER.PLOT_MODE)
 
         # --- 提取所有候选匹配点 (用于判断是取点有问题还是匹配有问题) ---
@@ -400,21 +401,8 @@ class MultimodalValidationCallback(Callback):
         self.epoch_maces = []
 
     def on_validation_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx=0):
-        if trainer.sanity_checking:
-            sub_dir = "step0"
-        else:
-            sub_dir = f"epoch{trainer.current_epoch + 1}"
-        
-        if self.args.val_on_real:
-            if dataloader_idx == 0:
-                epoch_dir = self.result_dir / f"{sub_dir}_generated"
-            else:
-                epoch_dir = self.result_dir / f"{sub_dir}_real"
-        else:
-            epoch_dir = self.result_dir / sub_dir
-            
-        epoch_dir.mkdir(parents=True, exist_ok=True)
-        batch_mses, batch_maces = self._save_batch_results(trainer, pl_module, batch, outputs, epoch_dir)
+        # 每个 epoch 都会运行，但不再保存结果到磁盘，仅计算指标
+        batch_mses, batch_maces = self._process_batch(trainer, pl_module, batch, outputs, None, save_images=False)
         
         if self.args.val_on_real:
             if dataloader_idx == 1:
@@ -465,8 +453,10 @@ class MultimodalValidationCallback(Callback):
             f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
             
         # [Revert] 用户要求回退到 MACE (越小越好)
+        is_best = False
         if avg_mace < self.best_val:
             self.best_val = avg_mace
+            is_best = True
             best_path = self.result_dir / "best_checkpoint"
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
@@ -474,7 +464,52 @@ class MultimodalValidationCallback(Callback):
                 f.write(f"Epoch: {epoch}\nBest MACE: {avg_mace:.4f}")
             loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, MACE: {avg_mace:.4f}")
 
-    def _save_batch_results(self, trainer, pl_module, batch, outputs, epoch_dir):
+        # 管理可视化文件夹的保存
+        if is_best or (epoch % 5 == 0):
+            self._trigger_visualization(trainer, pl_module, is_best, epoch)
+
+    def _trigger_visualization(self, trainer, pl_module, is_best, epoch):
+        loguru_logger.info(f"正在为 Epoch {epoch} 生成可视化结果...")
+        pl_module.force_viz = True  # 强制模型在 validation_step 中生成 matching figures
+        
+        target_dirs = []
+        if is_best:
+            target_dirs.append(self.result_dir / f"epoch{epoch}_best")
+        elif epoch % 5 == 0:
+            target_dirs.append(self.result_dir / f"epoch{epoch}")
+        
+        for d in target_dirs: d.mkdir(parents=True, exist_ok=True)
+        
+        # 获取验证数据加载器
+        val_dataloaders = trainer.val_dataloaders
+        if val_dataloaders is None: return
+        if not isinstance(val_dataloaders, list):
+            val_dataloaders = [val_dataloaders]
+            
+        pl_module.eval()
+        with torch.no_grad():
+            for dl_idx, dl in enumerate(val_dataloaders):
+                # 只取第 1 个 batch 做可视化，节省时间
+                for batch_idx, batch in enumerate(dl):
+                    if batch_idx >= 1: break 
+                    
+                    # 将 batch 移动到模型设备
+                    batch = {k: v.to(pl_module.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
+                    
+                    # 运行推理 (转发到模型的 validation_step)
+                    outputs = pl_module.validation_step(batch, batch_idx, dl_idx)
+                    
+                    # 针对每个目标目录保存可视化
+                    for target_dir in target_dirs:
+                        sub_dir = target_dir
+                        if self.args.val_on_real:
+                            sub_dir = target_dir / ("generated" if dl_idx == 0 else "real")
+                        sub_dir.mkdir(parents=True, exist_ok=True)
+                        self._process_batch(trainer, pl_module, batch, outputs, sub_dir, save_images=True)
+                        
+        pl_module.force_viz = False # 恢复
+
+    def _process_batch(self, trainer, pl_module, batch, outputs, epoch_dir, save_images=False):
         # 简化版实现，同 v2.1
         batch_size = batch['image0'].shape[0]
         mses = []
@@ -515,6 +550,9 @@ class MultimodalValidationCallback(Callback):
             mace = compute_corner_error(H_est, Ts_gt[i], h, w)
             maces.append(mace)
             
+            if not save_images:
+                continue
+                
             # 保存各个结果图像
             cv2.imwrite(str(save_path / "fix.png"), img0)
             cv2.imwrite(str(save_path / "moving.png"), img1)
@@ -652,18 +690,18 @@ def main():
     # 防止选出 "MACE 很小但全是交叉点" 的模型
     # 我们希望 AUC@10 越高越好，所以 mode='max'
     early_stop_callback = DelayedEarlyStopping(
-        start_epoch=20, 
+        start_epoch=100, 
         monitor='val_mace', 
         mode='min', 
-        patience=8, 
+        patience=10, 
         min_delta=0.001
     )
     
     trainer = pl.Trainer.from_argparse_args(
         args,
         max_epochs=args.max_epochs,
-        min_epochs=20,
-        check_val_every_n_epoch=5,
+        min_epochs=100,
+        check_val_every_n_epoch=1,
         num_sanity_val_steps=3,
         callbacks=[val_callback, lr_monitor, early_stop_callback],
         logger=tb_logger,
