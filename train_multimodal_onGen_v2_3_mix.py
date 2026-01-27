@@ -39,36 +39,45 @@ from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset impo
 class RealDatasetWrapper(torch.utils.data.Dataset):
     def __init__(self, base_dataset):
         self.base_dataset = base_dataset
+        self.clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
         
     def __len__(self):
         return len(self.base_dataset)
     
     def __getitem__(self, idx):
+        # 1. 获取基础数据集输出
         fix_tensor, moving_original_tensor, moving_gt_tensor, fix_path, moving_path, T_0to1 = self.base_dataset[idx]
+        
+        # 2. 转换范围 [0, 1]
+        # fix_tensor 已经是 [0, 1] (transforms.ToTensor), moving 是 [-1, 1]
         moving_original_tensor = (moving_original_tensor + 1) / 2
         moving_gt_tensor = (moving_gt_tensor + 1) / 2
         
-        if fix_tensor.shape[0] == 3:
-            fix_gray = 0.299 * fix_tensor[0] + 0.587 * fix_tensor[1] + 0.114 * fix_tensor[2]
-            fix_gray = fix_gray.unsqueeze(0)
-        else:
-            fix_gray = fix_tensor
+        # 3. 灰度转换
+        def to_gray(tensor):
+            if tensor.shape[0] == 3:
+                gray = 0.299 * tensor[0] + 0.587 * tensor[1] + 0.114 * tensor[2]
+                return gray.unsqueeze(0)
+            return tensor
             
-        if moving_gt_tensor.shape[0] == 3:
-            moving_gray = 0.299 * moving_gt_tensor[0] + 0.587 * moving_gt_tensor[1] + 0.114 * moving_gt_tensor[2]
-            moving_gray = moving_gray.unsqueeze(0)
-        else:
-            moving_gray = moving_gt_tensor
-            
-        if moving_original_tensor.shape[0] == 3:
-            moving_orig_gray = 0.299 * moving_original_tensor[0] + 0.587 * moving_original_tensor[1] + 0.114 * moving_original_tensor[2]
-            moving_orig_gray = moving_orig_gray.unsqueeze(0)
-        else:
-            moving_orig_gray = moving_original_tensor
+        fix_gray_raw = to_gray(fix_tensor)
+        moving_orig_gray_raw = to_gray(moving_original_tensor)
+        moving_gray_raw = to_gray(moving_gt_tensor)
+        
+        # 4. 应用 CLAHE
+        def apply_clahe(tensor):
+            img_np = (tensor[0].numpy() * 255).astype(np.uint8)
+            img_clahe = self.clahe.apply(img_np)
+            return torch.from_numpy(img_clahe).float().unsqueeze(0) / 255.0
+
+        fix_gray = apply_clahe(fix_gray_raw)
+        moving_orig_gray = apply_clahe(moving_orig_gray_raw)
+        moving_gray = apply_clahe(moving_gray_raw)
         
         fix_name = os.path.basename(fix_path)
         moving_name = os.path.basename(moving_path)
         
+        # 5. T 矩阵转换 (H_0to1 是从 Fix 到 Moving)
         try:
             T_fix_to_moving = torch.inverse(T_0to1)
         except:
@@ -78,6 +87,8 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
             'image0': fix_gray,
             'image1': moving_orig_gray,
             'image1_gt': moving_gray,
+            'image0_orig': fix_gray.clone(), # 真实数据不应用 DR，所以 orig 和 input 一致
+            'image1_orig': moving_orig_gray.clone(),
             'T_0to1': T_fix_to_moving,
             'pair_names': (fix_name, moving_name),
             'dataset_name': 'MultiModal'
@@ -99,24 +110,41 @@ class MultimodalDataModule(pl.LightningDataModule):
 
     def setup(self, stage=None):
         if stage == 'fit' or stage is None:
-            # 训练集：每次形变随机（生成数据）
-            self.train_dataset = MultiModalDataset(
+            # 1. 训练集 (生成数据)
+            self.train_dataset_gen = MultiModalDataset(
                 DATA_ROOT, mode=self.args.mode, split='train', img_size=self.args.img_size, vessel_sigma=self.args.vessel_sigma)
+            
+            # 2. 训练集 (真实数据)
+            if self.args.mode == 'cfocta':
+                train_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='train', mode='cf2octa')
+            elif self.args.mode == 'cffa':
+                train_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='train', mode='fa2cf')
+            elif self.args.mode == 'cfoct':
+                train_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='train', mode='cf2oct')
+            elif self.args.mode == 'octfa':
+                train_base = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='train', mode='fa2oct')
+            
+            self.train_dataset_real = RealDatasetWrapper(train_base)
+            
+            # 3. 混合训练集
+            from torch.utils.data import ConcatDataset
+            self.train_dataset = ConcatDataset([self.train_dataset_gen, self.train_dataset_real])
+            loguru_logger.info(f"训练集混合完成: 生成数据({len(self.train_dataset_gen)}) + 真实数据({len(self.train_dataset_real)}) = 总计 {len(self.train_dataset)}")
             
             # 验证集：根据参数选择
             if self.args.val_on_real:
-                # 使用真实数据集验证（与 train_multimodal_v3_3.py 一致）
+                # 使用真实数据集验证
                 if self.args.mode == 'cfocta':
-                    base_dataset = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
+                    val_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
                 elif self.args.mode == 'cffa':
-                    base_dataset = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
+                    val_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
                 elif self.args.mode == 'cfoct':
-                    base_dataset = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
+                    val_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
                 elif self.args.mode == 'octfa':
-                    base_dataset = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='val', mode='fa2oct')
+                    val_base = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='val', mode='fa2oct')
                 
-                # 包装真实数据集，使其输出格式与 MultiModalDataset 一致
-                self.val_dataset_real = RealDatasetWrapper(base_dataset)
+                # 包装真实数据集
+                self.val_dataset_real = RealDatasetWrapper(val_base)
                 
                 # 同时保留生成数据验证集用于可视化对比
                 self.val_dataset_gen = MultiModalDataset(
@@ -132,7 +160,6 @@ class MultimodalDataModule(pl.LightningDataModule):
     def val_dataloader(self):
         if self.args.val_on_real:
             # 返回双验证数据集：[生成数据, 真实数据]
-            # 注意：生成数据验证仅用于可视化，真实数据用于计算指标
             return [
                 torch.utils.data.DataLoader(self.val_dataset_gen, shuffle=False, **self.loader_params),
                 torch.utils.data.DataLoader(self.val_dataset_real, shuffle=False, **self.loader_params)
@@ -760,7 +787,7 @@ def main():
         resume_from_checkpoint=args.start_point
     )
     
-    loguru_logger.info(f"开始训练 V2.3 (Minimalist): {args.name}")
+    loguru_logger.info(f"开始混合训练 V2.3 (Gen + Real): {args.name}")
     trainer.fit(model, datamodule=data_module)
 
 if __name__ == '__main__':

@@ -254,8 +254,35 @@ class PL_LoFTR_V3(PL_LoFTR):
         if getattr(self, 'force_viz', False):
             figures = make_matching_figures(batch, self.config, mode=self.config.TRAINER.PLOT_MODE)
 
+        # --- 提取所有候选匹配点 (用于判断是取点有问题还是匹配有问题) ---
+        all_candidates = []
+        if 'conf_matrix' in batch:
+            conf_matrix = batch['conf_matrix'] # [N, L, S]
+            thr = self.matcher.coarse_matching.thr
+            hw0c = batch['hw0_c']
+            hw1c = batch['hw1_c']
+            scale0 = batch['image0'].shape[2] / hw0c[1] # W_orig / W_coarse
+            scale1 = batch['image1'].shape[2] / hw1c[1]
+            
+            for b in range(conf_matrix.shape[0]):
+                # image0 中 max_conf > thr 的点
+                mask0 = conf_matrix[b].max(dim=1)[0] > thr
+                indices0 = torch.where(mask0)[0]
+                kpts0 = torch.stack([indices0 % hw0c[1], indices0 // hw0c[1]], dim=1).float() * scale0
+                
+                # image1 中 max_conf > thr 的点
+                mask1 = conf_matrix[b].max(dim=0)[0] > thr
+                indices1 = torch.where(mask1)[0]
+                kpts1 = torch.stack([indices1 % hw1c[1], indices1 // hw1c[1]], dim=1).float() * scale1
+                
+                all_candidates.append({
+                    'kpts0': kpts0.detach().cpu().numpy(),
+                    'kpts1': kpts1.detach().cpu().numpy()
+                })
+
         return {
             **ret_dict,
+            'kpts_candidates': all_candidates,
             'loss_scalars': batch['loss_scalars'],
             'figures': figures,
         }
@@ -323,8 +350,10 @@ class MultimodalValidationCallback(Callback):
         auc20 = display_metrics.get('auc@20', 0.0)
         combined_auc = (auc5 + auc10 + auc20) / 3.0
         
+        is_best = False
         if combined_auc > self.best_val:
             self.best_val = combined_auc
+            is_best = True
             best_path = self.result_dir / "best_checkpoint"
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
@@ -332,8 +361,8 @@ class MultimodalValidationCallback(Callback):
                 f.write(f"Epoch: {epoch}\nBest Combined AUC: {combined_auc:.4f}\nAUC@10: {auc10:.4f}\nMSE: {avg_mse:.6f}\nMACE: {avg_mace:.4f}")
             loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, 综合 AUC: {combined_auc:.4f}")
 
-        if combined_auc > 0 or epoch % 10 == 0:
-            self._trigger_visualization(trainer, pl_module, combined_auc > self.best_val, epoch)
+        if is_best or (epoch % 5 == 0):
+            self._trigger_visualization(trainer, pl_module, is_best, epoch)
 
     def _trigger_visualization(self, trainer, pl_module, is_best, epoch):
         pl_module.force_viz = True
@@ -383,6 +412,30 @@ class MultimodalValidationCallback(Callback):
                 save_path.mkdir(parents=True, exist_ok=True)
                 cv2.imwrite(str(save_path / "fix.png"), img0)
                 cv2.imwrite(str(save_path / "moving_result.png"), img1_result)
+                
+                # --- 新增：绘制候选点 (白色) 和 最终匹配点 (红色) ---
+                img0_kpts = cv2.cvtColor(img0, cv2.COLOR_GRAY2BGR)
+                img1_kpts = cv2.cvtColor(img1, cv2.COLOR_GRAY2BGR)
+                
+                if 'kpts_candidates' in outputs and len(outputs['kpts_candidates']) > i:
+                    cands = outputs['kpts_candidates'][i]
+                    for pt in cands['kpts0']:
+                        cv2.circle(img0_kpts, (int(pt[0]), int(pt[1])), 2, (255, 255, 255), -1)
+                    for pt in cands['kpts1']:
+                        cv2.circle(img1_kpts, (int(pt[0]), int(pt[1])), 2, (255, 255, 255), -1)
+
+                if 'm_bids' in batch:
+                    mask_i = (batch['m_bids'] == i)
+                    kpts0_m = batch['mkpts0_f'][mask_i].cpu().numpy()
+                    kpts1_m = batch['mkpts1_f'][mask_i].cpu().numpy()
+                    for pt in kpts0_m:
+                        cv2.circle(img0_kpts, (int(pt[0]), int(pt[1])), 4, (0, 0, 255), -1)
+                    for pt in kpts1_m:
+                        cv2.circle(img1_kpts, (int(pt[0]), int(pt[1])), 4, (0, 0, 255), -1)
+                
+                cv2.imwrite(str(save_path / "fix_with_kpts.png"), img0_kpts)
+                cv2.imwrite(str(save_path / "moving_with_kpts.png"), img1_kpts)
+
                 try:
                     cb = create_chessboard(img1_result, img0)
                     cv2.imwrite(str(save_path / "chessboard.png"), cb)
@@ -390,6 +443,7 @@ class MultimodalValidationCallback(Callback):
                 if 'figures' in outputs and len(outputs['figures'][pl_module.config.TRAINER.PLOT_MODE]) > i:
                     fig = outputs['figures'][pl_module.config.TRAINER.PLOT_MODE][i]
                     fig.savefig(str(save_path / "matches.png"), bbox_inches='tight')
+                    plt.close(fig)
         return mses, maces
 
 class DelayedEarlyStopping(EarlyStopping):
