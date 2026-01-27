@@ -4,6 +4,13 @@ import torch
 import numpy as np
 from torch.utils.data import Dataset
 from pathlib import Path
+try:
+    from gen_data_enhance_v2 import apply_domain_randomization_numpy
+except ImportError:
+    # Fallback if running relative
+    import sys
+    sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+    from gen_data_enhance_v2 import apply_domain_randomization_numpy
 
 class MultiModalDataset(Dataset):
     """
@@ -26,6 +33,9 @@ class MultiModalDataset(Dataset):
         self.img_size = img_size
         self.df = df
         self.vessel_sigma = float(vessel_sigma)
+        
+        # Initialize CLAHE (moved from training loop)
+        self.clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
         
         # 列出所有子文件夹 (格式: 数字_字母，如 1_A, 600_N)
         # 过滤掉不符合命名规则的文件夹（如 .git, __pycache__ 等）
@@ -271,12 +281,69 @@ class MultiModalDataset(Dataset):
                 'flip_v': flip_v,  # 是否垂直翻转
                 'mask_quality': mask_quality,  # 掩码质量指标
             }
+
+            # ================= [Optimization] Move CLAHE & Augmentation Here =================
+            # 1. CLAHE Preprocessing (Always applied to ensure consistent distribution)
+            # Use separate variables to keep 'raw' versions for visualization if needed,
+            # but usually the model sees the CLAHE version as "Original".
+            # For simplicity:
+            # - image0/image1 in dict -> Final Input (Augmented -> CLAHE)
+            # - But wait, typically we Augment then CLAHE or CLAHE then Augment?
+            #   In v2.3 code: CLAHE -> DomainRandomization.
+            #   Wait, in train_multimodal_onGen_v2_3.py:
+            #   L282: batch[img_key] = self.clahe(batch[img_key])  <-- Step 1
+            #   L307: batch['image0'] = apply_domain_randomization(batch['image0']) <-- Step 2
+            #   So order is CLAHE -> Randomization.
+            
+            # Apply CLAHE
+            # img0 (numpy uint8) -> clahe -> float 0-1
+            img0_clahe = self.clahe.apply(img0).astype(np.float32) / 255.0
+            img1_clahe = self.clahe.apply(img1_warped).astype(np.float32) / 255.0
+            
+            # Apply Domain Randomization (Only in Train Split)
+            if self.split == 'train':
+                # Apply to CLAHE'd images
+                img0_aug = apply_domain_randomization_numpy(img0_clahe)
+                img1_aug = apply_domain_randomization_numpy(img1_clahe)
+                
+                # Update Data Dict
+                data['image0'] = torch.from_numpy(img0_aug).float()[None] # [1, H, W]
+                data['image1'] = torch.from_numpy(img1_aug).float()[None]
+                
+                # Keep CLAHE'd non-augmented versions for visualization comparison
+                data['image0_orig'] = torch.from_numpy(img0_clahe).float()[None]
+                data['image1_orig'] = torch.from_numpy(img1_clahe).float()[None]
+            else:
+                # Validation/Test: Just CLAHE
+                data['image0'] = torch.from_numpy(img0_clahe).float()[None]
+                data['image1'] = torch.from_numpy(img1_clahe).float()[None]
+                data['image0_orig'] = torch.from_numpy(img0_clahe).float()[None]
+                data['image1_orig'] = torch.from_numpy(img1_clahe).float()[None]
+            
+            # Update image1_gt (Target for MSE) - Also needs CLAHE to match
+            img1_gt_clahe = self.clahe.apply(img1_origin).astype(np.float32) / 255.0
+            data['image1_gt'] = torch.from_numpy(img1_gt_clahe).float()[None]
+            
+            # Note: image1_origin in dict was just raw normalized, let's keep it as raw raw
+            # but the model calculates MSE against something processed?
+            # In previous code:
+            # L288: batch['image1_gt'] = self.clahe(batch['image1_gt'])
+            # So yes, GT should be CLAHE'd.
+            # I will overwrite 'image1_gt' in dict if it existed, or create it.
+            # The original code had 'image1_origin' but training logic used 'image1_gt' if present.
+            # I'll ensure 'image1_gt' is the CLAHE version of the unwarped moving image.
+            
         else:
             # 测试阶段直接返回原图对和掩码
+            # Apply CLAHE
+            img0_clahe = self.clahe.apply(img0).astype(np.float32) / 255.0
+            img1_clahe = self.clahe.apply(img1).astype(np.float32) / 255.0
+            
             data = {
-                'image0': torch.from_numpy(img0).float()[None] / 255.0,
-                'image1': torch.from_numpy(img1).float()[None] / 255.0,
-                'image1_origin': torch.from_numpy(img1_origin).float()[None] / 255.0,
+                'image0': torch.from_numpy(img0_clahe).float()[None],
+                'image1': torch.from_numpy(img1_clahe).float()[None],
+                'image1_origin': torch.from_numpy(img1_origin).float()[None] / 255.0, # Raw
+                'image1_gt': torch.from_numpy(img1_clahe).float()[None], # CLAHE version for consistency
                 # 测试阶段：将血管掩码同时作为有效区域掩码与血管约束
                 'mask0': torch.from_numpy(vessel_mask_bin).float()[None],
                 'mask1': torch.from_numpy(vessel_mask_bin).float()[None],

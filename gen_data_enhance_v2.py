@@ -23,6 +23,138 @@ import numpy as np
 import cv2
 import random
 
+def generate_intensity_bias_field_numpy(H, W, num_control_points=4, strength_range=(0.7, 1.3)):
+    """
+    Numpy version of bias field generation
+    """
+    # Create low-res random field
+    low_res = np.random.uniform(strength_range[0], strength_range[1], (num_control_points, num_control_points))
+    # Resize to high-res
+    bias_field = cv2.resize(low_res, (W, H), interpolation=cv2.INTER_CUBIC)
+    return bias_field
+
+def apply_speckle_noise_numpy(img, intensity_range=(0.0, 0.15)):
+    intensity = random.uniform(*intensity_range)
+    if intensity > 0:
+        noise = np.random.randn(*img.shape) * intensity
+        img = img + img * noise
+    return img
+
+def apply_poisson_noise_numpy(img, scale_range=(50, 200)):
+    scale = random.uniform(*scale_range)
+    img_scaled = img * scale
+    noisy = np.random.poisson(img_scaled.clip(0, None)).astype(np.float32)
+    return noisy / scale
+
+def apply_random_downsample_numpy(img, factor_range=(2, 4)):
+    factor = random.randint(*factor_range)
+    H, W = img.shape[:2]
+    # Downsample
+    low_res = cv2.resize(img, (W // factor, H // factor), interpolation=cv2.INTER_LINEAR)
+    # Upsample
+    restored = cv2.resize(low_res, (W, H), interpolation=cv2.INTER_LINEAR)
+    # If channel dim was lost (for single channel), add it back? cv2.resize normally keeps it if 3, drops if 1?
+    # Actually cv2.resize on (H, W) -> (H', W'). If input was (H, W), output is (H', W').
+    return restored
+
+def apply_signal_dropout_numpy(img, num_regions_range=(1, 3), region_size_range=(0.1, 0.3)):
+    H, W = img.shape[:2]
+    num_regions = random.randint(*num_regions_range)
+    mask = np.ones((H, W), dtype=np.float32)
+    
+    y_grid, x_grid = np.meshgrid(np.arange(H), np.arange(W), indexing='ij')
+    
+    for _ in range(num_regions):
+        cx = random.randint(0, W)
+        cy = random.randint(0, H)
+        h_ratio = random.uniform(*region_size_range)
+        w_ratio = random.uniform(*region_size_range)
+        h_radius = int(H * h_ratio) // 2
+        w_radius = int(W * w_ratio) // 2
+        
+        dist_sq = ((x_grid - cx) / (w_radius + 1e-6)) ** 2 + ((y_grid - cy) / (h_radius + 1e-6)) ** 2
+        dropout_region = 1.0 / (1.0 + np.exp(-10 * (dist_sq - 1.0)))
+        mask *= dropout_region
+
+    if img.ndim == 3:
+        mask = mask[..., None]
+        
+    return img * mask
+
+def apply_domain_randomization_numpy(img, 
+                                   gamma_range=(0.7, 1.5), 
+                                   contrast_range=(0.7, 1.3),
+                                   brightness_range=(-0.15, 0.15),
+                                   noise_std_range=(0.0, 0.05),
+                                   blur_prob=0.3, blur_kernel_range=(3, 7),
+                                   bias_field_prob=0.5,
+                                   speckle_prob=0.3,
+                                   poisson_prob=0.2,
+                                   downsample_prob=0.03,
+                                   dropout_prob=0.3):
+    """
+    Apply domain randomization to a single numpy image.
+    Args:
+        img: np.array, [H, W] or [H, W, C], values in [0, 1]
+    Returns:
+        augmented: np.array, same shape, values clipped to [0, 1]
+    """
+    augmented = img.copy().astype(np.float32)
+    H, W = augmented.shape[:2]
+
+    # 0. Intensity Bias Field
+    if random.random() < bias_field_prob:
+        bias_field = generate_intensity_bias_field_numpy(H, W)
+        if augmented.ndim == 3: bias_field = bias_field[..., None]
+        augmented = augmented * bias_field
+
+    # Dropout
+    if random.random() < dropout_prob:
+        augmented = apply_signal_dropout_numpy(augmented)
+
+    # 1. Gamma
+    gamma = random.uniform(*gamma_range)
+    augmented = np.power(np.maximum(augmented, 1e-8), gamma)
+
+    # 2. Contrast
+    contrast = random.uniform(*contrast_range)
+    mean_val = np.mean(augmented)
+    augmented = (augmented - mean_val) * contrast + mean_val
+
+    # 3. Brightness
+    brightness = random.uniform(*brightness_range)
+    augmented = augmented + brightness
+
+    # 4. Gaussian Noise
+    noise_std = random.uniform(*noise_std_range)
+    if noise_std > 0:
+        noise = np.random.randn(*augmented.shape) * noise_std
+        augmented = augmented + noise
+
+    # 5. Speckle Noise
+    if random.random() < speckle_prob:
+        augmented = apply_speckle_noise_numpy(augmented)
+
+    # 6. Poisson Noise
+    if random.random() < poisson_prob:
+        augmented = apply_poisson_noise_numpy(augmented)
+
+    # 7. Gaussian Blur
+    if random.random() < blur_prob:
+        k = random.choice(range(blur_kernel_range[0], blur_kernel_range[1] + 1, 2))
+        augmented = cv2.GaussianBlur(augmented, (k, k), 0)
+        if img.ndim == 3 and augmented.ndim == 2:
+            augmented = augmented[..., None]
+
+    # 8. Downsample
+    if random.random() < downsample_prob:
+        augmented = apply_random_downsample_numpy(augmented)
+        if img.ndim == 3 and augmented.ndim == 2:
+            augmented = augmented[..., None]
+
+    return np.clip(augmented, 0.0, 1.0)
+
+
 
 def generate_intensity_bias_field(H, W, device, num_control_points=4, strength_range=(0.7, 1.3)):
     """

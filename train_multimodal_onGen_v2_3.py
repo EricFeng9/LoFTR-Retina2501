@@ -23,7 +23,9 @@ from src.utils.misc import get_rank_zero_only_logger, setup_gpus
 from src.lightning.lightning_loftr import PL_LoFTR
 from data.FIVES_extract_v2.FIVES_extract_v2 import MultiModalDataset
 from src.utils.plotting import make_matching_figures
-from gen_data_enhance_v2 import apply_domain_randomization, save_batch_visualization
+from src.utils.plotting import make_matching_figures
+from gen_data_enhance_v2 import save_batch_visualization # Removed apply_domain_randomization import
+from src.utils.metrics import error_auc
 from src.utils.metrics import error_auc
 
 # 导入真实数据集
@@ -185,33 +187,6 @@ def compute_corner_error(H_est, H_gt, height, width):
         mace = float('inf')
     return mace
 
-class CLAHE_Preprocess:
-    """
-    CLAHE 预处理：增强血管对比度
-    """
-    def __init__(self, clip_limit=2.0, tile_grid_size=(8, 8)):
-        self.clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
-
-    def __call__(self, img_tensor):
-        """
-        Args:
-            img_tensor: [B, 1, H, W], values in [0, 1]
-        Returns:
-            processed_tensor: [B, 1, H, W], values in [0, 1]
-        """
-        device = img_tensor.device
-        B = img_tensor.shape[0]
-        res = []
-        for b in range(B):
-            # Convert to numpy uint8
-            img_np = (img_tensor[b, 0].detach().cpu().numpy() * 255).astype(np.uint8)
-            # Apply CLAHE
-            img_clahe = self.clahe.apply(img_np)
-            # Convert back
-            res.append(torch.from_numpy(img_clahe).float() / 255.0)
-        return torch.stack(res).unsqueeze(1).to(device)
-
-
 def create_chessboard(img1, img2, grid_size=4):
     """创建棋盘图"""
     H, W = img1.shape
@@ -270,22 +245,18 @@ class PL_LoFTR_V3(PL_LoFTR):
         # No more curriculum, no more mask injection during inference.
         self.vessel_loss_weight_scaler = 10.0 
         
-        self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
+        self.vessel_loss_weight_scaler = 10.0 
+        
+        # self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8)) # Moved to DataLoader
         
     def _trainval_inference(self, batch):
-        # [Fix 1] 确保所有输入在 [0, 1] 范围内且经过 CLAHE 增强 (针对跨模态)
-        # 注意：训练和验证必须保持预处理完全一致
-        for img_key in ['image0', 'image1']:
-            if img_key in batch:
-                if batch[img_key].min() < 0:
-                    batch[img_key] = (batch[img_key] + 1) / 2
-                batch[img_key] = self.clahe(batch[img_key])
-        
-        # 处理 GT 基准图（仅用于 MSE 计算，也统一预处理以保证对比一致）
-        if 'image1_gt' in batch:
-            if batch['image1_gt'].min() < 0:
-                batch['image1_gt'] = (batch['image1_gt'] + 1) / 2
-            batch['image1_gt'] = self.clahe(batch['image1_gt'])
+        # [Optimized] CLAHE and Normalization are now done in DataLoader
+        # Just ensure data range safety
+        for img_key in ['image0', 'image1', 'image1_gt']:
+             if img_key in batch and batch[img_key].min() < 0:
+                 batch[img_key] = (batch[img_key] + 1) / 2
+                 
+        # [V2.3] 注入 Spatial Loss Scaler 到 Loss 模块
 
         # [V2.3] 注入 Spatial Loss Scaler 到 Loss 模块
         if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
@@ -294,18 +265,47 @@ class PL_LoFTR_V3(PL_LoFTR):
         super()._trainval_inference(batch)
 
     def training_step(self, batch, batch_idx):
-        # 1. 应用 Domain Randomization (仅在训练模式且非推理阶段)
+        # 1. 记录可视化 (Domain Randomization 已经在 loader 中应用)
+        # batch['image0/1'] 是已经 Augment 过的
+        # batch['image0/1_orig'] 是仅 CLAHE 的 (如果有)
+        
         if self.use_domain_rand:
             # [Requirement] 保存前两个 batch 的可视化信息
             is_viz_batch = (self.current_epoch == 0 and batch_idx < 2)
             
             if is_viz_batch:
-                img0_orig = batch['image0'].clone()
-                img1_orig = batch['image1'].clone()
+                # 优先使用 Dataset 返回的 _orig 版本作为对比基准
+                img0_orig = batch.get('image0_orig', batch['image0']).clone()
+                img1_orig = batch.get('image1_orig', batch['image1']).clone()
+                img0_aug = batch['image0']
+                img1_aug = batch['image1']
             
-            # [Fix 3] 此时输入已保证是 [0, 1] 且做过 CLAHE
-            batch['image0'] = apply_domain_randomization(batch['image0'])
-            batch['image1'] = apply_domain_randomization(batch['image1'])
+                result_dir = Path(self.result_dir) if self.result_dir else Path(f"results/{self.config.DATASET.TRAINVAL_DATA_SOURCE}/{self.config.TRAINER.EXP_NAME}")
+                result_dir.mkdir(parents=True, exist_ok=True)
+                vessel_mask = batch.get('mask0', None)
+                
+                # A. 保存增强对比图 (包括要求的 comparison_*.png)
+                save_batch_visualization(
+                    img0_orig, img1_orig, img0_aug, img1_aug,
+                    str(result_dir), epoch=self.current_epoch + 1, step=batch_idx + 1, 
+                    batch_size=batch['image0'].shape[0], vessel_mask=vessel_mask
+                )
+                
+                # B. 保存模型当前的配准效果可视化
+                with torch.no_grad():
+                    # 临时运行一次 validation_step 流程获取必需的绘图字典
+                    old_training_mode = self.training
+                    self.eval()
+                    outputs = self.validation_step(batch, batch_idx)
+                    self.train(old_training_mode)
+                    
+                    # 确定保存路径: epoch1_visualization/stepX_sampleY
+                    vis_dir = result_dir / f"epoch1_visualization" / f"step{batch_idx+1}_registration"
+                    self._save_training_registration_viz(batch, outputs, vis_dir)
+
+        # 2. 调用基类的推理和 loss 计算 
+        # (此时 batch['image0'] 已经是增强过的)
+        return super().training_step(batch, batch_idx)
             
             if is_viz_batch:
                 result_dir = Path(self.result_dir) if self.result_dir else Path(f"results/{self.config.DATASET.TRAINVAL_DATA_SOURCE}/{self.config.TRAINER.EXP_NAME}")
