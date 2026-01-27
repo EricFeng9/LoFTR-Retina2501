@@ -93,21 +93,37 @@ class PL_LoFTR(pl.LightningModule):
     def _trainval_inference(self, batch):
         import time
         
+        # 确保 GPU 操作完成
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        
         t0 = time.time()
         with self.profiler.profile("Compute coarse supervision"):
             compute_supervision_coarse(batch, self.config)
+        
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         t1 = time.time()
         
         with self.profiler.profile("LoFTR"):
             self.matcher(batch)
+        
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         t2 = time.time()
         
         with self.profiler.profile("Compute fine supervision"):
             compute_supervision_fine(batch, self.config)
+        
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         t3 = time.time()
             
         with self.profiler.profile("Compute losses"):
             self.loss(batch)
+        
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
         t4 = time.time()
         
         # 打印详细计时（只打印前 20 次）
