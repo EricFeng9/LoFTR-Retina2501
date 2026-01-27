@@ -335,7 +335,23 @@ class PL_LoFTR_V3(PL_LoFTR):
         # 如果现有的 LoFTRLoss 不支持 pixel-wise weighting map，那我们需要修改 LoFTRLoss。
         # 考虑到时间，我们先主要依赖 Attention Bias (Lambda)，这已经是最强的引导了。
         
+    def training_step(self, batch, batch_idx):
+        # ... (此处逻辑不变)
         return super().training_step(batch, batch_idx)
+
+    def validation_epoch_end(self, outputs):
+        """
+        核心修正：确保评估指标只来自真实数据
+        outputs: 如果启用 val_on_real，则为 [outputs_gen, outputs_real]
+        """
+        if isinstance(outputs, list) and len(outputs) > 1:
+            # 只要有多验证集，主指标 (auc@5/10/20) 强制只取第二个验证集（真实数据）
+            # 这样 PL 自动记录的 'auc@10' 就是真实的 auc，
+            # 从而 EarlyStopping 和 Callback 拿到的全是真实数据指标
+            real_outputs = outputs[1]
+            return super().validation_epoch_end(real_outputs)
+        else:
+            return super().validation_epoch_end(outputs)
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         self._trainval_inference(batch)
