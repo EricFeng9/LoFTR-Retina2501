@@ -32,37 +32,16 @@ DATA_ROOTS = {
 }
 
 
-class CLAHE_Preprocess:
-    """
-    CLAHE 预处理：增强血管对比度
-    """
-    def __init__(self, clip_limit=2.0, tile_grid_size=(8, 8)):
-        self.clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
-
-    def __call__(self, img_np):
-        """
-        Args:
-            img_np: [H, W], values in [0, 1]
-        Returns:
-            processed_np: [H, W], values in [0, 1]
-        """
-        # Convert to numpy uint8
-        img_uint8 = (img_np * 255).astype(np.uint8)
-        # Apply CLAHE
-        img_clahe = self.clahe.apply(img_uint8)
-        # Convert back
-        return img_clahe.astype(np.float32) / 255.0
+# Removed CLAHE_Preprocess class to match v2.3 training
 
 class LoFTRTestDatasetWrapper(data.Dataset):
     """
     通过 Dataset 提供的 get_raw_sample 接口获取原始数据。
     测试时直接使用未对齐的原始图像（fix 和 moving），不施加额外变换。
     """
-    def __init__(self, dataset, img_size=512, use_clahe=True):
+    def __init__(self, dataset, img_size=512):
         self.dataset = dataset
         self.img_size = img_size
-        self.use_clahe = use_clahe
-        self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
 
     def __len__(self):
         return len(self.dataset)
@@ -83,10 +62,7 @@ class LoFTRTestDatasetWrapper(data.Dataset):
         h0, w0 = img0_raw.shape
         h1, w1 = img1_raw.shape
 
-        # Apply CLAHE if enabled (to match V3 training)
-        if self.use_clahe:
-            img0_raw = self.clahe(img0_raw)
-            img1_raw = self.clahe(img1_raw)
+        # Removed CLAHE (not used in v2.3 training)
 
         # Resize 图像到模型输入尺寸（保持 [0, 1] 范围）
         img0 = cv2.resize(img0_raw, (self.img_size, self.img_size))
@@ -175,7 +151,6 @@ def main():
     parser.add_argument('--name', type=str, required=True)
     parser.add_argument('--savedir', type=str, default='test_run')
     parser.add_argument('--minima', action='store_true', help='使用 MINIMA 预训练权重进行测试')
-    parser.add_argument('--no_clahe', action='store_true', help='禁用 CLAHE 预处理')
     args = parser.parse_args()
 
     # 1. 路径准备
@@ -223,7 +198,7 @@ def main():
     elif mode == 'cfocta':
         base_ds = CFOCTADataset(root_dir=root, split='test', mode='cf2octa')
     
-    test_ds = LoFTRTestDatasetWrapper(base_ds, use_clahe=not args.no_clahe)
+    test_ds = LoFTRTestDatasetWrapper(base_ds)
     test_loader = data.DataLoader(test_ds, batch_size=1, shuffle=False, num_workers=4)
 
     # 4. 测试循环
