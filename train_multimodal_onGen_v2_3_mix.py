@@ -23,9 +23,7 @@ from src.utils.misc import get_rank_zero_only_logger, setup_gpus
 from src.lightning.lightning_loftr import PL_LoFTR
 from data.FIVES_extract_v2.FIVES_extract_v2 import MultiModalDataset
 from src.utils.plotting import make_matching_figures
-from src.utils.plotting import make_matching_figures
-from gen_data_enhance_v2 import save_batch_visualization # Removed apply_domain_randomization import
-from src.utils.metrics import error_auc
+from gen_data_enhance_v2 import save_batch_visualization
 from src.utils.metrics import error_auc
 
 # 导入真实数据集
@@ -99,7 +97,7 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
         }
 
 # 数据集根目录硬编码
-DATA_ROOT = "/data/student/Fengjunming/LoFTR/data/FIVES_extract_v2"
+DATA_ROOT = "data/FIVES_extract_v2"
 
 class MultimodalDataModule(pl.LightningDataModule):
     def __init__(self, args, config):
@@ -271,12 +269,7 @@ class PL_LoFTR_V3(PL_LoFTR):
         self.saved_batches = 0
         self.result_dir = result_dir
         
-        # [V2.3] Training-Only Spatial Loss Guidance
-        # We use a static high weight for vessel regions to implicitly guide the model.
-        # No more curriculum, no more mask injection during inference.
-        self.vessel_loss_weight_scaler = 10.0 
-        
-        self.vessel_loss_weight_scaler = 10.0 
+        self.vessel_loss_weight_scaler = 10.0
         
         # self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8)) # Moved to DataLoader
         
@@ -287,9 +280,6 @@ class PL_LoFTR_V3(PL_LoFTR):
              if img_key in batch and batch[img_key].min() < 0:
                  batch[img_key] = (batch[img_key] + 1) / 2
                  
-        # [V2.3] 注入 Spatial Loss Scaler 到 Loss 模块
-
-        # [V2.3] 注入 Spatial Loss Scaler 到 Loss 模块
         if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
             self.loss.vessel_loss_weight_scaler = self.vessel_loss_weight_scaler
             
@@ -425,8 +415,8 @@ class PL_LoFTR_V3(PL_LoFTR):
             hw0c = batch['hw0_c']
             hw1c = batch['hw1_c']
             # 注意：hw0_i 可能在 batch 里是 [H, W]
-            scale0 = batch['image0'].shape[2] / hw0c[0]
-            scale1 = batch['image1'].shape[2] / hw1c[0]
+            scale0 = batch['image0'].shape[2] / hw0c[1]
+            scale1 = batch['image1'].shape[2] / hw1c[1]
             
             for b in range(conf_matrix.shape[0]):
                 # image0 中 max_conf > thr 的点
@@ -771,7 +761,7 @@ def main():
     # [Monitor Change] MSE -> AUC@10
     # 既然尺度问题已解决，AUC@10 是最能反应配准成功率的指标
     early_stop_callback = DelayedEarlyStopping(
-        start_epoch=100, 
+        start_epoch=0, 
         monitor='auc@10', 
         mode='max', 
         patience=10, 
@@ -783,7 +773,7 @@ def main():
         max_epochs=args.max_epochs,
         min_epochs=100,
         check_val_every_n_epoch=1,
-        num_sanity_val_steps=3,
+        num_sanity_val_steps=0,
         callbacks=[val_callback, lr_monitor, early_stop_callback],
         logger=tb_logger,
         plugins=DDPPlugin(find_unused_parameters=False) if _n_gpus > 1 else None,

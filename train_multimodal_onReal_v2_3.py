@@ -492,16 +492,16 @@ def main():
     tb_logger = TensorBoardLogger(save_dir='logs/tb_logs', name=f"onReal_{args.name}")
     
     early_stop_callback = DelayedEarlyStopping(
-        start_epoch=100,
+        start_epoch=0,
         monitor='auc@10', 
         mode='max', 
-        patience=15, 
+        patience=10, 
         min_delta=0.0001
     )
     
     trainer = pl.Trainer.from_argparse_args(
         args,
-        num_sanity_val_steps=-1,  # 启动前跑完整验证
+        num_sanity_val_steps=0,  # 启动前不运行验证
         check_val_every_n_epoch=1, # 每一轮都验证
         callbacks=[MultimodalValidationCallback(args), LearningRateMonitor(logging_interval='step'), early_stop_callback],
         logger=tb_logger,
