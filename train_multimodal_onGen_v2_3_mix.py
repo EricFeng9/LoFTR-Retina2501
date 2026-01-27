@@ -36,6 +36,7 @@ from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset impo
 
 # 复用 v2.1 中的 RealDatasetWrapper 等辅助类
 # 为了完整性，这里重新定义一遍，避免 import 依赖问题
+class RealDatasetWrapper(torch.utils.data.Dataset):
     def __init__(self, base_dataset):
         self.base_dataset = base_dataset
         
