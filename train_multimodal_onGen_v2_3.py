@@ -306,34 +306,7 @@ class PL_LoFTR_V3(PL_LoFTR):
         # 2. 调用基类的推理和 loss 计算 
         # (此时 batch['image0'] 已经是增强过的)
         return super().training_step(batch, batch_idx)
-            
-            if is_viz_batch:
-                result_dir = Path(self.result_dir) if self.result_dir else Path(f"results/{self.config.DATASET.TRAINVAL_DATA_SOURCE}/{self.config.TRAINER.EXP_NAME}")
-                result_dir.mkdir(parents=True, exist_ok=True)
-                vessel_mask = batch.get('mask0', None)
-                
-                # A. 保存增强对比图 (包括要求的 comparison_*.png)
-                save_batch_visualization(
-                    img0_orig, img1_orig, batch['image0'], batch['image1'],
-                    str(result_dir), epoch=self.current_epoch + 1, step=batch_idx + 1, 
-                    batch_size=batch['image0'].shape[0], vessel_mask=vessel_mask
-                )
-                
-                # B. 保存模型当前的配准效果可视化 (跟验证集一致)
-                # 我们通过 self 访问内部的 callback 来复用绘制逻辑，或者直接本地实现
-                with torch.no_grad():
-                    # 临时运行一次 validation_step 流程获取必需的绘图字典
-                    old_training_mode = self.training
-                    self.eval()
-                    outputs = self.validation_step(batch, batch_idx)
-                    self.train(old_training_mode)
-                    
-                    # 确定保存路径: epoch1_visualization/stepX_sampleY
-                    vis_dir = result_dir / f"epoch1_visualization" / f"step{batch_idx+1}_registration"
-                    self._save_training_registration_viz(batch, outputs, vis_dir)
 
-        # 2. 调用基类的推理和 loss 计算
-        return super().training_step(batch, batch_idx)
 
     def _save_training_registration_viz(self, batch, outputs, save_dir):
         """在训练期间保存详细的注册效果图"""
