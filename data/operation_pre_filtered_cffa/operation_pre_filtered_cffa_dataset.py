@@ -4,11 +4,9 @@ import numpy as np
 import torch
 import cv2
 import random
-import hashlib
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-from tqdm import tqdm
 
 # ============ 配准与筛选工具函数 (整合自 effective_area_regist_cut.py) ============
 
@@ -112,24 +110,14 @@ class CFFADataset(Dataset):
     """
     CF-FA 自动配对数据集 - 支持直接从文件夹读取
     支持配准和有效区域筛选
-    
-    Args:
-        root_dir: 数据集根目录
-        split: 'train' 或 'val'
-        mode: 'fa2cf' 或 'cf2fa'
-        use_cache: 是否启用预计算缓存（默认 False，保持前向兼容）
-                   启用后会在首次加载时预计算所有样本的配准结果并缓存到磁盘
-    
-    返回: fix_tensor, moving_original_tensor, moving_gt_tensor, fix_path, moving_path, T_0to1
+    返回: cond_original, tgt, cond_path, tgt_path
     """
-    def __init__(self, root_dir='/data/student/Fengjunming/LoFTR/data/operation_pre_filtered_cffa', split='train', mode='fa2cf', use_cache=False):
+    def __init__(self, root_dir='/data/student/Fengjunming/LoFTR/data/operation_pre_filtered_cffa', split='train', mode='fa2cf'):
         self.root_dir = root_dir
         self.split = split
         self.mode = mode
-        self.use_cache = use_cache
         
         self.samples = []
-        self.cache_data = {}  # 用于存储预计算的缓存数据
         
         if not os.path.exists(root_dir):
             raise FileNotFoundError(f"Root directory not found: {root_dir}")
@@ -169,100 +157,6 @@ class CFFADataset(Dataset):
             self.samples = all_samples[num_train:]
         
         print(f"[CFFADataset] {split} set: {len(self.samples)} samples (total {num_total})")
-        
-        # 3. 如果启用缓存，加载或预计算缓存
-        if self.use_cache:
-            self._init_cache()
-    
-    def _get_cache_path(self):
-        """获取缓存文件路径"""
-        cache_dir = os.path.join(self.root_dir, '_cache')
-        os.makedirs(cache_dir, exist_ok=True)
-        cache_file = os.path.join(cache_dir, f'{self.split}_{self.mode}_cache.npz')
-        return cache_file
-    
-    def _init_cache(self):
-        """初始化缓存：如果缓存存在则加载，否则预计算并保存"""
-        cache_path = self._get_cache_path()
-        
-        if os.path.exists(cache_path):
-            # 加载已有缓存
-            print(f"[CFFADataset] Loading cache from {cache_path}...")
-            cache = np.load(cache_path, allow_pickle=True)
-            self.cache_data = {
-                'T_0to1': cache['T_0to1'],           # [N, 3, 3] 所有样本的变换矩阵
-                'moving_gt': cache['moving_gt'],     # [N, H, W, 3] 配准后的 moving 图像
-                'fix_shape': cache['fix_shape'],     # [N, 2] 原始 fix 图像尺寸 (h, w)
-                'moving_shape': cache['moving_shape'] # [N, 2] 原始 moving 图像尺寸 (h, w)
-            }
-            print(f"[CFFADataset] Cache loaded: {len(self.cache_data['T_0to1'])} samples")
-        else:
-            # 预计算缓存
-            print(f"[CFFADataset] Building cache (this may take a while)...")
-            self._build_cache(cache_path)
-    
-    def _build_cache(self, cache_path):
-        """预计算所有样本的配准结果并保存到缓存文件"""
-        all_T = []
-        all_moving_gt = []
-        all_fix_shape = []
-        all_moving_shape = []
-        
-        for idx in tqdm(range(len(self.samples)), desc=f"Building {self.split} cache"):
-            sample = self.samples[idx]
-            fa_path = sample['fa_path']
-            cf_path = sample['cf_path']
-            fa_pts_path = sample['fa_pts']
-            cf_pts_path = sample['cf_pts']
-            
-            # 加载图像
-            fa_pil = Image.open(fa_path).convert("RGB")
-            cf_pil = Image.open(cf_path).convert("RGB")
-            fa_np = np.array(fa_pil)
-            cf_np = np.array(cf_pil)
-            
-            # 读取关键点
-            try:
-                fa_points = read_points_from_txt(fa_pts_path)
-                cf_points = read_points_from_txt(cf_pts_path)
-            except:
-                fa_points = np.array([])
-                cf_points = np.array([])
-            
-            # 确定 fix 和 moving
-            fix_np = cf_np
-            moving_np = fa_np
-            fix_points = cf_points
-            moving_points = fa_points
-            
-            # 计算配准
-            T_0to1 = np.eye(3, dtype=np.float32)
-            if len(fix_points) >= 4 and len(moving_points) >= 4:
-                moving_gt_np, T_0to1 = register_image(fix_np, fix_points, moving_np, moving_points)
-            else:
-                moving_gt_np = moving_np.copy()
-            
-            all_T.append(T_0to1)
-            all_moving_gt.append(moving_gt_np)
-            all_fix_shape.append(np.array([fix_np.shape[0], fix_np.shape[1]]))
-            all_moving_shape.append(np.array([moving_np.shape[0], moving_np.shape[1]]))
-        
-        # 保存缓存 (使用 allow_pickle 因为图像尺寸可能不一致)
-        self.cache_data = {
-            'T_0to1': np.array(all_T),
-            'moving_gt': np.array(all_moving_gt, dtype=object),  # object 类型以支持不同尺寸
-            'fix_shape': np.array(all_fix_shape),
-            'moving_shape': np.array(all_moving_shape)
-        }
-        
-        np.savez_compressed(
-            cache_path,
-            T_0to1=self.cache_data['T_0to1'],
-            moving_gt=self.cache_data['moving_gt'],
-            fix_shape=self.cache_data['fix_shape'],
-            moving_shape=self.cache_data['moving_shape']
-        )
-        print(f"[CFFADataset] Cache saved to {cache_path}")
 
     def __len__(self):
         return len(self.samples)
@@ -271,6 +165,8 @@ class CFFADataset(Dataset):
         sample = self.samples[idx]
         fa_path = sample['fa_path']
         cf_path = sample['cf_path']
+        fa_pts_path = sample['fa_pts']
+        cf_pts_path = sample['cf_pts']
         
         # 1. 加载原始图像
         fa_pil = Image.open(fa_path).convert("RGB")
@@ -279,49 +175,42 @@ class CFFADataset(Dataset):
         fa_np = np.array(fa_pil)
         cf_np = np.array(cf_pil)
         
-        # 确定 fix 和 moving: cffa -> fix=CF, moving=FA
+        # 2. 读取关键点
+        try:
+            fa_points = read_points_from_txt(fa_pts_path)
+            cf_points = read_points_from_txt(cf_pts_path)
+        except:
+            fa_points = np.array([])
+            cf_points = np.array([])
+        
+        # 3. 确定 fix 和 moving: cffa -> fix=CF, moving=FA
         fix_np = cf_np
         moving_np = fa_np
+        fix_points = cf_points
+        moving_points = fa_points
         fix_path = cf_path
         moving_path = fa_path
         
-        # 2. 获取配准结果（从缓存或实时计算）
-        if self.use_cache and self.cache_data:
-            # === 从缓存读取 ===
-            T_0to1 = self.cache_data['T_0to1'][idx].astype(np.float32)
-            # 从 object dtype 转换回 uint8 numpy 数组
-            moving_gt_np = np.array(self.cache_data['moving_gt'][idx], dtype=np.uint8)
-            h_orig, w_orig = self.cache_data['fix_shape'][idx]
-            h_mov_orig, w_mov_orig = self.cache_data['moving_shape'][idx]
+        # 4. 计算配准后的moving_gt
+        T_0to1 = np.eye(3, dtype=np.float32)
+        if len(fix_points) >= 4 and len(moving_points) >= 4:
+            moving_gt_np, T_0to1 = register_image(fix_np, fix_points, moving_np, moving_points)
         else:
-            # === 原有逻辑：实时计算 RANSAC ===
-            fa_pts_path = sample['fa_pts']
-            cf_pts_path = sample['cf_pts']
-            
-            try:
-                fa_points = read_points_from_txt(fa_pts_path)
-                cf_points = read_points_from_txt(cf_pts_path)
-            except:
-                fa_points = np.array([])
-                cf_points = np.array([])
-            
-            fix_points = cf_points
-            moving_points = fa_points
-            
-            T_0to1 = np.eye(3, dtype=np.float32)
-            if len(fix_points) >= 4 and len(moving_points) >= 4:
-                moving_gt_np, T_0to1 = register_image(fix_np, fix_points, moving_np, moving_points)
-            else:
-                moving_gt_np = moving_np.copy()
-            
-            h_orig, w_orig = fix_np.shape[:2]
-            h_mov_orig, w_mov_orig = moving_np.shape[:2]
+            moving_gt_np = moving_np.copy()
         
-        # 3. 准备原始moving
+        # 5. 移除裁剪逻辑，直接使用原图进行 Resize
+        fix_filtered = fix_np
+        moving_gt_filtered = moving_gt_np
+        
+        # 6. 准备原始moving
         moving_original_pil = Image.fromarray(moving_np).resize((SIZE, SIZE), Image.BICUBIC)
         
-        # 4. Resize 到 512x512 并补偿 T_0to1 尺度
+        # 7. Resize 到 512x512 并补偿 T_0to1 尺度
+        h_orig, w_orig = fix_np.shape[:2]
+        h_mov_orig, w_mov_orig = moving_np.shape[:2]
+        
         # 尺度补偿：T_scaled = T_fix_scale @ T_orig @ inv(T_mov_scale)
+        # 这样矩阵才能在 512x512 空间内自恰
         T_fix_scale = np.array([
             [SIZE / float(w_orig), 0, 0],
             [0, SIZE / float(h_orig), 0],
@@ -336,15 +225,15 @@ class CFFADataset(Dataset):
         
         T_0to1 = T_fix_scale @ T_0to1 @ T_mov_scale_inv
 
-        fix_pil = Image.fromarray(fix_np).resize((SIZE, SIZE), Image.BICUBIC)
-        moving_gt_pil = Image.fromarray(moving_gt_np).resize((SIZE, SIZE), Image.BICUBIC)
+        fix_pil = Image.fromarray(fix_filtered).resize((SIZE, SIZE), Image.BICUBIC)
+        moving_gt_pil = Image.fromarray(moving_gt_filtered).resize((SIZE, SIZE), Image.BICUBIC)
         
-        # 5. 转换为 Tensor
+        # 8. 转换为 Tensor
         fix_tensor = transforms.ToTensor()(fix_pil)  # [0, 1]
         moving_original_tensor = transforms.ToTensor()(moving_original_pil)  # [0, 1]
         moving_gt_tensor = transforms.ToTensor()(moving_gt_pil)  # [0, 1]
         
-        # 6. 归一化到 [-1, 1]
+        # 9. 归一化到 [-1, 1]
         moving_original_tensor = moving_original_tensor * 2 - 1
         moving_gt_tensor = moving_gt_tensor * 2 - 1
         

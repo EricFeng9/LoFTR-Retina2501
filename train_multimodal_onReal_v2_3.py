@@ -225,9 +225,6 @@ class PL_LoFTR_V3(PL_LoFTR):
         self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
         
     def _trainval_inference(self, batch):
-        import time
-        t0 = time.time()
-        
         # 统一预处理
         for img_key in ['image0', 'image1']:
             if img_key in batch:
@@ -235,33 +232,15 @@ class PL_LoFTR_V3(PL_LoFTR):
                     batch[img_key] = (batch[img_key] + 1) / 2
                 batch[img_key] = self.clahe(batch[img_key])
         
-        t1 = time.time()
-        
         if 'image1_gt' in batch:
             if batch['image1_gt'].min() < 0:
                 batch['image1_gt'] = (batch['image1_gt'] + 1) / 2
             batch['image1_gt'] = self.clahe(batch['image1_gt'])
 
-        t2 = time.time()
-        
         if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
             self.loss.vessel_loss_weight_scaler = self.vessel_loss_weight_scaler
-        
-        # 打印计时信息（只在前 10 个 batch 打印）
-        if hasattr(self, '_timing_count'):
-            self._timing_count += 1
-        else:
-            self._timing_count = 1
             
-        if self._timing_count <= 10:
-            loguru_logger.info(f"[TIMING] CLAHE image0+1: {t1-t0:.3f}s | CLAHE gt: {t2-t1:.3f}s")
-        
-        t3 = time.time()
         super()._trainval_inference(batch)
-        t4 = time.time()
-        
-        if self._timing_count <= 10:
-            loguru_logger.info(f"[TIMING] super()._trainval_inference: {t4-t3:.3f}s | TOTAL: {t4-t0:.3f}s")
 
     def training_step(self, batch, batch_idx):
         # 在真实图像训练中，去除了 Domain Randomization (直接调用基类)
@@ -482,7 +461,7 @@ def main():
     
     trainer = pl.Trainer.from_argparse_args(
         args,
-        num_sanity_val_steps=3,  # 只检查 3 个 batch，不跑完整验证
+        num_sanity_val_steps=-1,  # 启动前跑完整验证
         check_val_every_n_epoch=1, # 每一轮都验证
         callbacks=[MultimodalValidationCallback(args), LearningRateMonitor(logging_interval='step'), early_stop_callback],
         logger=tb_logger,
