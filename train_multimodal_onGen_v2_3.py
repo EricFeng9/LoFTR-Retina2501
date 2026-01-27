@@ -522,6 +522,7 @@ class MultimodalValidationCallback(Callback):
         # 直接使用本地定义的辅助函数
 
         for i in range(batch_size):
+            H_est = H_ests[i]
             img0 = (batch['image0'][i, 0].cpu().numpy() * 255).astype(np.uint8)
             img1 = (batch['image1'][i, 0].cpu().numpy() * 255).astype(np.uint8)
             ref_key = 'image1_gt' if 'image1_gt' in batch else 'image1_origin'
