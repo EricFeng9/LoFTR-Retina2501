@@ -505,6 +505,7 @@ class MultimodalValidationCallback(Callback):
             return
 
         epoch = trainer.current_epoch + 1
+        metrics = trainer.callback_metrics
         
         display_metrics = {'mse_real': avg_mse, 'mace_real': avg_mace}
         for k in ['auc@5', 'auc@10', 'auc@20']:
