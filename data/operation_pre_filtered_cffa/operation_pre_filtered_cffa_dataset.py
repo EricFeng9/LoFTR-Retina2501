@@ -289,7 +289,8 @@ class CFFADataset(Dataset):
         if self.use_cache and self.cache_data:
             # === 从缓存读取 ===
             T_0to1 = self.cache_data['T_0to1'][idx].astype(np.float32)
-            moving_gt_np = self.cache_data['moving_gt'][idx]
+            # 从 object dtype 转换回 uint8 numpy 数组
+            moving_gt_np = np.array(self.cache_data['moving_gt'][idx], dtype=np.uint8)
             h_orig, w_orig = self.cache_data['fix_shape'][idx]
             h_mov_orig, w_mov_orig = self.cache_data['moving_shape'][idx]
         else:
