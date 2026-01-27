@@ -489,10 +489,9 @@ class MultimodalValidationCallback(Callback):
         pl_module.eval()
         with torch.no_grad():
             for dl_idx, dl in enumerate(val_dataloaders):
-                # 只取第 1 个 batch 做可视化，节省时间
+                dl_name = "generated" if dl_idx == 0 else "real"
+                # 对该数据加载器下的所有 batch 进行可视化
                 for batch_idx, batch in enumerate(dl):
-                    if batch_idx >= 1: break 
-                    
                     # 将 batch 移动到模型设备
                     batch = {k: v.to(pl_module.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
                     
