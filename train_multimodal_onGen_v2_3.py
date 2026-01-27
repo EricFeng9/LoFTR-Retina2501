@@ -724,11 +724,12 @@ def main():
         callbacks=[val_callback, lr_monitor, early_stop_callback],
         logger=tb_logger,
         plugins=DDPPlugin(find_unused_parameters=False) if _n_gpus > 1 else None,
-        replace_sampler_ddp=True
+        replace_sampler_ddp=True,
+        resume_from_checkpoint=args.start_point
     )
     
     loguru_logger.info(f"开始训练 V2.3 (Minimalist): {args.name}")
-    trainer.fit(model, datamodule=data_module, ckpt_path=args.start_point)
+    trainer.fit(model, datamodule=data_module)
 
 if __name__ == '__main__':
     main()
