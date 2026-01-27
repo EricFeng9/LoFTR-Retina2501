@@ -103,8 +103,8 @@ class MultimodalDataModule(pl.LightningDataModule):
                 train_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='train', mode='cf2octa')
                 val_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
             elif self.args.mode == 'cffa':
-                train_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='train', mode='fa2cf', use_cache=True)
-                val_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf', use_cache=True)
+                train_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='train', mode='fa2cf')
+                val_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
             elif self.args.mode == 'cfoct':
                 train_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='train', mode='cf2oct')
                 val_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
@@ -461,7 +461,7 @@ def main():
     
     trainer = pl.Trainer.from_argparse_args(
         args,
-        num_sanity_val_steps=-1,  # 启动前跑完整验证
+        num_sanity_val_steps=3,  # 只检查 3 个 batch，不跑完整验证
         check_val_every_n_epoch=1, # 每一轮都验证
         callbacks=[MultimodalValidationCallback(args), LearningRateMonitor(logging_interval='step'), early_stop_callback],
         logger=tb_logger,
