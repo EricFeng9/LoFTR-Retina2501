@@ -103,8 +103,8 @@ class MultimodalDataModule(pl.LightningDataModule):
                 train_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='train', mode='cf2octa')
                 val_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
             elif self.args.mode == 'cffa':
-                train_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='train', mode='fa2cf')
-                val_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
+                train_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='train', mode='fa2cf', use_cache=True)
+                val_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf', use_cache=True)
             elif self.args.mode == 'cfoct':
                 train_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='train', mode='cf2oct')
                 val_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
@@ -222,20 +222,20 @@ class PL_LoFTR_V3(PL_LoFTR):
         self.result_dir = result_dir
         # 在真实图像上训练，默认不使用额外的血管损失权重（因为数据集没有 mask）
         self.vessel_loss_weight_scaler = 1.0 
-        # self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
+        self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
         
     def _trainval_inference(self, batch):
-        # 统一预处理 (移除 CLAHE)
+        # 统一预处理
         for img_key in ['image0', 'image1']:
             if img_key in batch:
                 if batch[img_key].min() < 0:
                     batch[img_key] = (batch[img_key] + 1) / 2
-                # batch[img_key] = self.clahe(batch[img_key])
+                batch[img_key] = self.clahe(batch[img_key])
         
         if 'image1_gt' in batch:
             if batch['image1_gt'].min() < 0:
                 batch['image1_gt'] = (batch['image1_gt'] + 1) / 2
-            # batch['image1_gt'] = self.clahe(batch['image1_gt'])
+            batch['image1_gt'] = self.clahe(batch['image1_gt'])
 
         if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
             self.loss.vessel_loss_weight_scaler = self.vessel_loss_weight_scaler
