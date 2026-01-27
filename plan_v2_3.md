@@ -75,24 +75,5 @@
 
 ---
 
-## 6. 对比实验设计 (Comparative Experiment Design)
-
-为了验证“生成的弱监督数据 + 血管感知引导”的有效性，我们设计了如下对比实验。
-
-### 6.1 实验组设置
-
-| 实验组 ID | 训练数据来源 | 预训练权重 | Domain Rand. | 血管感知 Loss (W=10) | 脚本名称 |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Exp-Real (Baseline)** | 真实标注数据 (Real) | Full Pretrained | **OFF** | **OFF** | `train_multimodal_onReal_v2_3.py` |
-| **Exp-Gen (Proposed)** | 仿真生成数据 (Gen) | Full Pretrained | **ON** | **ON** | `train_multimodal_onGen_v2_3.py` |
-
-### 6.2 实验一致性保证 (Consistency)
-*   **Backbone**: 统一使用 `MegaDepth` 全量预训练权重。
-*   **预处理**: 统一应用 `CLAHE` (clip=3.0) 增强。
-*   **学习率**: 统一使用相同的 `Canonical LR` 及线性缩放策略。
-*   **测试集**: 统一在各模态的真实 `val/test` 集上进行最终评估。
-
-### 6.3 核心观测点 (Hypothesis)
-1.  **收敛速度**: 观察 `Exp-Real` 是否会因为数据量较小（真实标注稀缺）而迅速过拟合，或陷入局部最优。
-2.  **泛化能力**: `Exp-Gen` 在强随机化和血管引导下，尽管训练数据是仿真的，其在真实测试集上的 `AUC` 是否能超越直接在少量真实数据上训练的结果。
-3.  **匹配模式**: 通过 `visualize` 结果，对比两者在非血管区域（背景）的伪匹配情况，验证血管引导 loss 对 Attention Head 的聚拢作用。
+## 5. 总结
+本版本 (V2.3 Robust) 是 LoFTR 在眼底配准领域的**定制化适配版**。它保留了 LoFTR 强大的 Dense Matching 能力，通过 **CLAHE 增强** 让它“看清”血管，通过 **Loss 加权** 强迫它“记住”血管，最后通过 **全量预训练** 赋予它几何常识。这是一个不依赖推理时 Mask 输入的、端到端的鲁棒配准方案。

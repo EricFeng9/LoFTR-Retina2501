@@ -243,8 +243,16 @@ class PL_LoFTR_V3(PL_LoFTR):
         super()._trainval_inference(batch)
 
     def training_step(self, batch, batch_idx):
-        # 在真实图像训练中，去除了 Domain Randomization (直接调用基类)
-        return super().training_step(batch, batch_idx)
+        # 核心优化：只运行推理和 Loss 计算，绝对不运行 RANSAC 指标和绘图
+        # 这样训练速度将从 25s/it 回归到 1s/it
+        self._trainval_inference(batch)
+        
+        # 只记录 Loss 相关指标
+        for k, v in batch['loss_scalars'].items():
+            self.log(f'train/{k}', v, on_step=True, on_epoch=True, prog_bar=False, logger=True)
+        self.log('train/loss', batch['loss'], on_step=True, on_epoch=True, prog_bar=True, logger=True)
+        
+        return {'loss': batch['loss']}
 
     def validation_step(self, batch, batch_idx, dataloader_idx=0):
         self._trainval_inference(batch)
@@ -461,6 +469,8 @@ def main():
     
     trainer = pl.Trainer.from_argparse_args(
         args,
+        num_sanity_val_steps=-1,  # 启动前跑完整验证
+        check_val_every_n_epoch=1, # 每一轮都验证
         callbacks=[MultimodalValidationCallback(args), LearningRateMonitor(logging_interval='step'), early_stop_callback],
         logger=tb_logger,
         plugins=DDPPlugin(find_unused_parameters=False) if _n_gpus > 1 else None,
