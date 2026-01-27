@@ -443,11 +443,11 @@ class DelayedEarlyStopping(EarlyStopping):
 def parse_args():
     parser = argparse.ArgumentParser(description="LoFTR V2.3 Real-Data Baseline")
     parser.add_argument('--mode', type=str, default='cffa', choices=['cffa', 'cfoct', 'octfa', 'cfocta'])
-    parser.add_argument('--name', '-n', type=str, default='loftr_onReal_v2_3_baseline', help='训练名称')
+    parser.add_argument('--name', '-n', type=str, default='loftr_onReal_v2_4_baseline', help='训练名称')
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--img_size', type=int, default=512)
-    parser.add_argument('--pretrained_ckpt', type=str, default='weights/outdoor_ds.ckpt')
+    parser.add_argument('--pretrained_ckpt', type=str, default=None)
     parser.add_argument('--start_point', type=str, default=None)
     parser.add_argument('--main_cfg_path', type=str, default=None)
     parser = pl.Trainer.add_argparse_args(parser)
@@ -480,13 +480,8 @@ def main():
         result_dir=str(result_dir)
     )
     
-    # 强制全权重加载
-    if args.pretrained_ckpt:
-        checkpoint = torch.load(args.pretrained_ckpt, map_location='cpu')
-        state_dict = checkpoint.get('state_dict', checkpoint)
-        state_dict = {k.replace('matcher.', ''): v for k, v in state_dict.items()}
-        model.matcher.load_state_dict(state_dict, strict=False)
-        loguru_logger.info(f"已加载全量预训练权重")
+    # V2.4: 不再加载预训练权重，由随机初始化开始训练
+    loguru_logger.info(f"V2.4 实验：不加载预训练权重，进行随机初始化的训练")
     
     data_module = MultimodalDataModule(args, config)
     tb_logger = TensorBoardLogger(save_dir='logs/tb_logs', name=f"onReal_{args.name}")
@@ -510,7 +505,7 @@ def main():
         resume_from_checkpoint=args.start_point
     )
     
-    loguru_logger.info(f"开始真实数据基准训练: {args.name}")
+    loguru_logger.info(f"开始真实数据基准训练 V2.4: {args.name}")
     trainer.fit(model, datamodule=data_module)
 
 if __name__ == '__main__':

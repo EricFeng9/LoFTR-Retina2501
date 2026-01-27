@@ -661,13 +661,13 @@ class DelayedEarlyStopping(EarlyStopping):
 def parse_args():
     parser = argparse.ArgumentParser(description="LoFTR V2.3 Minimalist Vessel-Aware")
     parser.add_argument('--mode', type=str, default='cffa', choices=['cffa', 'cfoct', 'octfa', 'cfocta'])
-    # 默认名改为 v2.3
-    parser.add_argument('--name', '-n', type=str, default='loftr_multimodal_v2_3_minimal', help='训练名称') 
+    # 默认名改为 v2.4
+    parser.add_argument('--name', '-n', type=str, default='loftr_multimodal_v2_4_minimal', help='训练名称') 
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--img_size', type=int, default=512)
     parser.add_argument('--vessel_sigma', type=float, default=6.0)
-    parser.add_argument('--pretrained_ckpt', type=str, default='weights/outdoor_ds.ckpt')
+    parser.add_argument('--pretrained_ckpt', type=str, default=None)
     parser.add_argument('--start_point', type=str, default=None, help='训练断点路径 (.ckpt)')
     parser.add_argument('--use_domain_randomization', action='store_true', default=True)
     parser.add_argument('--val_on_real', action='store_true', default=True)
@@ -703,23 +703,8 @@ def main():
         result_dir=str(result_dir)
     )
     
-    # 强制全权重加载 (覆盖 V2.3 的 Random Init 策略)
-    # 如果用户提供了 pretrained_ckpt，我们希望利用这里面所有的知识
-    if args.pretrained_ckpt:
-        checkpoint = torch.load(args.pretrained_ckpt, map_location='cpu')
-        if 'state_dict' in checkpoint:
-            state_dict = checkpoint['state_dict']
-        else:
-            state_dict = checkpoint
-            
-        # 移除 'matcher.' 前缀 (如果存在)
-        state_dict = {k.replace('matcher.', ''): v for k, v in state_dict.items()}
-        
-        # 加载所有通过 key 匹配的权重 (Backbone + Transformer)
-        # strict=False 允许部分不匹配 (如检测头参数可能不同)
-        keys = model.matcher.load_state_dict(state_dict, strict=False)
-        loguru_logger.info(f"已强制加载全量预训练权重 (Backbone + Transformer)")
-        loguru_logger.info(f"Missing keys: {keys.missing_keys}")
+    # V2.4: 不再加载预训练权重，进行从零开始的训练
+    loguru_logger.info(f"V2.4 实验：不加载预训练权重，从随机初始化开始训练")
         
     
     data_module = MultimodalDataModule(args, config)
@@ -750,7 +735,7 @@ def main():
         resume_from_checkpoint=args.start_point
     )
     
-    loguru_logger.info(f"开始训练 V2.3 (Minimalist): {args.name}")
+    loguru_logger.info(f"开始训练 V2.4 (Minimalist): {args.name}")
     trainer.fit(model, datamodule=data_module)
 
 if __name__ == '__main__':
