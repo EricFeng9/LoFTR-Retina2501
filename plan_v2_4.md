@@ -50,6 +50,7 @@
 *   **Optimizer**: AdamW, `weight_decay=0.01`。
 *   **Batch Size**: 4 (受限于显存，配合梯度累积)。
 *   **Monitor**: 监控 **Combined AUC** (AUC@5, 10, 20 的算术平均值)。
+*   **Early Stopping**: 考虑到从随机初始化开始，模型需要较长的时间预热，**早停机制延迟至 100 epoch 后触发**。
 
 ---
 

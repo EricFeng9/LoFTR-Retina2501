@@ -487,7 +487,7 @@ def main():
     tb_logger = TensorBoardLogger(save_dir='logs/tb_logs', name=f"onReal_{args.name}")
     
     early_stop_callback = DelayedEarlyStopping(
-        start_epoch=0,
+        start_epoch=100,
         monitor='auc@10', 
         mode='max', 
         patience=10, 

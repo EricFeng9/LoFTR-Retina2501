@@ -715,7 +715,7 @@ def main():
     # [Monitor Change] MSE -> AUC@10
     # 既然尺度问题已解决，AUC@10 是最能反应配准成功率的指标
     early_stop_callback = DelayedEarlyStopping(
-        start_epoch=0, 
+        start_epoch=100, 
         monitor='auc@10', 
         mode='max', 
         patience=10, 
