@@ -272,72 +272,118 @@ class PL_LoFTR_V3(PL_LoFTR):
         
         self.clahe = CLAHE_Preprocess(clip_limit=3.0, tile_grid_size=(8, 8))
         
-    def training_step(self, batch, batch_idx):
+    def _trainval_inference(self, batch):
+        # [Fix 1] 确保所有输入在 [0, 1] 范围内且经过 CLAHE 增强 (针对跨模态)
+        # 注意：训练和验证必须保持预处理完全一致
+        for img_key in ['image0', 'image1']:
+            if img_key in batch:
+                if batch[img_key].min() < 0:
+                    batch[img_key] = (batch[img_key] + 1) / 2
+                batch[img_key] = self.clahe(batch[img_key])
+        
+        # 处理 GT 基准图（仅用于 MSE 计算，也统一预处理以保证对比一致）
+        if 'image1_gt' in batch:
+            if batch['image1_gt'].min() < 0:
+                batch['image1_gt'] = (batch['image1_gt'] + 1) / 2
+            batch['image1_gt'] = self.clahe(batch['image1_gt'])
+
         # [V2.3] 注入 Spatial Loss Scaler 到 Loss 模块
-        # 即使是静态的，也需要确保 loss 模块拿到了这个值
         if hasattr(self, 'vessel_loss_weight_scaler') and hasattr(self.loss, 'vessel_loss_weight_scaler'):
             self.loss.vessel_loss_weight_scaler = self.vessel_loss_weight_scaler
-
-        if self.use_domain_rand and self.training:
-            # [Fix 1] 强制归一化到 [0, 1]
-            # 检查最小值，如果小于 0，说明是 [-1, 1] 范围，需要转换
-            if batch['image0'].min() < 0:
-                batch['image0'] = (batch['image0'] + 1) / 2
-                batch['image1'] = (batch['image1'] + 1) / 2
             
-            # [Fix 2] 应用 CLAHE 增强对比度 (让血管跳出来)
-            # 对所有数据应用（包括 real_val），但这里只在 training block
-            # 实际上，最好是一视同仁
-            # 考虑到 LoFTR 对 intensity 敏感，我们先对 raw images 做 CLAHE
-            batch['image0'] = self.clahe(batch['image0'])
-            batch['image1'] = self.clahe(batch['image1'])
+        super()._trainval_inference(batch)
 
-            if self.saved_batches < 2:
+    def training_step(self, batch, batch_idx):
+        # 1. 应用 Domain Randomization (仅在训练模式且非推理阶段)
+        if self.use_domain_rand:
+            # [Requirement] 保存前两个 batch 的可视化信息
+            is_viz_batch = (self.current_epoch == 0 and batch_idx < 2)
+            
+            if is_viz_batch:
                 img0_orig = batch['image0'].clone()
                 img1_orig = batch['image1'].clone()
             
-            # [Fix 3] 此时输入已保证是 [0, 1]，增强函数可以正常工作
+            # [Fix 3] 此时输入已保证是 [0, 1] 且做过 CLAHE
             batch['image0'] = apply_domain_randomization(batch['image0'])
             batch['image1'] = apply_domain_randomization(batch['image1'])
             
-            if self.saved_batches < 2:
-                if self.result_dir is None:
-                    result_dir = Path(f"results/{self.config.DATASET.TRAINVAL_DATA_SOURCE}/{self.config.TRAINER.EXP_NAME}")
-                else:
-                    result_dir = Path(self.result_dir)
+            if is_viz_batch:
+                result_dir = Path(self.result_dir) if self.result_dir else Path(f"results/{self.config.DATASET.TRAINVAL_DATA_SOURCE}/{self.config.TRAINER.EXP_NAME}")
                 result_dir.mkdir(parents=True, exist_ok=True)
-                
                 vessel_mask = batch.get('mask0', None)
-                if self.trainer.sanity_checking:
-                    epoch_label = 0
-                else:
-                    epoch_label = self.current_epoch + 1
                 
+                # A. 保存增强对比图 (包括要求的 comparison_*.png)
                 save_batch_visualization(
                     img0_orig, img1_orig, batch['image0'], batch['image1'],
-                    str(result_dir), epoch=epoch_label, step=self.saved_batches + 1, 
+                    str(result_dir), epoch=self.current_epoch + 1, step=batch_idx + 1, 
                     batch_size=batch['image0'].shape[0], vessel_mask=vessel_mask
                 )
-                self.saved_batches += 1
+                
+                # B. 保存模型当前的配准效果可视化 (跟验证集一致)
+                # 我们通过 self 访问内部的 callback 来复用绘制逻辑，或者直接本地实现
+                with torch.no_grad():
+                    # 临时运行一次 validation_step 流程获取必需的绘图字典
+                    old_training_mode = self.training
+                    self.eval()
+                    outputs = self.validation_step(batch, batch_idx)
+                    self.train(old_training_mode)
+                    
+                    # 确定保存路径: epoch1_visualization/stepX_sampleY
+                    vis_dir = result_dir / f"epoch1_visualization" / f"step{batch_idx+1}_registration"
+                    self._save_training_registration_viz(batch, outputs, vis_dir)
 
-        # 【关键改动】：不再移除 mask0/mask1
-        # 我们需要保留 mask 供模型使用
-        
-        # 将 curriculum_loss_weight 注入到 batch 中或其他方式传递给 Loss
-        # 这里我们hack一下：假设 Loss 计算逻辑可以使用 batch 中的某个字段
-        # 或者我们直接修改 Loss 对象的权重（如果它支持）
-        # 查看 LoFTR 的 Loss 计算逻辑，通常 LoFTRLoss 接受 batch
-        # 如果要动态加权，最好是传入参数。
-        # 暂时方案：我们不改 Loss 代码，而是依赖 vessel_soft_lambda 改变 Attention
-        # 至于 loss_weight (vessel vs background)，如果 Loss 类没暴露接口，可能改起来复杂
-        # 假如 LoFTRLoss 只是计算 coarse/fine loss，且不区分 vessel/bg 的话，那 sched_loss_w 可能只用于 log?
-        # 不，Plan说 loss_bias: "Control how much penalty... for missing vessel matches".
-        # 如果现有的 LoFTRLoss 不支持 pixel-wise weighting map，那我们需要修改 LoFTRLoss。
-        # 考虑到时间，我们先主要依赖 Attention Bias (Lambda)，这已经是最强的引导了。
-        
-    def training_step(self, batch, batch_idx):
-        # ... (此处逻辑不变)
+        # 2. 调用基类的推理和 loss 计算
         return super().training_step(batch, batch_idx)
+
+    def _save_training_registration_viz(self, batch, outputs, save_dir):
+        """在训练期间保存详细的注册效果图"""
+        save_dir.mkdir(parents=True, exist_ok=True)
+        batch_size = batch['image0'].shape[0]
+        H_ests = outputs.get('H_est', [np.eye(3)] * batch_size)
+        
+        for i in range(min(batch_size, 2)): # 每个 batch 只保存前 2 个样本防止磁盘爆满
+            sample_dir = save_dir / f"sample{i}"
+            sample_dir.mkdir(parents=True, exist_ok=True)
+            
+            H_est = H_ests[i]
+            img0 = (batch['image0'][i, 0].cpu().numpy() * 255).astype(np.uint8)
+            img1 = (batch['image1'][i, 0].cpu().numpy() * 255).astype(np.uint8)
+            
+            h, w = img0.shape
+            try:
+                H_inv = np.linalg.inv(H_est)
+                img1_result = cv2.warpPerspective(img1, H_inv, (w, h))
+            except:
+                img1_result = img1.copy()
+            
+            # 保存基础图和棋盘图
+            cv2.imwrite(str(sample_dir / "fix_aug.png"), img0)
+            cv2.imwrite(str(sample_dir / "moving_aug.png"), img1)
+            cv2.imwrite(str(sample_dir / "moving_result.png"), img1_result)
+            
+            try:
+                from train_multimodal_onGen_v2_1 import create_chessboard
+                cb = create_chessboard(img1_result, img0)
+                cv2.imwrite(str(sample_dir / "chessboard.png"), cb)
+            except: pass
+            
+            # 保存 matches (如果 figures 已生成)
+            try:
+                mode = self.config.TRAINER.PLOT_MODE
+                if 'figures' in outputs and mode in outputs['figures'] and len(outputs['figures'][mode]) > i:
+                    fig = outputs['figures'][mode][i]
+                    fig.savefig(str(sample_dir / "matches.png"), bbox_inches='tight')
+                    # plt.close(fig) # 注意：如果是训练中途，plt 关闭需谨慎
+            except: pass
+            
+            # 检测点图
+            img0_kpts = cv2.cvtColor(img0, cv2.COLOR_GRAY2BGR)
+            if 'm_bids' in batch:
+                mask_i = (batch['m_bids'] == i)
+                kpts0_m = batch['mkpts0_f'][mask_i].cpu().numpy()
+                for pt in kpts0_m:
+                    cv2.circle(img0_kpts, (int(pt[0]), int(pt[1])), 4, (0, 0, 255), -1)
+            cv2.imwrite(str(sample_dir / "fix_with_matches.png"), img0_kpts)
 
     def validation_epoch_end(self, outputs):
         """
@@ -468,19 +514,23 @@ class MultimodalValidationCallback(Callback):
         with open(latest_path / "log.txt", "w") as f:
             f.write(f"Epoch: {epoch}\nLatest MSE: {avg_mse:.6f}\nLatest MACE: {avg_mace:.4f}")
             
-        # [Update] 既然修复了尺度 Bug，改回使用 AUC@10 作为 Best 评价指标 (越高越好)
+        # [Update] 既然修复了尺度 Bug，改回使用 AUC 作为 Best 评价指标
+        # 优化：使用 AUC@5, 10, 20 的平均值作为综合指标，比单看 AUC@10 更稳健 (防止运气导致的突跳)
         is_best = False
-        current_auc = display_metrics.get('auc@10', 0.0)
+        auc5 = display_metrics.get('auc@5', 0.0)
+        auc10 = display_metrics.get('auc@10', 0.0)
+        auc20 = display_metrics.get('auc@20', 0.0)
+        combined_auc = (auc5 + auc10 + auc20) / 3.0
         
-        if current_auc > self.best_val:
-            self.best_val = current_auc
+        if combined_auc > self.best_val:
+            self.best_val = combined_auc
             is_best = True
             best_path = self.result_dir / "best_checkpoint"
             best_path.mkdir(exist_ok=True)
             trainer.save_checkpoint(best_path / "model.ckpt")
             with open(best_path / "log.txt", "w") as f:
-                f.write(f"Epoch: {epoch}\nBest AUC@10: {current_auc:.4f}\nMSE: {avg_mse:.6f}\nMACE: {avg_mace:.4f}")
-            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, AUC@10: {current_auc:.4f}")
+                f.write(f"Epoch: {epoch}\nBest Combined AUC: {combined_auc:.4f}\nAUC@10: {auc10:.4f}\nMSE: {avg_mse:.6f}\nMACE: {avg_mace:.4f}")
+            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, 综合 AUC: {combined_auc:.4f} (auc@10: {auc10:.4f})")
 
         # 管理可视化文件夹的保存
         if is_best or (epoch % 5 == 0):
