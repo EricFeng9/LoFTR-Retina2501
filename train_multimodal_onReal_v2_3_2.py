@@ -497,7 +497,7 @@ def parse_args():
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--img_size', type=int, default=512)
-    parser.add_argument('--pretrained_ckpt', type=str, default='weights/outdoor_ds.ckpt')
+    parser.add_argument('--pretrained_ckpt', type=str, default=None)
     parser.add_argument('--start_point', type=str, default=None)
     parser.add_argument('--main_cfg_path', type=str, default=None)
     parser = pl.Trainer.add_argparse_args(parser)
@@ -542,19 +542,19 @@ def main():
         result_dir=str(result_dir)
     )
     
-    # 强制全权重加载
-    if args.pretrained_ckpt:
-        checkpoint = torch.load(args.pretrained_ckpt, map_location='cpu')
-        state_dict = checkpoint.get('state_dict', checkpoint)
-        state_dict = {k.replace('matcher.', ''): v for k, v in state_dict.items()}
-        model.matcher.load_state_dict(state_dict, strict=False)
-        loguru_logger.info(f"已加载全量预训练权重")
+    # 强制全权重加载 (已按要求关闭)
+    # if args.pretrained_ckpt:
+    #     checkpoint = torch.load(args.pretrained_ckpt, map_location='cpu')
+    #     state_dict = checkpoint.get('state_dict', checkpoint)
+    #     state_dict = {k.replace('matcher.', ''): v for k, v in state_dict.items()}
+    #     model.matcher.load_state_dict(state_dict, strict=False)
+    #     loguru_logger.info(f"已加载全量预训练权重")
     
     data_module = MultimodalDataModule(args, config)
     tb_logger = TensorBoardLogger(save_dir='logs/tb_logs', name=f"onReal_{args.name}")
     
     early_stop_callback = DelayedEarlyStopping(
-        start_epoch=0,
+        start_epoch=50,
         monitor='auc_avg', 
         mode='max', 
         patience=10, 

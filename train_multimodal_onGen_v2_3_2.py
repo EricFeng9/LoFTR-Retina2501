@@ -755,7 +755,7 @@ def parse_args():
     parser.add_argument('--num_workers', type=int, default=8)
     parser.add_argument('--img_size', type=int, default=512)
     parser.add_argument('--vessel_sigma', type=float, default=6.0)
-    parser.add_argument('--pretrained_ckpt', type=str, default='weights/outdoor_ds.ckpt')
+    parser.add_argument('--pretrained_ckpt', type=str, default=None)
     parser.add_argument('--start_point', type=str, default=None, help='训练断点路径 (.ckpt)')
     parser.add_argument('--use_domain_randomization', action='store_true', default=True)
     parser.add_argument('--val_on_real', action='store_true', default=True)
@@ -843,23 +843,22 @@ def main():
         result_dir=str(result_dir)
     )
     
-    # 强制全权重加载 (覆盖 V2.3 的 Random Init 策略)
-    # 如果用户提供了 pretrained_ckpt，我们希望利用这里面所有的知识
-    if args.pretrained_ckpt:
-        checkpoint = torch.load(args.pretrained_ckpt, map_location='cpu')
-        if 'state_dict' in checkpoint:
-            state_dict = checkpoint['state_dict']
-        else:
-            state_dict = checkpoint
-            
-        # 移除 'matcher.' 前缀 (如果存在)
-        state_dict = {k.replace('matcher.', ''): v for k, v in state_dict.items()}
-        
-        # 加载所有通过 key 匹配的权重 (Backbone + Transformer)
-        # strict=False 允许部分不匹配 (如检测头参数可能不同)
-        keys = model.matcher.load_state_dict(state_dict, strict=False)
-        dual_logger.info(f"已强制加载全量预训练权重 (Backbone + Transformer)")
-        dual_logger.info(f"Missing keys: {keys.missing_keys}")
+    # 强制全权重加载 (覆盖 V2.3 的 Random Init 策略) (已按要求关闭)
+    # if args.pretrained_ckpt:
+    #     checkpoint = torch.load(args.pretrained_ckpt, map_location='cpu')
+    #     if 'state_dict' in checkpoint:
+    #         state_dict = checkpoint['state_dict']
+    #     else:
+    #         state_dict = checkpoint
+    #         
+    #     # 移除 'matcher.' 前缀 (如果存在)
+    #     state_dict = {k.replace('matcher.', ''): v for k, v in state_dict.items()}
+    #     
+    #     # 加载所有通过 key 匹配的权重 (Backbone + Transformer)
+    #     # strict=False 允许部分不匹配 (如检测头参数可能不同)
+    #     keys = model.matcher.load_state_dict(state_dict, strict=False)
+    #     dual_logger.info(f"已强制加载全量预训练权重 (Backbone + Transformer)")
+    #     dual_logger.info(f"Missing keys: {keys.missing_keys}")
         
     
     data_module = MultimodalDataModule(args, config)
@@ -870,7 +869,7 @@ def main():
     # [Monitor Change] MSE -> auc_avg
     # 既然尺度问题已解决，综合 AUC (auc_avg) 是最能反应配准成功率的指标
     early_stop_callback = DelayedEarlyStopping(
-        start_epoch=0, 
+        start_epoch=50, 
         monitor='auc_avg', 
         mode='max', 
         patience=10, 
