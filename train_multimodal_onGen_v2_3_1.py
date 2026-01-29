@@ -1,6 +1,7 @@
 import sys
 import os
 import shutil
+import atexit
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -21,7 +22,7 @@ import logging
 from src.config.default import get_cfg_defaults
 from src.utils.misc import get_rank_zero_only_logger, setup_gpus
 from src.lightning.lightning_loftr import PL_LoFTR
-from data.FIVES_extract_v2.FIVES_extract_v2 import MultiModalDataset
+from data.FIVES_extract_v3.FIVES_extract_v3 import MultiModalDataset
 from src.utils.plotting import make_matching_figures
 from gen_data_enhance_v2 import save_batch_visualization
 from src.utils.metrics import error_auc
@@ -31,6 +32,7 @@ from data.CF_OCTA_v2_repaired.cf_octa_v2_repaired_dataset import CFOCTADataset
 from data.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import CFFADataset
 from data.operation_pre_filtered_cfoct.operation_pre_filtered_cfoct_dataset import CFOCTDataset
 from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset import OCTFADataset
+from data.CFFA.cffa_dataset import CFFADataset as CFFAValDataset
 
 # 复用 v2.1 中的 RealDatasetWrapper 等辅助类
 # 为了完整性，这里重新定义一遍，避免 import 依赖问题
@@ -81,8 +83,29 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
             'dataset_name': 'MultiModal'
         }
 
+class RandomSubsetSampler(torch.utils.data.Sampler):
+    """Randomly samples a fixed subset at initialization and reuses it for all epochs"""
+    def __init__(self, data_source, num_samples, seed=None):
+        self.data_source = data_source
+        self.num_samples = min(num_samples, len(data_source))
+        
+        # Sample indices once at initialization
+        if seed is not None:
+            generator = torch.Generator()
+            generator.manual_seed(seed)
+            self.indices = torch.randperm(len(data_source), generator=generator).tolist()[:self.num_samples]
+        else:
+            self.indices = torch.randperm(len(data_source)).tolist()[:self.num_samples]
+        
+    def __iter__(self):
+        # Always return the same fixed indices
+        return iter(self.indices)
+    
+    def __len__(self):
+        return self.num_samples
+
 # 数据集根目录硬编码
-DATA_ROOT = "data/FIVES_extract_v2"
+DATA_ROOT = "data/FIVES_extract_v3"
 
 class MultimodalDataModule(pl.LightningDataModule):
     def __init__(self, args, config):
@@ -106,15 +129,23 @@ class MultimodalDataModule(pl.LightningDataModule):
                 # 使用真实数据集验证（与 train_multimodal_v3_3.py 一致）
                 if self.args.mode == 'cfocta':
                     base_dataset = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
+                    self.val_dataset_real = RealDatasetWrapper(base_dataset)
                 elif self.args.mode == 'cffa':
-                    base_dataset = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
+                    # 使用 CFFA 数据集（所有样本都用于验证）
+                    base_dataset = CFFAValDataset(
+                        root_dir='data/CFFA', 
+                        split='val', 
+                        mode='cf2fa',  # CF as image0 (fix), FA as image1 (moving)
+                        train_ratio=0.0,  # 所有样本都用于验证
+                        seed=42
+                    )
+                    self.val_dataset_real = RealDatasetWrapper(base_dataset)
                 elif self.args.mode == 'cfoct':
                     base_dataset = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
+                    self.val_dataset_real = RealDatasetWrapper(base_dataset)
                 elif self.args.mode == 'octfa':
                     base_dataset = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='val', mode='fa2oct')
-                
-                # 包装真实数据集，使其输出格式与 MultiModalDataset 一致
-                self.val_dataset_real = RealDatasetWrapper(base_dataset)
+                    self.val_dataset_real = RealDatasetWrapper(base_dataset)
                 
                 # 同时保留生成数据验证集用于可视化对比
                 self.val_dataset_gen = MultiModalDataset(
@@ -131,10 +162,19 @@ class MultimodalDataModule(pl.LightningDataModule):
         if self.args.val_on_real:
             # 返回双验证数据集：[生成数据, 真实数据]
             # 注意：生成数据验证仅用于可视化，真实数据用于计算指标
-            return [
-                torch.utils.data.DataLoader(self.val_dataset_gen, shuffle=False, **self.loader_params),
-                torch.utils.data.DataLoader(self.val_dataset_real, shuffle=False, **self.loader_params)
-            ]
+            # 对于 CFFA 模式，使用随机采样器固定选择 20 个样本（整个训练过程使用相同的样本）
+            if self.args.mode == 'cffa':
+                sampler = RandomSubsetSampler(self.val_dataset_real, num_samples=20, seed=42)
+                return [
+                    torch.utils.data.DataLoader(self.val_dataset_gen, shuffle=False, **self.loader_params),
+                    torch.utils.data.DataLoader(self.val_dataset_real, sampler=sampler, batch_size=self.args.batch_size, 
+                                               num_workers=self.args.num_workers, pin_memory=True)
+                ]
+            else:
+                return [
+                    torch.utils.data.DataLoader(self.val_dataset_gen, shuffle=False, **self.loader_params),
+                    torch.utils.data.DataLoader(self.val_dataset_real, shuffle=False, **self.loader_params)
+                ]
         else:
             return torch.utils.data.DataLoader(self.val_dataset, shuffle=False, **self.loader_params)
 
@@ -201,25 +241,69 @@ def create_chessboard(img1, img2, grid_size=4):
                 chessboard[y_start:y_end, x_start:x_end] = img2[y_start:y_end, x_start:x_end]
     return chessboard
 
-# 日志配置 (同 v2.1)
+# 日志配置 (与 v2.2 / v2.1 保持一致)
+# 注意：不要在模块级别配置 logger，因为这会在 main() 之前执行
+# 导致文件 handler 无法正确添加
 loguru_logger = get_rank_zero_only_logger(logger)
-loguru_logger.remove()
 log_format = "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <level>{message}</level>"
-loguru_logger.add(sys.stderr, format=log_format, level="INFO")
+
+# 【全局双重日志】创建一个包装类，同时输出到 loguru 和文件
+class DualLogger:
+    def __init__(self, loguru_logger):
+        self.loguru_logger = loguru_logger
+        self._file = None
+    
+    def set_file(self, file_path):
+        """设置日志文件"""
+        if self._file:
+            self._file.close()
+        self._file = open(file_path, 'a', buffering=1)
+    
+    def _write_to_file(self, level, message):
+        """直接写入文件"""
+        if self._file:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self._file.write(f"{timestamp} | {level: <8} | {message}\n")
+            self._file.flush()
+    
+    def info(self, message):
+        self.loguru_logger.info(message)
+        self._write_to_file("INFO", message)
+    
+    def warning(self, message):
+        self.loguru_logger.warning(message)
+        self._write_to_file("WARNING", message)
+    
+    def error(self, message):
+        self.loguru_logger.error(message)
+        self._write_to_file("ERROR", message)
+    
+    def debug(self, message):
+        self.loguru_logger.debug(message)
+        self._write_to_file("DEBUG", message)
+    
+    # 保留 loguru 的其他方法
+    def __getattr__(self, name):
+        return getattr(self.loguru_logger, name)
+
+# 创建双重日志实例
+dual_logger = DualLogger(loguru_logger)
 
 class InterceptHandler(logging.Handler):
     def emit(self, record):
         try:
-            level = loguru_logger.level(record.levelname).name
+            level = dual_logger.level(record.levelname).name
         except ValueError:
             level = record.levelno
         frame, depth = logging.currentframe(), 2
         while frame.f_code.co_filename == logging.__file__:
             frame = frame.f_back
             depth += 1
-        loguru_logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
+        dual_logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
-logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO)
+# 注意：不要在模块级别配置 logging，等到 main() 中配置
+# logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO, force=True)
 logging.getLogger("matplotlib").setLevel(logging.ERROR)
 logging.getLogger("PIL").setLevel(logging.ERROR)
 
@@ -451,7 +535,7 @@ class MultimodalValidationCallback(Callback):
                 display_metrics[name] = metrics[k].item()
         if display_metrics:
             metric_str = " | ".join([f"{k}: {v:.4f}" for k, v in display_metrics.items()])
-            loguru_logger.info(f"Epoch {epoch} 训练总结 >> {metric_str}")
+            dual_logger.info(f"Epoch {epoch} 训练总结 >> {metric_str}")
 
     def on_validation_epoch_end(self, trainer, pl_module):
         if not self.epoch_mses: return
@@ -461,8 +545,8 @@ class MultimodalValidationCallback(Callback):
         avg_mace = sum(self.epoch_maces) / len(self.epoch_maces) if self.epoch_maces else float('inf')
         
         if trainer.sanity_checking:
-            loguru_logger.info(f"--- [Sanity Check] 初始状态验证总结 ---")
-            loguru_logger.info(f"MSE: {avg_mse:.6f} | MACE: {avg_mace:.4f}")
+            dual_logger.info(f"--- [Sanity Check] 初始状态验证总结 ---")
+            dual_logger.info(f"MSE: {avg_mse:.6f} | MACE: {avg_mace:.4f}")
             # 为 Sanity Check 触发一次特殊的可视化
             self._trigger_visualization(trainer, pl_module, is_best=False, epoch=0)
             return
@@ -475,7 +559,7 @@ class MultimodalValidationCallback(Callback):
             if k in metrics: display_metrics[k] = metrics[k].item()
         
         metric_str = " | ".join([f"{k}: {v:.4f}" for k, v in display_metrics.items()])
-        loguru_logger.info(f"Epoch {epoch} 验证总结（真实数据） >> {metric_str}")
+        dual_logger.info(f"Epoch {epoch} 验证总结（真实数据） >> {metric_str}")
         
         pl_module.log("val_mse", avg_mse, on_epoch=True, prog_bar=False, logger=True)
         pl_module.log("val_mace", avg_mace, on_epoch=True, prog_bar=True, logger=True)
@@ -502,14 +586,14 @@ class MultimodalValidationCallback(Callback):
             trainer.save_checkpoint(best_path / "model.ckpt")
             with open(best_path / "log.txt", "w") as f:
                 f.write(f"Epoch: {epoch}\nBest Combined AUC: {combined_auc:.4f}\nAUC@10: {auc10:.4f}\nMSE: {avg_mse:.6f}\nMACE: {avg_mace:.4f}")
-            loguru_logger.info(f"发现新的最优模型! Epoch {epoch}, 综合 AUC: {combined_auc:.4f} (auc@10: {auc10:.4f})")
+            dual_logger.info(f"发现新的最优模型! Epoch {epoch}, 综合 AUC: {combined_auc:.4f} (auc@10: {auc10:.4f})")
 
         # 管理可视化文件夹的保存
         if is_best or (epoch % 5 == 0):
             self._trigger_visualization(trainer, pl_module, is_best, epoch)
 
     def _trigger_visualization(self, trainer, pl_module, is_best, epoch):
-        loguru_logger.info(f"正在为 Epoch {epoch} 生成可视化结果...")
+        dual_logger.info(f"正在为 Epoch {epoch} 生成可视化结果...")
         pl_module.force_viz = True  # 强制模型在 validation_step 中生成 matching figures
         
         target_dirs = []
@@ -685,16 +769,57 @@ def main():
     result_dir.mkdir(parents=True, exist_ok=True)
     log_file = result_dir / "log.txt"
     
-    # 重要：先移除之前的所有 handler，然后重新添加（确保在 main 中配置）
-    logger.remove()  # 移除所有现有 handler
-    logger.add(sys.stderr, format=log_format, level="INFO")  # 重新添加 stderr
-    # 添加文件 handler（同步写入，确保日志不丢失）
-    logger.add(log_file, format=log_format, level="INFO", mode="a", backtrace=True, diagnose=False)
-    logger.info(f"日志将同时保存到: {log_file}")
+    # 【终极方案】设置环境变量，让 metrics.py 知道日志文件路径
+    os.environ['LOFTR_LOG_FILE'] = str(log_file.absolute())
+
+    # 【终极修复】在 main() 函数中重新配置整个日志系统
+    # 移除所有现有 handler（包括模块级别可能添加的）
+    loguru_logger.remove()
     
-    # 同时配置 loguru_logger（虽然它们是同一个对象，但为了保险起见）
-    if loguru_logger is not logger:
-        loguru_logger.add(log_file, format=log_format, level="INFO", mode="a", backtrace=True, diagnose=False)
+    # 打开日志文件（保持打开状态，确保实时写入）
+    log_file_handle = open(log_file, 'a', buffering=1)  # 行缓冲
+    
+    # 添加控制台输出
+    handler_stderr = loguru_logger.add(
+        sys.stderr, 
+        format=log_format, 
+        level="INFO",
+        enqueue=False
+    )
+    
+    # 添加文件输出（使用已打开的文件句柄）
+    handler_file = loguru_logger.add(
+        log_file_handle,
+        format=log_format,
+        level="INFO",
+        enqueue=False,  # 同步写入
+        backtrace=False,  # 简化输出
+        diagnose=False,
+        colorize=False  # 文件不需要颜色
+    )
+    
+    # 【关键】设置 dual_logger 的文件输出
+    dual_logger.set_file(log_file)
+    
+    dual_logger.info(f"日志将同时保存到: {log_file}")
+    dual_logger.info(f"日志 handler IDs: stderr={handler_stderr}, file={handler_file}")
+    
+    # 【关键修复2】配置 Python logging 模块，确保 PyTorch Lightning 的日志也被拦截
+    logging.basicConfig(handlers=[InterceptHandler()], level=logging.INFO, force=True)
+    logging.getLogger("pytorch_lightning").setLevel(logging.INFO)
+    logging.getLogger("pytorch_lightning").handlers = [InterceptHandler()]
+    
+    # 【关键修复3】注册退出时的清理函数，确保所有日志都被刷新
+    def cleanup_logging():
+        try:
+            dual_logger.info("程序退出，正在刷新日志...")
+            log_file_handle.flush()
+            log_file_handle.close()
+            if dual_logger._file:
+                dual_logger._file.close()
+        except:
+            pass
+    atexit.register(cleanup_logging)
     
     config.DATASET.MGDPT_IMG_RESIZE = args.img_size
     config.LOFTR.RESOLUTION = (8, 2)
@@ -729,8 +854,8 @@ def main():
         # 加载所有通过 key 匹配的权重 (Backbone + Transformer)
         # strict=False 允许部分不匹配 (如检测头参数可能不同)
         keys = model.matcher.load_state_dict(state_dict, strict=False)
-        loguru_logger.info(f"已强制加载全量预训练权重 (Backbone + Transformer)")
-        loguru_logger.info(f"Missing keys: {keys.missing_keys}")
+        dual_logger.info(f"已强制加载全量预训练权重 (Backbone + Transformer)")
+        dual_logger.info(f"Missing keys: {keys.missing_keys}")
         
     
     data_module = MultimodalDataModule(args, config)
@@ -761,8 +886,15 @@ def main():
         resume_from_checkpoint=args.start_point
     )
     
-    loguru_logger.info(f"开始训练 V2.3 (Minimalist): {args.name}")
+    dual_logger.info(f"开始训练 V2.3 (Minimalist): {args.name}")
+    
+    # 【调试】在训练开始前测试日志是否正常工作
+    dual_logger.warning("【测试】这是训练开始前的测试日志，应该同时出现在控制台和文件中")
+    
     trainer.fit(model, datamodule=data_module)
+    
+    # 训练结束后的日志
+    dual_logger.info("训练完成！")
 
 if __name__ == '__main__':
     main()

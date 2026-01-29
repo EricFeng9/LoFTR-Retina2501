@@ -26,9 +26,10 @@ from src.utils.metrics import error_auc
 
 # 导入真实数据集
 from data.CF_OCTA_v2_repaired.cf_octa_v2_repaired_dataset import CFOCTADataset
-from data.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import CFFADataset
+from data.operation_pre_filtered_cffa.operation_pre_filtered_cffa_dataset import CFFADataset as CFFATrainDataset
 from data.operation_pre_filtered_cfoct.operation_pre_filtered_cfoct_dataset import CFOCTDataset
 from data.operation_pre_filtered_octfa.operation_pre_filtered_octfa_dataset import OCTFADataset
+from data.CFFA.cffa_dataset import CFFADataset as CFFAValDataset
 
 # ==========================================
 # 辅助类: RealDatasetWrapper (格式转换)
@@ -85,6 +86,27 @@ class RealDatasetWrapper(torch.utils.data.Dataset):
             'dataset_name': 'MultiModal'
         }
 
+class RandomSubsetSampler(torch.utils.data.Sampler):
+    """Randomly samples a fixed subset at initialization and reuses it for all epochs"""
+    def __init__(self, data_source, num_samples, seed=None):
+        self.data_source = data_source
+        self.num_samples = min(num_samples, len(data_source))
+        
+        # Sample indices once at initialization
+        if seed is not None:
+            generator = torch.Generator()
+            generator.manual_seed(seed)
+            self.indices = torch.randperm(len(data_source), generator=generator).tolist()[:self.num_samples]
+        else:
+            self.indices = torch.randperm(len(data_source)).tolist()[:self.num_samples]
+        
+    def __iter__(self):
+        # Always return the same fixed indices
+        return iter(self.indices)
+    
+    def __len__(self):
+        return self.num_samples
+
 class MultimodalDataModule(pl.LightningDataModule):
     def __init__(self, args, config):
         super().__init__()
@@ -102,24 +124,48 @@ class MultimodalDataModule(pl.LightningDataModule):
             if self.args.mode == 'cfocta':
                 train_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='train', mode='cf2octa')
                 val_base = CFOCTADataset(root_dir='data/CF_OCTA_v2_repaired', split='val', mode='cf2octa')
+                self.train_dataset = RealDatasetWrapper(train_base)
+                self.val_dataset = RealDatasetWrapper(val_base)
             elif self.args.mode == 'cffa':
-                train_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='train', mode='fa2cf')
-                val_base = CFFADataset(root_dir='data/operation_pre_filtered_cffa', split='val', mode='fa2cf')
+                # 训练集使用原始 CFFA 数据集 (operation_pre_filtered_cffa)
+                train_base = CFFATrainDataset(root_dir='data/operation_pre_filtered_cffa', split='train', mode='cf2fa')  # CF as fix, FA as moving
+                self.train_dataset = RealDatasetWrapper(train_base)
+                # 验证集使用 CFFA 数据集（所有样本都用于验证）
+                val_base = CFFAValDataset(
+                    root_dir='data/CFFA', 
+                    split='val', 
+                    mode='cf2fa',  # CF as image0 (fix), FA as image1 (moving)
+                    train_ratio=0.0,  # 所有样本都用于验证
+                    seed=42
+                )
+                self.val_dataset = RealDatasetWrapper(val_base)
             elif self.args.mode == 'cfoct':
                 train_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='train', mode='cf2oct')
                 val_base = CFOCTDataset(root_dir='data/operation_pre_filtered_cfoct', split='val', mode='cf2oct')
+                self.train_dataset = RealDatasetWrapper(train_base)
+                self.val_dataset = RealDatasetWrapper(val_base)
             elif self.args.mode == 'octfa':
                 train_base = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='train', mode='fa2oct')
                 val_base = OCTFADataset(root_dir='data/operation_pre_filtered_octfa', split='val', mode='fa2oct')
-            
-            self.train_dataset = RealDatasetWrapper(train_base)
-            self.val_dataset = RealDatasetWrapper(val_base)
+                self.train_dataset = RealDatasetWrapper(train_base)
+                self.val_dataset = RealDatasetWrapper(val_base)
 
     def train_dataloader(self):
         return torch.utils.data.DataLoader(self.train_dataset, shuffle=True, **self.loader_params)
 
     def val_dataloader(self):
-        return torch.utils.data.DataLoader(self.val_dataset, shuffle=False, **self.loader_params)
+        # 对于 CFFA 模式，使用随机采样器固定选择 20 个样本（整个训练过程使用相同的样本）
+        if self.args.mode == 'cffa':
+            sampler = RandomSubsetSampler(self.val_dataset, num_samples=20, seed=42)
+            return torch.utils.data.DataLoader(
+                self.val_dataset, 
+                sampler=sampler, 
+                batch_size=self.args.batch_size,
+                num_workers=self.args.num_workers,
+                pin_memory=True
+            )
+        else:
+            return torch.utils.data.DataLoader(self.val_dataset, shuffle=False, **self.loader_params)
 
 # ==========================================
 # 辅助工具

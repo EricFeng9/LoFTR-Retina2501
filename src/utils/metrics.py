@@ -5,6 +5,38 @@ from collections import OrderedDict
 from loguru import logger
 from kornia.geometry.epipolar import numeric
 from kornia.geometry.conversions import convert_points_to_homogeneous
+import sys
+import os
+
+# 【终极方案】创建一个同时输出到控制台和文件的日志函数
+_log_file = None
+def _dual_log(level, message):
+    """同时输出到 loguru 和文件"""
+    global _log_file
+    
+    # 输出到 loguru
+    if level == "INFO":
+        logger.info(message)
+    elif level == "WARNING":
+        logger.warning(message)
+    elif level == "ERROR":
+        logger.error(message)
+    
+    # 同时直接写入文件（绕过 loguru）
+    if _log_file is None:
+        # 尝试从环境变量获取日志文件路径
+        log_path = os.environ.get('LOFTR_LOG_FILE', None)
+        if log_path:
+            try:
+                _log_file = open(log_path, 'a', buffering=1)
+            except:
+                pass
+    
+    if _log_file:
+        from datetime import datetime
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        _log_file.write(f"{timestamp} | {level: <8} | {message}\n")
+        _log_file.flush()
 
 
 # --- METRICS ---
@@ -226,8 +258,7 @@ def compute_homography_errors(data, config):
         num_matches = np.sum(mask)
         
         if num_matches < 4:
-            from loguru import logger
-            logger.warning(f"⚠️ Batch {bs}: 匹配点数不足 ({num_matches} < 4)")
+            _dual_log("WARNING", f"⚠️ Batch {bs}: 匹配点数不足 ({num_matches} < 4)")
             data['R_errs'].append(np.inf)
             data['t_errs'].append(np.inf)
             data['inliers'].append(np.array([]).astype(bool))
@@ -243,8 +274,7 @@ def compute_homography_errors(data, config):
         
         bin_indices = spatial_binning(pts0_batch, pts1_batch, img_size, grid_size=4, top_n=20, conf=mconf_batch)
         
-        from loguru import logger
-        logger.info(f"🔍 Batch {bs}: 总匹配点={num_matches}, Spatial Binning后={len(bin_indices)}")
+        _dual_log("INFO", f"🔍 Batch {bs}: 总匹配点={num_matches}, Spatial Binning后={len(bin_indices)}")
         
         if len(bin_indices) >= 4:
             pts0_ransac = pts0_batch[bin_indices]
@@ -255,26 +285,24 @@ def compute_homography_errors(data, config):
         
         if H_est is None:
             # 【调试】RANSAC 失败，记录原因
-            from loguru import logger
-            logger.warning(f"⚠️ Batch {bs}: RANSAC 返回 None (匹配点数: {len(bin_indices) if len(bin_indices) >= 4 else num_matches})")
+            _dual_log("WARNING", f"⚠️ Batch {bs}: RANSAC 返回 None (匹配点数: {len(bin_indices) if len(bin_indices) >= 4 else num_matches})")
             data['R_errs'].append(np.inf)
             data['t_errs'].append(np.inf)
             data['inliers'].append(np.array([]).astype(bool))
             data['H_est'].append(np.eye(3))
         else:
             # 【调试】检查 inliers 数量和矩阵状态
-            from loguru import logger
             num_inliers = np.sum(inliers.ravel() > 0) if inliers is not None else 0
             is_identity = np.allclose(H_est, np.eye(3), atol=1e-3)
             
-            logger.info(f"✅ Batch {bs}: RANSAC 成功, inliers={num_inliers}/{len(bin_indices) if len(bin_indices) >= 4 else num_matches}, H_est是否单位矩阵={is_identity}")
+            _dual_log("INFO", f"✅ Batch {bs}: RANSAC 成功, inliers={num_inliers}/{len(bin_indices) if len(bin_indices) >= 4 else num_matches}, H_est是否单位矩阵={is_identity}")
             
             if is_identity:
-                logger.warning(f"⚠️ Batch {bs}: H_est 接近单位矩阵! 这不正常!")
-                logger.warning(f"   pts0 范围: [{pts0_batch[:, 0].min():.1f}, {pts0_batch[:, 0].max():.1f}] x [{pts0_batch[:, 1].min():.1f}, {pts0_batch[:, 1].max():.1f}]")
-                logger.warning(f"   pts1 范围: [{pts1_batch[:, 0].min():.1f}, {pts1_batch[:, 0].max():.1f}] x [{pts1_batch[:, 1].min():.1f}, {pts1_batch[:, 1].max():.1f}]")
+                _dual_log("WARNING", f"⚠️ Batch {bs}: H_est 接近单位矩阵! 这不正常!")
+                _dual_log("WARNING", f"   pts0 范围: [{pts0_batch[:, 0].min():.1f}, {pts0_batch[:, 0].max():.1f}] x [{pts0_batch[:, 1].min():.1f}, {pts0_batch[:, 1].max():.1f}]")
+                _dual_log("WARNING", f"   pts1 范围: [{pts1_batch[:, 0].min():.1f}, {pts1_batch[:, 0].max():.1f}] x [{pts1_batch[:, 1].min():.1f}, {pts1_batch[:, 1].max():.1f}]")
             elif num_inliers < 30:
-                logger.warning(f"⚠️ Batch {bs}: Inliers 数量较少 ({num_inliers}), 可能导致配准质量差")
+                _dual_log("WARNING", f"⚠️ Batch {bs}: Inliers 数量较少 ({num_inliers}), 可能导致配准质量差")
             
             # 对于眼底图像配准，我们将 R_errs 设为 0
             # 将 t_errs 设为 Corner Error，用于 AUC 计算 (对应 MegaDepth/LoFTR 的标准评测方式)

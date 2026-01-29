@@ -459,9 +459,21 @@ def main():
     config = get_cfg_defaults()
     if args.main_cfg_path: config.merge_from_file(args.main_cfg_path)
     
-    result_dir = Path(f"results/onReal_{args.mode}/{args.name}")
+    # 修复：与 Callback 中的路径保持一致
+    result_dir = Path(f"results/{args.mode}/{args.name}")
     result_dir.mkdir(parents=True, exist_ok=True)
-    loguru_logger.add(result_dir / "log.txt", enqueue=True, mode="a")
+    log_file = result_dir / "log.txt"
+    
+    # 重要：先移除之前的所有 handler，然后重新添加（确保在 main 中配置）
+    logger.remove()  # 移除所有现有 handler
+    logger.add(sys.stderr, format=log_format, level="INFO")  # 重新添加 stderr
+    # 添加文件 handler（同步写入，确保日志不丢失）
+    logger.add(log_file, format=log_format, level="INFO", mode="a", backtrace=True, diagnose=False)
+    logger.info(f"日志将同时保存到: {log_file}")
+    
+    # 同时配置 loguru_logger（虽然它们是同一个对象，但为了保险起见）
+    if loguru_logger is not logger:
+        loguru_logger.add(log_file, format=log_format, level="INFO", mode="a", backtrace=True, diagnose=False)
     
     config.DATASET.MGDPT_IMG_RESIZE = args.img_size
     config.LOFTR.RESOLUTION = (8, 2)
